@@ -250,6 +250,8 @@ def main() -> int:
         result = send({"op": "party", "action": args[1], "target": args[2] if len(args) > 2 else ""})
     elif op == "partystate":
         result = send({"op": "partystate"})
+    elif op == "rclick":  # T-736: right-click a named entity via the real input path
+        result = send({"op": "rclick", "name": args[1]})
     elif op == "state":
         result = send({"op": "state"})
     elif op == "observe":  # T-562: one consolidated semantic snapshot for a play-agent

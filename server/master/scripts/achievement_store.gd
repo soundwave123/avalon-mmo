@@ -109,6 +109,14 @@ static func observe(cid: int, event: String, key: String, value: int = 0) -> Dic
 	return {"newly_earned": earned_defs}
 
 
+# T-367: fold an observe() result's newly-earned defs into a credit reply so the world can toast
+# the earner. Carved here from master main.gd (which rides the 1000-line cap) for T-734 headroom.
+static func merge_into(result: Dictionary, observed: Dictionary) -> void:
+	var earned: Array = observed.get("newly_earned", [])
+	if not earned.is_empty():
+		result["achievements"] = (result.get("achievements", []) as Array) + earned
+
+
 # The client panel view: every def with its earned flag + completion fraction. Read-only.
 static func list(cid: int) -> Dictionary:
 	var counters: Dictionary = {}

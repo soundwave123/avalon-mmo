@@ -139,6 +139,8 @@ func handle_server_message(data: Dictionary) -> void:
 			_dispatch("pvp", data)
 		"weekly_state":  # T-480: self-registered weekly vault panel reply
 			_dispatch("pvp", data)
+		"world_clock":  # T-734: low-frequency server day-clock resync → WorldView slew
+			_dispatch("world_clock", data)
 		_:
 			pass
 

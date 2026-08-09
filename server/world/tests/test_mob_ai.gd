@@ -593,3 +593,83 @@ func test_41_aggroed_chase_within_leash_still_pursues():
 			"a target inside leash_radius must never trigger evade"
 		)
 	assert_gt(current_mob.position.x, 0.0, "the mob actually chased toward the in-leash target")
+
+
+# ---- T-726: the IDLE out-of-leash safe spot (Shallow Graves door-pull) --------------------------
+# The filed hypothesis — "leaving the encounter area doesn't reset boss HP/threat" — was REFUTED by
+# a live repro (scripts/test-t726-evade-e2e.sh): Pallbearer Ost full-reset 333/333 → IDLE → spawn on
+# both a leash-out and a wipe. What the same rig DID find is the neighbouring hole these tests
+# close: an attacker standing past the leash circle generates threat _tick_idle deliberately
+# refuses to aggro on, and before this fix nothing then restored the mob — so the damage stuck
+# forever. Measured live: a mage at TRIAL_ENTRANCE (15.16 m from Ost's spawn, leash 12) took him
+# 333 → 229 in 45 s at ai_state IDLE / target_id -1. A free kill from a spot he can never reach.
+
+
+func test_42_idle_mob_damaged_from_outside_the_leash_resets():
+	var mob = _make_mob(Vector3(10.0, 10.0, 0.0), _MAI.MobAIState.IDLE)  # standing on its spawn
+	mob.retaliate_only = true  # the Shallow Graves boss chassis — proximity aggro is off
+	mob.resources.hp = 20  # chipped from the safe spot
+	var tt := _TT.new()
+	tt.add_threat(mob.entity_id, 1, 50)
+	# Attacker 30 m from spawn — past leash_radius 15, well inside a 30-unit nuke's range.
+	var players := {1: _make_player(Vector3(40.0, 10.0, 0.0))}
+
+	var r1 = _MAI.ai_tick(mob, players, tt, 0, _make_rng())
+	assert_eq(
+		r1.new_mob.ai_state,
+		_MAI.MobAIState.EVADING,
+		"an idle mob chipped by an attacker it can never reach must reset, not absorb it"
+	)
+	assert_eq(r1.new_mob.resources.hp, r1.new_mob.resources.max_hp, "HP restored on the reset")
+
+	# Already home, so the very next tick completes the reset and wipes the safe-spotter's threat.
+	var r2 = _MAI.ai_tick(r1.new_mob, players, tt, 1, _make_rng())
+	assert_eq(r2.new_mob.ai_state, _MAI.MobAIState.IDLE, "reset completes to IDLE at spawn")
+	var cleared_threat := false
+	for ev in r2.events:
+		if ev.get("type", "") == "clear_threat":
+			cleared_threat = true
+	assert_true(cleared_threat, "the out-of-leash attacker's threat must not survive the reset")
+
+
+func test_43_idle_mob_at_full_hp_with_distant_threat_does_not_churn_evades():
+	# Don't over-fix (1/3): the reset is gated on damage actually taken. An untouched mob holding
+	# stale distant threat must stay a plain no-op IDLE tick — no evade event, no per-tick mob copy.
+	var mob = _make_mob(Vector3(10.0, 10.0, 0.0), _MAI.MobAIState.IDLE)
+	mob.retaliate_only = true
+	var tt := _TT.new()
+	tt.add_threat(mob.entity_id, 1, 50)
+	var players := {1: _make_player(Vector3(40.0, 10.0, 0.0))}
+
+	var r = _MAI.ai_tick(mob, players, tt, 0, _make_rng())
+	assert_eq(r.new_mob.ai_state, _MAI.MobAIState.IDLE, "a full-HP idle mob has nothing to reset")
+	assert_eq(r.events.size(), 0, "and must not emit an evade event every tick")
+
+
+func test_44_idle_mob_damaged_from_inside_the_leash_still_aggros():
+	# Don't over-fix (2/3): the T-070 threat pull is the whole point of retaliate_only. An attacker
+	# INSIDE the leash must still start the fight, damaged HP and all — never get reset away from.
+	var mob = _make_mob(Vector3(10.0, 10.0, 0.0), _MAI.MobAIState.IDLE)
+	mob.retaliate_only = true
+	mob.resources.hp = 20
+	var tt := _TT.new()
+	tt.add_threat(mob.entity_id, 1, 50)
+	var players := {1: _make_player(Vector3(20.0, 10.0, 0.0))}  # 10 m from spawn, inside leash 15
+
+	var r = _MAI.ai_tick(mob, players, tt, 0, _make_rng())
+	assert_eq(r.new_mob.ai_state, _MAI.MobAIState.AGGROED, "an in-leash attacker still pulls")
+	assert_eq(r.new_mob.current_target_id, 1, "and becomes the target")
+	assert_eq(r.new_mob.resources.hp, 20, "the pull must NOT hand the mob a free heal")
+
+
+func test_45_idle_mob_with_no_threat_at_all_is_untouched():
+	# Don't over-fix (3/3): a damaged mob nobody is fighting (e.g. mid-respawn bookkeeping) has no
+	# threat entry, so the new branch is never reached and the tick stays a no-op.
+	var mob = _make_mob(Vector3(10.0, 10.0, 0.0), _MAI.MobAIState.IDLE)
+	mob.retaliate_only = true
+	mob.resources.hp = 20
+	var players := {1: _make_player(Vector3(40.0, 10.0, 0.0))}
+
+	var r = _MAI.ai_tick(mob, players, _TT.new(), 0, _make_rng())
+	assert_eq(r.new_mob.ai_state, _MAI.MobAIState.IDLE, "no threat, no reset")
+	assert_eq(r.new_mob.resources.hp, 20, "and no free heal")

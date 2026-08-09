@@ -4,6 +4,7 @@ extends Node
 # (ENet + @rpc), delegating to ClientNet + HudHandlers; the client sends INTENTS only.
 
 const ClientNet = preload("res://scripts/net/client_net.gd")
+const ConnectionRecovery = preload("res://scripts/net/connection_recovery.gd")  # T-704 classify+cap
 const GatewayLogin = preload("res://scripts/net/gateway_login.gd")
 const HarnessProbe = preload("res://scripts/net/harness_probe.gd")  # T-494 carve: smoke/result
 const HudHandlers = preload("res://scripts/net/hud_handlers.gd")
@@ -71,6 +72,7 @@ var _client_build := ServerConnectionConfig.resolve_build(
 )
 var _connected: bool = false
 var _world_built: bool = false  # T-494: false until login succeeds; gates HUD build + world hotkeys
+var _hud_wired: bool = false  # T-704: one-shot latch for panel/timer wiring (a reconnect re-enters)
 var _my_peer_id: int = 0  # T-054: our ENet peer id (to pick our own position out of the broadcast)
 var _own_cast: Dictionary = {}  # T-264: latest own cast payload from the broadcast
 var _party_prompt = preload("res://scripts/net/party_invite_prompt.gd").new()  # T-598: invite UI
@@ -80,7 +82,7 @@ var _accept_ok: bool = false  # smoke: accept_quest reply
 var _observe: bool = false  # AVALON_OBSERVE: headless two-client harness hook — stay alive, watch
 var _observe_probe = preload("res://scripts/dev/observe_probe.gd").new()  # T-361: extracted
 var _reply_router = preload("res://scripts/net/reply_router.gd").new()  # T-401: routed-reply hub
-var _recovery = preload("res://scripts/net/connection_recovery.gd").new()  # T-511 reasoned login
+var _recovery = ConnectionRecovery.new()  # T-511 reasoned login + T-704 terminal/transient policy
 var _awaiting_indicators: bool = false  # smoke: waiting for the npc_indicators reply → markers
 var _result_file: String = ""
 var _elapsed: float = 0.0
@@ -90,9 +92,11 @@ var _kit: Array = []  # T-063: the player's class ability kit (from the server's
 var _autoattack: bool = false  # T-057: auto-attack toggle — Strike on the GCD while a target is set
 var _attack_timer: Timer = null
 var _cast_queue := AbilityCastQueue.new()  # T-721: press ledger + server-verdict account
+var _cast_fx := CastFx.new()  # T-721/T-732: the ability presentation timeline (cue/channel/impact)
 var _panel_set: Array = []  # T-571: Esc-close-first (#28) / recap-yield (#27) candidate panels
 var _recap_panel: PerformanceRecapPanel = null  # T-576: OUT of _panel_set (that set's #27 watcher)
 var _creation: CreationFlow = null  # T-520/T-716: owns the gender→class→name modals + latches
+var _invite_flow: PartyInviteFlow = null  # T-736: right-click invite menu + Accept/Decline dialog
 
 
 func _ready() -> void:
@@ -279,12 +283,13 @@ func _enter_world() -> void:
 	CraftingUi.mount(
 		$HUD, world_view, craft_send, craft_typing, _reply_router, combat_feedback.get_combat_log()
 	)
+	var map_ui := MapUi.mount($HUD, self, craft_typing, settings_panel)  # T-730/T-738 maps
 	var wardrobe := WardrobePanel.mount($HUD, craft_send, craft_typing, _reply_router)
 	var shop := CosmeticShopPanel.mount($HUD, craft_send, craft_typing, _reply_router)
 	var mail := MailPanel.mount($HUD, func(n, a, e): _net.service_intent(n, a, e), service_panel)
 	_panel_set = [quest_log_panel, inventory_panel, talent_panel, character_sheet_panel]
 	_panel_set += [service_panel, player_hud.spellbook, wardrobe, shop, social_ui.guild_panel, mail]
-	_panel_set.append(social_ui.lfg_panel)  # T-625: LFG board joins the Esc-close / recap-yield sweep
+	_panel_set += [social_ui.lfg_panel, map_ui.world_map]  # T-625 LFG + T-730 map join the Esc sweep
 	_recap_panel = PerformanceRecapPanel.mount($HUD, craft_send, craft_typing, _reply_router)
 	_recap_panel.watch_panels(_panel_set)  # #27
 	PerformanceRecapPanel.wire_autopop_gate(_recap_panel, self)  # #79: no auto-pop mid-pull
@@ -310,12 +315,12 @@ func _enter_world() -> void:
 
 
 func _setup_networking(token_override := "", host_override := "", port_override := 0) -> void:
-	_token = token_override if token_override != "" else OS.get_environment("AVALON_TOKEN")
+	_token = _recovery.resolve_token(token_override)  # T-704: a terminal reject blocks AVALON_TOKEN
 	var host := ServerConnectionConfig.resolve_runtime_host(
 		host_override, OS.get_executable_path(), OS.get_environment("AVALON_HOST")
 	)
 	if _token == "":
-		if DisplayServer.get_name() == "headless":
+		if not ConnectionRecovery.is_interactive():  # T-704: same seam the recovery path uses
 			print("[client] offline — no AVALON_TOKEN; nothing to connect to")
 			get_tree().quit.bind(0).call_deferred()
 			return
@@ -343,15 +348,16 @@ func _setup_networking(token_override := "", host_override := "", port_override 
 	handlers["talents"] = func(d): talent_panel.render(d)  # T-065: talent state -> tree UI
 	handlers["player_stats"] = func(d): _on_player_stats(d)  # T-060 XP HUD + T-635 levelup celebration
 	handlers["quest_delta"] = func(d): _on_quest_delta(d)  # T-058: targeted pushes
-	handlers["party_invite"] = func(d): _party_prompt.show(chat_panel, str(d.get("from", "")))
+	handlers["party_invite"] = func(d): _invite_flow.on_invite(d)  # T-736 dialog + T-598 chat line
 	handlers["party_update"] = func(d): _on_party_update(d)  # T-280
-	handlers["party_result"] = func(d): _party_prompt.on_result(d)  # T-598
+	handlers["party_result"] = func(d): _invite_flow.on_result(d)  # T-598 prompt + T-736 refusals
 	handlers["lfg_board"] = func(d): lfg_board = social_ui.on_lfg(d)  # T-334/T-625: panel + pilot var
 	handlers["chat"] = func(d): _on_chat(d)  # T-361: relayed chat + rejections → the chat panel
 	handlers["trade"] = func(d): social_ui.on_trade(d)  # T-363: server-fed trade window
 	handlers["social"] = func(d): social_ui.on_social(d)  # T-361: friends/ignore lists
 	handlers["achievements"] = func(d): achievement_ui.on_achievements(d)  # T-367: panel feed + toast
 	handlers["pvp"] = func(d): _reply_router.route(d)  # T-401: routed-reply hub (PvP panel + future)
+	handlers["world_clock"] = func(d): world_view.server_day_sync(float(d.get("day_t", -1.0)))
 	handlers["result"] = _wire_result_handler(handlers["result"])  # T-578: chain, don't overwrite
 	# T-426: first-item-in-bag contextual hint rides the existing inventory render (fire-once).
 	var render_inventory: Callable = handlers["inventory"]
@@ -359,32 +365,8 @@ func _setup_networking(token_override := "", host_override := "", port_override 
 		render_inventory.call(d)
 		if not (d.get("slots", []) as Array).is_empty():
 			_onboarding.hint("bag_item")
-	if player_cast_bar != null:  # T-426: first interrupted cast teaches "moving cancels casting"
-		player_cast_bar.interrupted.connect(func(): _onboarding.hint("interrupt"))
 	_net.setup(func(m): _send_to_server(m), handlers)
-	# T-056: debounced refresh — a burst of quest results coalesces into ONE log+indicator re-request.
-	_refresh_timer = Timer.new()
-	_refresh_timer.one_shot = true
-	_refresh_timer.wait_time = 0.3
-	_refresh_timer.timeout.connect(_do_quest_refresh)
-	add_child(_refresh_timer)
-	# T-057: auto-attack timer (Strike on the GCD) + click-to-target.
-	_attack_timer = Timer.new()
-	_attack_timer.wait_time = 1.6  # ~GCD; the server harmlessly rejects an early cast
-	_attack_timer.timeout.connect(_on_attack_tick)
-	add_child(_attack_timer)
-	add_child(_cast_queue)  # T-721: press ledger (surfaced via the pilot's observe())
-	remote_entities.entity_clicked.connect(_on_entity_clicked)
-	npc_world.npc_clicked.connect(_on_npc_clicked)  # T-056: click an NPC → talk intent
-	# T-056 pass 2: clicked quest-log / inventory action links → the matching intent.
-	quest_log_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
-	# T-461/T-710: the quest log's active-objective state renders the always-on HUD tracker via the
-	# controller (which injects the pre-accept tutorial line and feeds the T-711 stall clock).
-	quest_log_panel.objectives_changed.connect(func(m): _onboarding.on_objectives(m))
-	inventory_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
-	talent_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
-	_creation.connect_actions(func(meta): PanelActions.dispatch(_net, meta))  # T-520/T-716
-	character_sheet_panel.action_selected.connect(func(m): PanelActions.dispatch(_net, m))  # T-640
+	_wire_hud_once()  # T-704: HUD-lifetime wiring, and _setup_networking() re-runs on every reconnect
 
 	var port_env: String = OS.get_environment("AVALON_PORT")
 	var port: int = (
@@ -399,11 +381,43 @@ func _setup_networking(token_override := "", host_override := "", port_override 
 		return
 	var mp := get_tree().get_multiplayer()
 	mp.multiplayer_peer = _enet
-	mp.connected_to_server.connect(_on_connected)
-	mp.connection_failed.connect(func(): _recovery.recover(self, {}))  # T-716 carve
-	mp.server_disconnected.connect(_on_server_disconnected)
+	_recovery.bind_signals(self, mp)  # T-704: idempotent — a reconnect never stacks handlers
 	_awaiting = true
 	print("[client] connecting to world enet://%s:%d" % [host, port])
+
+
+# T-704: HUD-LIFETIME wiring, but _setup_networking() re-runs on every reconnect — re-adding the
+# timers leaked a node per attempt and the re-connect()ed panel signals (lambdas, so is_connected()
+# cannot guard them) filled the log with "already connected" errors. Bind once.
+func _wire_hud_once() -> void:
+	if _hud_wired:
+		return
+	_hud_wired = true
+	if player_cast_bar != null:  # T-426: first interrupted cast teaches "moving cancels casting"
+		player_cast_bar.interrupted.connect(func(): _onboarding.hint("interrupt"))
+	# T-056: debounced refresh — a burst of quest results coalesces into ONE log+indicator re-request.
+	_refresh_timer = Timer.new()
+	_refresh_timer.one_shot = true
+	_refresh_timer.wait_time = 0.3
+	_refresh_timer.timeout.connect(_do_quest_refresh)
+	add_child(_refresh_timer)
+	# T-057: auto-attack timer (Strike on the GCD) + click-to-target.
+	_attack_timer = Timer.new()
+	_attack_timer.wait_time = 1.6  # ~GCD; the server harmlessly rejects an early cast
+	_attack_timer.timeout.connect(_on_attack_tick)
+	add_child(_attack_timer)
+	add_child(_cast_queue)  # T-721: press ledger (surfaced via the pilot's observe())
+	remote_entities.entity_clicked.connect(_on_entity_clicked)
+	npc_world.npc_clicked.connect(_on_npc_clicked)  # T-056: click an NPC → talk intent
+	_invite_flow = PartyInviteFlow.mount(self)  # T-736: menu/dialog under $HUD + target-frame hook
+	# T-056 pass 2: clicked quest-log / inventory action links → the matching intent. T-461/T-710:
+	# objectives_changed renders the always-on HUD tracker (pre-accept line + T-711 stall clock).
+	quest_log_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
+	quest_log_panel.objectives_changed.connect(func(m): _onboarding.on_objectives(m))
+	inventory_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
+	talent_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
+	_creation.connect_actions(func(meta): PanelActions.dispatch(_net, meta))  # T-520/T-716
+	character_sheet_panel.action_selected.connect(func(m): PanelActions.dispatch(_net, m))  # T-640
 
 
 func _process(delta: float) -> void:
@@ -470,11 +484,6 @@ func _on_connected() -> void:
 	_send_to_server({"type": "session", "token": _token, "build": _client_build})
 
 
-func _on_server_disconnected() -> void:
-	var notice := chat_panel.disconnect_notice() if chat_panel != null else {}
-	_recovery.recover(self, notice)
-
-
 # Server → client. Handshake replies gate readiness; all else routes through ClientNet to the HUD.
 @rpc("any_peer", "reliable")
 func _receive_client_message(data: Dictionary, _mirror: bool = false) -> void:
@@ -484,12 +493,14 @@ func _receive_client_message(data: Dictionary, _mirror: bool = false) -> void:
 	match str(data.get("type", "")):
 		"handshake_ok":
 			print("[client] handshake_ok — world ready")
+			world_view.server_day_sync(float(data.get("day_t", -1.0)))  # T-734: join snap
+			_recovery.on_session_ok()  # T-704: a completed handshake refills the retry budget
 			_onboarding.set_return_reason_state(data.get("daily", {}))
 			# T-550: seed ACCOUNT onboarding (tutorial-skip + hints); report sightings server-side.
 			_onboarding.begin_account(data.get("account_onboarding", {}), _send_to_server)
 			_on_world_ready()
-		"handshake_err":
-			_fail("handshake_err: %s" % str(data.get("reason", "")))
+		"handshake_err":  # T-704: classify (terminal → login form + reason), never quit blind
+			_recovery.on_handshake_err(self, data)
 		_:
 			_net.handle_server_message(data)
 
@@ -530,6 +541,7 @@ func _spawn_local_player() -> void:
 	local_player.set_gameplay_input_check(death_presentation.is_input_disabled)
 	local_player.set_username(OnboardingPrefs.username_from_token(_token))  # T-127: per-username look
 	world_view.add_child(local_player)
+	_invite_flow.bind_player(local_player)  # T-736: still right-click release → context menu
 
 
 # T-280/T-472: party roster push (names + leader); raid push adds {username -> subgroup} for frames.
@@ -626,6 +638,7 @@ func _on_npc_clicked(npc_id: String) -> void:
 # T-057: combat events → CombatFeedback; a mob_death may credit a kill → refresh quests + markers.
 func _on_combat(data: Dictionary) -> void:
 	_cast_queue.on_combat_event(data)  # T-721: ledger sees every server verdict first
+	_cast_fx.on_combat_event(self, data)  # T-732: cue/channel/bolt/impact, all server-confirmed
 	combat_feedback.process_event(data)
 	# T-060: 3D-native floating combat numbers off the hit entity.
 	if str(data.get("type", "")) == "ability_result":
@@ -657,16 +670,8 @@ func _on_combat(data: Dictionary) -> void:
 		if int(data.get("heal", 0)) > 0:  # T-343 p3: a landed heal rings its warm chime (§11.5)
 			AbilitySfx.play_heal(audio, abil_id)
 		var tid := int(data.get("target_id", -1))
-		var tnode: Node3D = remote_entities.target_node(tid) if remote_entities != null else null
-		if vfx != null and tnode != null:
-			var tpos: Vector3 = tnode.global_position
-			if str(data.get("outcome", "")) == "heal" or int(data.get("heal", 0)) > 0:
-				vfx.spawn_heal(tpos)
-			elif is_ranged and int(data.get("damage", 0)) > 0:  # T-350: muzzle flash + tracer + impact
-				vfx.spawn_gunshot(remote_entities.target_node(int(data.get("caster_id", -1))), tpos)
-			elif int(data.get("damage", 0)) > 0:
-				# T-343: frost bolt flash-freezes the victim (by ability id); else generic burst.
-				vfx.spawn_impact_on(tpos, tnode, abil_id)
+		# T-732: the landing VFX (heal / gunshot / impact) moved into CastFx with the rest of the
+		# ability timeline — it still fires off THIS event, one call above, beside the damage number.
 		# T-125: both belligerents square up — the caster turns to its target and (melee read) back.
 		# Local player / unknown ids no-op inside the layer, so it's safe to call unconditionally.
 		var cid := int(data.get("caster_id", -1))
@@ -741,9 +746,8 @@ func _on_entity_clicked(target_id: int) -> void:  # T-057: click an entity to ta
 	remote_entities.set_target(target_id)
 	if _autoattack:
 		_set_autoattack(true)  # T-729: sticky mode resumes on the new target, no re-toggle needed
-	if target_id != -1:  # T-557: hint range tracks the live filled-slot count, not a stale "1-4"
-		var slots := player_hud.action_bar.slot_count() if player_hud != null else 5
-		_onboarding.hint("target", HintReference.target_hint(slots))
+	if target_id != -1 and _invite_flow != null:  # T-557/T-736: both target hints live in the flow
+		_invite_flow.on_target_selected(target_id)
 
 
 # T-729: a MODE, not a per-target toggle — it arms with or without a target and survives kills,
@@ -828,8 +832,9 @@ func _cast_kit_slot(slot: int) -> void:
 		player_hud.on_ability_pressed(slot)
 	_net.request_use_ability(ability_id, _target_id)
 	_cast_queue.note_manual_send(slot, ability_id, _target_id)
-	# T-721 carve: cast cue + shimmer/bolt presentation lives in CastFx (main.gd 1000-line cap).
-	CastFx.on_cast_sent(audio, vfx, local_player, remote_entities, _target_id, ability_id)
+	# T-721 carve/T-732: presentation lives in CastFx — an INSTANT gets its launch beat here; a
+	# cast-time spell shows nothing until the server's cast_started (the wind-up) and result (the hit).
+	_cast_fx.on_press(self, ability_id, _target_id)
 
 
 # T-057/T-729: each GCD tick, Strike — but ONLY a live hostile selection. No target, a corpse

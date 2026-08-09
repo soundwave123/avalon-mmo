@@ -85,15 +85,17 @@ func test_unknown_sfx_is_ignored_safely() -> void:
 	assert_true(true, "unknown sfx name is ignored")
 
 
-func test_footstep_is_rate_limited() -> void:
+# T-737: the T-111 `footstep_if_due` hook is GONE — a fixed 340 ms wall-clock cadence playing one
+# sample at one volume was the machine-gun the ticket was filed about. Footfalls are now scheduled
+# by FootstepCadence (distance-keyed, 4 rotating variations, pitch + stride jitter, surface-aware)
+# and played through this same pool; see test_footstep_cadence.gd / test_locomotion_audio.gd.
+func test_the_fixed_interval_footstep_hook_is_retired() -> void:
 	var am = _am()
-	am.footstep_if_due(100000)  # first call fires + records the time
-	var t1 = am._last_step_ms
-	am.footstep_if_due(100000)  # within the (huge) interval -> must NOT re-fire
-	assert_eq(am._last_step_ms, t1, "footstep respects the cadence interval")
+	assert_false(
+		am.has_method("footstep_if_due"), "the fixed-cadence footstep hook must not come back"
+	)
 
 
-# T-503: the frostbolt CHARGE layer — a dedicated, looping cast-bar drone (not a pool one-shot).
 func test_frost_charge_layer_built_and_loops() -> void:
 	var am = _am()
 	assert_not_null(am.charge, "the frost-charge AudioStreamPlayer exists")

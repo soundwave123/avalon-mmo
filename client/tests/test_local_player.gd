@@ -114,6 +114,9 @@ func test_right_drag_still_turns_the_character() -> void:
 	var p = _player()
 	var yaw0: float = p.body_yaw()
 	p._unhandled_input(_mouse_button(MOUSE_BUTTON_RIGHT, true))
+	# T-736: the FIRST motion past the deadzone promotes press->look (and, like the left orbit's
+	# promotion event, swings nothing itself); subsequent motion turns the character as always.
+	p._unhandled_input(_mouse_motion(Vector2(120, 0)))
 	p._unhandled_input(_mouse_motion(Vector2(120, 0)))
 	assert_ne(p.body_yaw(), yaw0, "right-drag turns the character heading (unchanged from today)")
 	p._unhandled_input(_mouse_button(MOUSE_BUTTON_RIGHT, false))
@@ -137,20 +140,22 @@ func test_left_click_select_never_changes_the_mouse_mode() -> void:
 	assert_eq(p.cam_orbit_yaw(), 0.0, "sub-deadzone drift does not swing the camera either")
 
 
-# T-739 / T-077: mouse-look still captures on right-press — and the release now warps the cursor
-# back to the pre-capture position instead of leaving it at the screen centre Godot hands back.
+# T-739 / T-077 / T-736: mouse-look captures once right-drag clears the deadzone (T-736 moved the
+# capture off the press so a still right-CLICK can be the context-menu affordance) — and the
+# release warps the cursor back to the PRESS position, exactly the left-orbit anchor rule.
 func test_right_drag_capture_release_restores_the_pre_capture_cursor() -> void:
 	var p = _player()
 	var press := Vector2(640, 360)
 	p._unhandled_input(_mouse_button(MOUSE_BUTTON_RIGHT, true, press))
-	assert_true(p.mouse_capture().is_captured(), "right-press captures the cursor (T-077)")
+	assert_false(p.mouse_capture().is_captured(), "a still press captures nothing yet (T-736)")
+	p._unhandled_input(_mouse_motion(Vector2(120, 0)))  # past the deadzone -> look begins
+	assert_true(p.mouse_capture().is_captured(), "real drag travel captures the cursor (T-077)")
 	assert_eq(p.mouse_capture().anchor(), press, "the pre-capture position is saved")
-	p._unhandled_input(_mouse_motion(Vector2(120, 0)))
 	p._unhandled_input(_mouse_button(MOUSE_BUTTON_RIGHT, false, Vector2(9999, 9999)))
 	assert_false(p.mouse_capture().is_captured(), "right-release frees the cursor")
 	var ops: Array[Dictionary] = p.mouse_capture().ops
 	assert_eq(ops.size(), 2, "exactly one capture and one restore")
-	assert_eq(ops[0]["op"], MouseCapture.OP_CAPTURE, "captured on press")
+	assert_eq(ops[0]["op"], MouseCapture.OP_CAPTURE, "captured on promotion")
 	assert_eq(ops[1]["op"], MouseCapture.OP_RESTORE, "restored on release")
 	assert_eq(ops[1]["pos"], press, "the restore warp targets the SAVED pre-capture position")
 
@@ -384,3 +389,57 @@ func test_apply_gear_with_equal_dict_is_a_no_op_and_change_rebuilds() -> void:
 	p.apply_gear({"weapon": "itm_iron_axe"})
 	var rebuilt := skel.find_child("GearSlot_weapon", false, false)
 	assert_false(is_same(rebuilt, socket), "a REAL gear change still rebuilds the attachment")
+
+
+# ---- T-736: right-click vs mouse-look (the T-739 deadzone, mirrored onto RMB) ------------
+
+
+func _rmb(pressed: bool, pos: Vector2) -> InputEventMouseButton:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_RIGHT
+	ev.pressed = pressed
+	ev.position = pos
+	return ev
+
+
+func _rmb_motion(relative: Vector2) -> InputEventMouseMotion:
+	var ev := InputEventMouseMotion.new()
+	ev.relative = relative
+	return ev
+
+
+func test_still_right_click_emits_right_clicked_and_never_captures() -> void:
+	var p = _player()
+	watch_signals(p)
+	p._unhandled_input(_rmb(true, Vector2(100, 100)))
+	p._unhandled_input(_rmb_motion(Vector2(1, 1)))  # a click's inevitable pixel of drift
+	p._unhandled_input(_rmb(false, Vector2(101, 101)))
+	assert_signal_emitted(p, "right_clicked", "a still RMB release is a click")
+	assert_false(p._looking, "no mouse-look was entered")
+	assert_eq(p._mouse_capture.ops, [], "the cursor was never captured (T-739 rule)")
+
+
+func test_right_drag_past_deadzone_is_mouse_look_not_a_click() -> void:
+	var p = _player()
+	watch_signals(p)
+	var yaw_before: float = p.rotation.y
+	p._unhandled_input(_rmb(true, Vector2(100, 100)))
+	p._unhandled_input(_rmb_motion(Vector2(30, 0)))  # well past ORBIT_DEADZONE_PX
+	assert_true(p._looking, "real travel promotes the press to mouse-look")
+	p._unhandled_input(_rmb_motion(Vector2(30, 0)))
+	assert_ne(p.rotation.y, yaw_before, "mouse-look turns the character")
+	p._unhandled_input(_rmb(false, Vector2(160, 100)))
+	assert_signal_not_emitted(p, "right_clicked", "a look release is NOT a click")
+	assert_eq(p._mouse_capture.ops.size(), 2, "captured on promotion, released on release")
+	assert_eq(str(p._mouse_capture.ops[0].get("op", "")), "capture")
+	assert_eq(str(p._mouse_capture.ops[1].get("op", "")), "restore")
+
+
+func test_sub_deadzone_travel_swings_no_camera() -> void:
+	var p = _player()
+	var yaw_before: float = p.rotation.y
+	p._unhandled_input(_rmb(true, Vector2(100, 100)))
+	p._unhandled_input(_rmb_motion(Vector2(2, 0)))  # below the 4 px deadzone
+	assert_false(p._looking)
+	assert_eq(p.rotation.y, yaw_before, "no camera/body creep below the deadzone")
+	p._unhandled_input(_rmb(false, Vector2(102, 100)))

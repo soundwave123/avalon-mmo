@@ -120,6 +120,9 @@ func _handle_message(peer_id: int, ws: WebSocketPeer, raw: String) -> void:
 	match msg_type:
 		"login":
 			_process_login_request(peer_id, ws, msg)
+		# T-740: the second half of a one-time-password login, on the SAME socket.
+		"set_password":
+			_process_set_password(peer_id, ws, msg)
 		"refresh":
 			_process_refresh_request(peer_id, ws, msg)
 		# T-507: roster ops on the SAME socket after login (the login handler keeps it open).
@@ -151,11 +154,62 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 		print("[gateway] login_err outdated_build peer_id=%d (min=%s)" % [peer_id, _min_build])
 		return
 
-	if not Auth.validate_login(username, password):
+	var check: Dictionary = Auth.check_login(username, password)
+	if not bool(check.get("ok", false)):
 		_login_limiter.record_failure(source, now_ms)
 		_send_err_and_close(peer_id, ws, "invalid_credentials")
 		return
 
+	# T-740: a provisioned one-time password proves who you are but never opens a session. The
+	# socket stays OPEN for the set_password that follows, so choosing a password and getting into
+	# the world is one round trip with nothing re-typed. Not a credential failure — the player did
+	# everything right — so it costs nothing against the rate limiter.
+	if bool(check.get("password_is_otp", false)):
+		_send_text(
+			ws,
+			{"type": "password_change_required", "min_length": Auth.MIN_PASSWORD_LENGTH},
+		)
+		print("[gateway] password_change_required for %s (one-time password)" % username)
+		return
+
+	_issue_login_ok(peer_id, ws, username, bool(request.get("manage", false)))
+
+
+# T-740: spend the one-time password, install the player's own, and log them in — same socket,
+# same breath. Auth.set_password re-validates the OTP against the live row (a client flag is never
+# trusted), and a credential failure here spends the SAME login budget, so `set_password` cannot
+# be used as a second, unmetered door to guess an OTP.
+func _process_set_password(peer_id: int, ws: WebSocketPeer, request: Dictionary) -> void:
+	var username := str(request.get("username", ""))
+	var source := str(_peer_ips.get(peer_id, "unknown:%d" % peer_id))
+	var now_ms := Time.get_ticks_msec()
+
+	if not _login_limiter.can_attempt(source, now_ms):
+		_send_set_password_err(peer_id, ws, "rate_limited")
+		return
+
+	var result: Dictionary = Auth.set_password(
+		username, str(request.get("password", "")), str(request.get("new_password", ""))
+	)
+	if not bool(result.get("ok", false)):
+		var reason := str(result.get("reason", "invalid_credentials"))
+		if reason == "invalid_credentials":
+			_login_limiter.record_failure(source, now_ms)
+		_send_set_password_err(peer_id, ws, reason)
+		return
+
+	print("[gateway] password set for %s (one-time password consumed)" % username)
+	_issue_login_ok(peer_id, ws, username, bool(request.get("manage", false)))
+
+
+func _send_set_password_err(peer_id: int, ws: WebSocketPeer, reason: String) -> void:
+	_send_text(ws, {"type": "set_password_err", "reason": reason})
+	ws.close(1000, reason)
+	print("[gateway] set_password_err sent to peer_id=%d (%s)" % [peer_id, reason])
+
+
+# The login_ok payload, shared by a plain login and by the T-740 set_password that replaces one.
+func _issue_login_ok(peer_id: int, ws: WebSocketPeer, username: String, wants_manage: bool) -> void:
 	# T-007: Issue both access and refresh tokens
 	var tokens: Dictionary = Auth.issue_tokens(username)
 
@@ -169,7 +223,6 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 	# 0/1-character accounts keep today's drop-in: the master auto-resolves their character.
 	_peer_auth[peer_id] = username
 	var characters := CharacterRoster.list_characters(username)
-	var wants_manage := bool(request.get("manage", false))
 
 	var response := {
 		"type": "login_ok",

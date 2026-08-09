@@ -1,0 +1,53 @@
+{
+  "_doc": "T-431 server-authored roost graph, extended by T-596 to the continent flight web (phase 1). Coords are world planar [x,y]; PlayerSessions derives terrain z at landing. Connections are directed hops with copper cost; author both directions explicitly. Every P1 build zone (continent-plan.md §1) has >=1 node and the capital (Highkeep) is the hub. Costs are tuned MONOTONIC to the real inter-node planar distance (nodes sit at their zone's real region origin per regions.json), so a longer hop always costs more. flight_speed is the >=x3-run data value from continent-plan.md §3 (tuned here); the travel-time audit reads it as the flight budget. Era crossings (Wold->Ashmoor->Greyrise) are modeled as long sky-lane hops in P1 — the shipped highkeep->ashmoor precedent — and become rift capstones in P2 (continent-plan.md §0/§3).",
+  "flight_speed": 18.0,
+  "nodes": [
+    {
+      "id": "village",
+      "name": "Elmsvale Village",
+      "npc_id": "npc_village_flightmaster",
+      "coords": [-12.0, -8.0],
+      "region_id": "era1",
+      "connections": [{"dest": "highkeep", "cost": 25}]
+    },
+    {
+      "id": "highkeep",
+      "name": "Highkeep Roost",
+      "npc_id": "npc_hk_flightmaster",
+      "coords": [8.0, -118.0],
+      "region_id": "era1",
+      "connections": [
+        {"dest": "village", "cost": 25},
+        {"dest": "kargrim", "cost": 32},
+        {"dest": "ashmoor", "cost": 60}
+      ]
+    },
+    {
+      "id": "kargrim",
+      "name": "Kargrim Deep Gate",
+      "npc_id": "npc_kargrim_flightmaster",
+      "coords": [-160.0, -140.0],
+      "region_id": "era1",
+      "connections": [{"dest": "highkeep", "cost": 32}]
+    },
+    {
+      "id": "ashmoor",
+      "name": "Ashmoor Sky Dock",
+      "npc_id": "npc_ashmoor_flightmaster",
+      "coords": [-408.0, -4.0],
+      "region_id": "ashmoor",
+      "connections": [
+        {"dest": "highkeep", "cost": 60},
+        {"dest": "greyrise", "cost": 160}
+      ]
+    },
+    {
+      "id": "greyrise",
+      "name": "Greyrise Transit Station",
+      "npc_id": "npc_greyrise_flightmaster",
+      "coords": [0.0, -1290.0],
+      "region_id": "greyrise",
+      "connections": [{"dest": "ashmoor", "cost": 160}]
+    }
+  ]
+}

@@ -19,14 +19,19 @@ const _VALID_TOKEN2 := "0123456789abcdef0123456789abcdef"  # gitleaks:allow — 
 # be exercised without a live master. call_master is a plain func (await on a non-coroutine just
 # returns it).
 class _FakeMaster:
-	var state: String = ""  # the q_rift_vault_counted state this master reports
+	var state: String = ""  # the state reported for EVERY quest_id (the pre-T-684 single-key shape)
+	# T-684: per-quest states, so a character can hold ONE of the two capstones and not the other.
+	# Falls back to `state` for any quest_id not named here.
+	var states: Dictionary = {}
 	var calls: Array = []
 
 	func call_master(method: String, params: Dictionary) -> Dictionary:
 		calls.append([method, params])
+		var quest_id := str(params.get("quest_id", ""))
+		var reported: String = str(states.get(quest_id, state))
 		var entry: Dictionary = {}
-		if state != "":
-			entry = {"state": state}
+		if reported != "":
+			entry = {"state": reported}
 		return {"entry": entry}
 
 
@@ -120,10 +125,11 @@ func _rec_reply(peer: int, msg: Dictionary) -> void:
 	_replies.append([peer, msg])
 
 
-func _gated_svc(state: String) -> Object:
+func _gated_svc(state: String, states: Dictionary = {}) -> Object:
 	var svc = _svc()
 	var master := _FakeMaster.new()
 	master.state = state
+	master.states = states  # T-684: per-capstone states; {} keeps the old blanket behaviour
 	svc.setup_lfg({}, Callable(self, "_rec_reply"), master)
 	PlayerSessions._reset_for_test()
 	PlayerSessions.add_player(4242, _VALID_TOKEN, "rift_hero")
@@ -165,6 +171,40 @@ func test_enter_era_allows_a_returning_player_who_already_completed_the_quest() 
 	var svc = _gated_svc("complete")
 	await svc.enter_era(4242)
 	assert_eq(_move_calls, [[4242, _ISVC.ASHMOOR_ARRIVAL]], "a completed-quest player may re-cross")
+
+
+# --- T-684: the rift is a PARALLEL key — either capstone earns the crossing ---------------------
+
+
+# The bug this closes: a solo player who ran T-627's crypt-free spine to its terminal quest holds NO
+# crypt row at all, and the pre-T-684 gate queried only q_rift_vault_counted — so the quest that
+# *sends* them to Ashmoor sealed the only door its own text promises.
+func test_enter_era_allows_the_solo_spine_capstone_without_any_crypt_row() -> void:
+	var svc = _gated_svc("", {"q_wold_moor_road_ashmoor": "active"})
+	await svc.enter_era(4242)
+	assert_eq(
+		_move_calls,
+		[[4242, _ISVC.ASHMOOR_ARRIVAL]],
+		"the solo spine's own terminal quest is a passage grant"
+	)
+
+
+# Regression (T-684 DoD): the GROUP gate is not widened — the crypt capstone alone still crosses,
+# exactly as before, with no solo row present.
+func test_enter_era_still_allows_the_crypt_capstone_alone() -> void:
+	var svc = _gated_svc("", {"q_rift_vault_counted": "active"})
+	await svc.enter_era(4242)
+	assert_eq(_move_calls, [[4242, _ISVC.ASHMOOR_ARRIVAL]], "the crypt chain still earns its key")
+
+
+# ...and holding NEITHER capstone is still sealed — including the un-prereq'd L10 kingsroad variant,
+# which is deliberately NOT a key (a fresh L10 must not hold an era-2 pass; T-684 Work item 3).
+func test_enter_era_still_seals_a_player_holding_only_the_l10_kingsroad_variant() -> void:
+	_replies = []
+	var svc = _gated_svc("", {"q_wold_kingsroad_ashmoor": "complete"})
+	await svc.enter_era(4242)
+	assert_eq(_move_calls, [], "an un-prereq'd L10 quest is not a rift key")
+	assert_eq(str(_replies[0][1].get("type", "")), "rift_sealed")
 
 
 func test_ashmoor_is_the_far_west_offset_region_clear_of_the_crypt() -> void:

@@ -82,17 +82,114 @@ func test_make_mount_builds_from_the_drop_in_default_path() -> void:
 	assert_gt(mount.get_child_count(), 0, "the GLB model is instanced under the attach node")
 
 
-func test_seat_offset_rides_the_registry_not_code() -> void:
-	assert_eq(
-		MountVisuals.seat_offset("mount_common_gryphon"),
-		Vector3(0.0, 1.15, 0.0),
-		"the rider attach transform is registry data (asset re-fits are data edits)"
+# ---- T-728: the saddle seat is per-mount DATA resolved against the mount's own rig ----
+
+
+func test_seat_transform_differs_per_mount_seat_data() -> void:
+	# The T-728 contract: two mounts with different seat data must seat their rider differently.
+	# Same anchor for both, so any difference is the registry's (offset + fit scale), not the rig's.
+	var anchor := Vector3(0.0, 0.5, 0.0)
+	var gryphon := MountVisuals.seat_transform("mount_common_gryphon", anchor)
+	var drop_in := MountVisuals.seat_transform(STANDIN_MOUNT, anchor)
+	assert_ne(
+		gryphon.origin,
+		drop_in.origin,
+		"per-mount seat data (offset + fit scale) moves the rider — not one hardcoded vector"
+	)
+	# The gryphon rides scale 1.9, so its saddle sits materially higher than the identity-fit one.
+	assert_gt(gryphon.origin.y, drop_in.origin.y, "the taller mount seats its rider higher")
+
+
+func test_seat_transform_lands_the_riders_hips_on_the_saddle() -> void:
+	# The bug this ticket exists for: the rider's ROOT was put on the saddle, so it STOOD there.
+	# The seat points at the saddle surface and the root sinks by the seated clip's hip height.
+	var anchor := Vector3(0.0, 0.5754, 0.0)  # the gryphon's own "chest" rest origin
+	var t := MountVisuals.seat_transform("mount_common_gryphon", anchor)
+	var saddle_y := (0.5754 + 0.149) * 1.9  # (anchor + offset) * fit, in world metres
+	assert_almost_eq(
+		t.origin.y + MountVisuals.RIDER_HIP_HEIGHT,
+		saddle_y,
+		0.001,
+		"root + the seated clip's hip height == the saddle surface (hips seated, not feet)"
+	)
+	assert_lt(t.origin.y, saddle_y, "the rider's root sits BELOW the saddle — it is not standing")
+
+
+func test_every_shipped_mount_resolves_a_seat() -> void:
+	# "Works for all shipped mounts" — enumerated from the mount data, so a new registry row that
+	# forgets its seat fails here instead of shipping a surfing rider.
+	for id: String in MountVisuals.MOUNTS:
+		var seat: Dictionary = MountVisuals.seat_spec(id)
+		assert_true(
+			str(seat["anchor_bone"]) != "" or (seat["offset"] as Vector3) != Vector3.ZERO,
+			"shipped mount '%s' declares a seat (bone anchor and/or offset)" % id
+		)
+		var t := MountVisuals.seat_transform(id, Vector3(0.0, 0.5754, 0.0))
+		assert_gt(t.origin.y, 0.0, "shipped mount '%s' seats its rider above the ground" % id)
+
+
+func test_seat_anchor_is_read_off_the_real_mount_rig() -> void:
+	# The seat's anchor is the mount's OWN skeleton, not a number typed into the registry: the
+	# gryphon's barrel bone rests at model y 0.575 and the seat is measured from there.
+	var mount := MountVisuals.make_mount("mount_common_gryphon")
+	assert_not_null(mount, "the gryphon GLB has landed")
+	autofree(mount)
+	var model := mount.get_child(0)
+	assert_almost_eq(
+		MountVisuals.bone_rest_origin(model, "chest").y,
+		0.5754,
+		0.01,
+		"the rig's barrel bone anchors the saddle (model space, before the fit scale)"
 	)
 	assert_eq(
-		MountVisuals.seat_offset("mount_never_heard_of"),
+		MountVisuals.bone_rest_origin(model, "no_such_bone"),
 		Vector3.ZERO,
-		"an unregistered mount has no seat lift"
+		"a renamed/absent bone degrades to the model origin instead of throwing"
 	)
+
+
+func test_make_mount_stamps_the_resolved_seat_for_both_render_paths() -> void:
+	var mount := MountVisuals.make_mount("mount_common_gryphon")
+	autofree(mount)
+	var seat := MountVisuals.rider_seat(mount)
+	var expected := MountVisuals.seat_transform(
+		"mount_common_gryphon", MountVisuals.bone_rest_origin(mount.get_child(0), "chest")
+	)
+	assert_almost_eq(seat.origin.y, expected.origin.y, 0.0001, "the stamped seat is the rig's seat")
+	assert_gt(seat.origin.y, 0.0, "the gryphon seats its rider well above the player's feet")
+	assert_eq(
+		MountVisuals.rider_seat(null),
+		Transform3D.IDENTITY,
+		"no mount -> identity seat (the rider stays at its own origin)"
+	)
+
+
+func test_cosmetic_skins_share_the_base_mounts_fit_and_seat() -> void:
+	# One mesh, one animal: a paint job must not resize the beast or move its saddle (T-728 — the
+	# skins carried the default fit scale, which shrank a bought skin to half the base gryphon).
+	var base := MountVisuals.seat_transform("mount_common_gryphon", Vector3(0.0, 0.5754, 0.0))
+	for skin in ["skin_storm_gryphon", "skin_royal_gryphon"]:
+		assert_eq(
+			float(MountVisuals.spec_for(skin)["scale"]),
+			float(MountVisuals.spec_for("mount_common_gryphon")["scale"]),
+			"%s is the same mesh as the base gryphon, so it is the same size" % skin
+		)
+		assert_eq(
+			MountVisuals.seat_transform(skin, Vector3(0.0, 0.5754, 0.0)).origin,
+			base.origin,
+			"%s seats its rider exactly where the base gryphon does" % skin
+		)
+
+
+func test_legacy_vector3_seat_row_still_resolves() -> void:
+	# The T-573 registry shape was a bare Vector3. It normalizes to a bone-less model-space offset
+	# rather than silently seating the rider at the origin, so an unmigrated row keeps working.
+	var legacy: Dictionary = MountVisuals.normalize_seat(Vector3(0.0, 1.15, 0.0))
+	assert_eq(str(legacy["anchor_bone"]), "", "a bare Vector3 carries no rig anchor")
+	assert_eq(legacy["offset"], Vector3(0.0, 1.15, 0.0), "and reads as a model-space offset")
+	var seat: Dictionary = MountVisuals.seat_spec("mount_never_heard_of")
+	assert_eq(str(seat["anchor_bone"]), "chest", "the drop-in default still anchors to the rig")
+	assert_eq(seat["offset"], Vector3.ZERO, "and adds no offset of its own")
 
 
 # ---- local player: mount-state transition toggles the MountVisual (poll on change) ----
@@ -108,6 +205,14 @@ func test_local_mount_transition_spawns_then_dismount_hides() -> void:
 	p._physics_process(0.05)
 	var mount = p.get_node_or_null("MountVisual")
 	assert_not_null(mount, "the server-confirmed mount transition spawns the MountVisual child")
+	# T-728: the rider is snapped to the seat the mount's rig defines, not left at the origin.
+	var body := p.get_node_or_null("BodyVisual") as Node3D
+	assert_eq(
+		body.position,
+		MountVisuals.rider_seat(mount).origin,
+		"the rider snaps to the mount's resolved saddle seat"
+	)
+	assert_ne(body.position, Vector3.ZERO, "which is NOT the mount's origin (the T-728 bug)")
 	p._physics_process(0.05)
 	assert_eq(
 		p.get_node_or_null("MountVisual"),
@@ -121,6 +226,12 @@ func test_local_mount_transition_spawns_then_dismount_hides() -> void:
 		(p.get_node_or_null("BodyVisual") as Node3D).position,
 		Vector3.ZERO,
 		"the rider reseats at ZERO after dismount"
+	)
+	assert_almost_eq(
+		(p.get_node_or_null("BodyVisual") as Node3D).rotation.y,
+		0.0,
+		0.0001,
+		"T-728: dismount restores the on-foot facing too, not just the position"
 	)
 
 
@@ -206,6 +317,13 @@ func test_remote_mounted_body_holds_seated_idle_not_the_run_clip() -> void:
 	assert_true(
 		clip in EntityVisuals.STATE_CLIPS["mounted"],
 		"a mounted rider resolves the seated state (Ride_Seated when baked, idle family today)"
+	)
+	# T-728: the actual pose fix — the baked seated ride clip wins over the standing idle. This is
+	# also the oracle for the bake: if the importer renames the clip, this fails instead of quietly
+	# falling through to the idle family and shipping a rider standing on the mount again.
+	assert_true(
+		clip in ["Ride_Seated", "Driving", "Driving_Loop", "Sitting_Idle"],
+		"the rider plays the baked SEATED ride clip, not the standing idle (got '%s')" % clip
 	)
 	assert_false(
 		clip in ["run", "Jog_Fwd_Loop", "Jog_Fwd", "Sprint_Loop", "Sprint", "Running_A"],

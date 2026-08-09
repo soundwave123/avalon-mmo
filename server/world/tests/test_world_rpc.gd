@@ -377,6 +377,58 @@ func test_accept_bounty_at_board_ok() -> void:
 		await get_tree().process_frame
 
 
+# ---- T-689: an authored roost grant fires on ACCEPT (the sky-lane the text promises) ----
+
+
+# Portal Bug #101: the solo spine's terminal quest says "ride the western sky-lane to the Ashmoor
+# Sky Dock", but the Ashmoor roost was discoverable only by talking to the flightmaster who stands
+# AT that dock — so the promised route was a chicken-and-egg lie and the real path was a 420 m walk
+# across empty void. Accepting the quest now pre-seeds the roost through the ordinary discover verb.
+func _flight_discoveries() -> Array:
+	return _fm.calls.filter(
+		func(c):
+			return (
+				str(c["method"]) == "flight_op" and str(c["params"].get("action", "")) == "discover"
+			)
+	)
+
+
+func test_accepting_the_ashmoor_reach_quest_grants_the_ashmoor_roost() -> void:
+	_make()
+	PlayerSessions._reset_for_test()
+	PlayerSessions.add_player(10, TOKEN, "alice", Vector3(60.0, -30.0, 0.0))  # the Outpost Sentry
+	await _rpc.handle("accept_quest", 10, {"quest_id": "q_wold_moor_road_ashmoor"})
+	var accepts := _replied.filter(func(r): return r.get("type", "") == "accept_quest_result")
+	assert_true(bool(accepts[0]["ok"]), "the accept itself still succeeds")
+	var grants := _flight_discoveries()
+	assert_eq(grants.size(), 1, "accepting the quest grants exactly one roost")
+	assert_eq(
+		str(grants[0]["params"]["node"]),
+		"ashmoor",
+		"the NODE id from flight_nodes.json, never the npc_id"
+	)
+	assert_eq(str(grants[0]["params"]["username"]), "alice", "granted to the accepting character")
+	for _frame in 4:
+		await get_tree().process_frame
+
+
+# The grant is authored per-quest, not blanket: an ordinary quest grants no roost, and in particular
+# the un-prereq'd L10 variant aimed at the SAME dock (q_wold_kingsroad_ashmoor) is untouched — a
+# fresh L10 must not be handed a free era-2 flight (T-684 Work item 3 is still an open design call).
+func test_ordinary_and_l10_variant_accepts_grant_no_roost() -> void:
+	_make()
+	PlayerSessions._reset_for_test()
+	PlayerSessions.add_player(10, TOKEN, "alice", Vector3(4.8, 1.5, 0.0))  # Farmer Geld, q001
+	await _rpc.handle("accept_quest", 10, {"quest_id": "q001"})
+	assert_eq(_flight_discoveries(), [], "a quest that promises no route grants no roost")
+	PlayerSessions._reset_for_test()
+	PlayerSessions.add_player(10, TOKEN, "alice", Vector3(60.0, -30.0, 0.0))  # the Outpost Sentry
+	await _rpc.handle("accept_quest", 10, {"quest_id": "q_wold_kingsroad_ashmoor"})
+	assert_eq(_flight_discoveries(), [], "the L10 kingsroad variant is deliberately unchanged")
+	for _frame in 4:
+		await get_tree().process_frame
+
+
 # ---- T-565: reach objectives level-trigger at accept time (portal report #19 softlock) ----
 
 

@@ -48,6 +48,14 @@ func _process(delta: float) -> void:
 
 
 # --- stage 1: cast anticipation ---------------------------------------------------------------
+# T-732: how long one anticipation pass runs — the cadence VfxManager re-pulses this stage at while
+# a cast-time spell is channelling, so the creep/aura wind-up covers the WHOLE cast, not its first
+# 0.9 s. (Before T-732 the stage played once, at the press, and never again.)
+func antic_buildup_s() -> float:
+	var antic: Dictionary = _p.get("antic", {})
+	return maxf(0.2, float(antic.get("buildup", 0.9)))
+
+
 func begin_cast(pos: Vector3) -> void:
 	var antic: Dictionary = _p["antic"]
 	var kit: Dictionary = _antic[_ai]

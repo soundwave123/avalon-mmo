@@ -9,7 +9,13 @@ class_name TargetFrame
 
 extends Control
 
+# T-736: right-click RELEASE on the frame (without dragging off it) — the owner-specified
+# "right-click their name" seam; main-side wiring opens the party context menu for the
+# current selection. Press+release both land here (root is MOUSE_FILTER_STOP now).
+signal right_clicked(pos: Vector2)
+
 const _W := 260.0
+const _CLICK_SLOP_PX := 4.0  # mirrors LocalPlayer.ORBIT_DEADZONE_PX (T-739 click-vs-drag rule)
 const _H := 62.0
 const _LEFT := 292.0  # 20px margin + 256px vitals + 16px breathing room
 const _TOP := 20.0
@@ -32,6 +38,7 @@ var _level_label: Label = null
 var _hp_label: Label = null
 var _bar_bg: ColorRect = null
 var _bar_fill: ColorRect = null
+var _rmb_press: Vector2 = Vector2.INF  # T-736: RMB press anchor for the click-slop rule
 
 
 func _ready() -> void:
@@ -44,7 +51,10 @@ func _ready() -> void:
 	offset_right = _frame_left + _frame_width
 	offset_top = _frame_top
 	offset_bottom = _frame_top + _frame_height
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# T-736: STOP (was IGNORE) — the frame is only visible while a target is bound, and it now
+	# owns its own right-click affordance. Children stay IGNORE so gui_input lands on the root.
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	gui_input.connect(_on_gui_input)
 	# T-396/T-505 de-boxed idiom: text outline + bar carry legibility; only the shared subtle
 	# chat-gradient sits behind them, never a filled/bordered whole-frame Panel.
 	var backdrop := UiTheme.gradient_backdrop(0.26, true)
@@ -140,6 +150,18 @@ func fill_ratio() -> float:
 
 func fill_color() -> Color:
 	return _color
+
+
+# T-736: right-click release with at most click-slop travel emits right_clicked (screen pos).
+# Tracked locally: a drag that starts on the frame is neither a click nor a mouse-look.
+func _on_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed:
+			_rmb_press = event.global_position
+		elif _rmb_press != Vector2.INF:
+			if event.global_position.distance_to(_rmb_press) <= _CLICK_SLOP_PX:
+				right_clicked.emit(event.global_position)
+			_rmb_press = Vector2.INF
 
 
 func _render() -> void:

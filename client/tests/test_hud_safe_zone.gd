@@ -58,3 +58,26 @@ func test_intersects_helpers_agree_with_rect2_intersects() -> void:
 	assert_false(HudSafeZone.intersects_vitals(clear))
 	assert_false(HudSafeZone.intersects_action_bar(clear))
 	assert_false(HudSafeZone.intersects_compass(clear))
+
+
+# ---- T-738: the minimap corner reservation ----
+
+
+func test_minimap_rect_matches_the_live_minimap_panel() -> void:
+	var root := Control.new()
+	root.size = Vector2(1280, 720)
+	add_child_autofree(root)
+	var minimap = preload("res://scripts/ui/minimap_panel.gd").new()
+	root.add_child(minimap)
+	await get_tree().process_frame
+	assert_eq(HudSafeZone.MINIMAP_RECT, minimap.get_global_rect())
+
+
+func test_minimap_rect_clears_every_other_reserved_rect() -> void:
+	var mm := HudSafeZone.MINIMAP_RECT
+	assert_false(HudSafeZone.intersects_vitals(mm))
+	assert_false(HudSafeZone.intersects_action_bar(mm))
+	assert_false(HudSafeZone.intersects_compass(mm))
+	# And it sits inside the 1280x720 base frame.
+	assert_true(Rect2(0.0, 0.0, HudSafeZone.BASE_WIDTH, HudSafeZone.BASE_HEIGHT).encloses(mm))
+	assert_true(HudSafeZone.intersects_minimap(mm.grow(-2.0)))

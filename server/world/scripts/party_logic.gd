@@ -8,21 +8,48 @@
 extends RefCounted
 
 const MAX_PARTY := 5
+# T-736: invites expire and repeated declines back off (owner-directed anti-grief). All lazy —
+# `now_ms` is the CALLER's millisecond clock (duel_service idiom), so no timers and the module
+# stays pure/fake-clock testable. State is in-memory world state: a restart clears pendings AND
+# decline ledgers (accepted for v1 — a cooldown is grief-throttling, not a ban).
+const INVITE_TTL_MS := 45000  # an unanswered invite lapses; lapse is NOT a decline
+const DECLINE_LIMIT := 3  # declines from one inviter to one target before the cooldown arms
+const DECLINE_COOLDOWN_MS := 300000  # 5 min lockout; lapsing grants a fresh decline budget
 
 
 # A fresh store. party_id -> {leader:int, members:[int]}; party_of peer->party_id;
-# pending invitee_peer -> {party_id:int, from:int}; next_id monotonic.
+# pending invitee_peer -> {party_id:int, from:int, expires:int, key:String}; next_id monotonic.
+# declines "inviterName>inviteeName" -> {count:int, until:int} — USERNAME-keyed on purpose:
+# peer ids are session-scoped, so a peer-keyed cooldown would evaporate on a relog (T-736).
 static func new_store() -> Dictionary:
-	return {"parties": {}, "party_of": {}, "pending": {}, "next_id": 1}
+	return {"parties": {}, "party_of": {}, "pending": {}, "next_id": 1, "declines": {}}
 
 
 # inviter invites invitee (both peer_ids). Creates a party led by inviter if they have
 # none. Returns {ok, reason}. Sets a pending invite the invitee must accept.
-static func invite(store: Dictionary, inviter: int, invitee: int) -> Dictionary:
+# T-736: pair_key is the caller-resolved "inviterName>inviteeName" decline-ledger key.
+static func invite(
+	store: Dictionary, inviter: int, invitee: int, now_ms := 0, pair_key := ""
+) -> Dictionary:
 	if inviter == invitee:
 		return {"ok": false, "reason": "cannot_invite_self"}
 	if store["party_of"].has(invitee):
 		return {"ok": false, "reason": "target_in_party"}
+	var stale: Dictionary = store["pending"].get(invitee, {})
+	if not stale.is_empty() and now_ms > int(stale.get("expires", now_ms)):
+		store["pending"].erase(invitee)  # lapsed unanswered — slot freed, no decline counted
+	if store["pending"].has(invitee):
+		# One live invite per invitee: the modal can never stack, and a second suitor is
+		# refused instead of silently replacing the first (anti-spam, T-736).
+		return {"ok": false, "reason": "invite_pending"}
+	var ledger: Dictionary = store.get("declines", {})
+	var cd: Dictionary = ledger.get(pair_key, {})
+	if int(cd.get("count", 0)) >= DECLINE_LIMIT:
+		if now_ms < int(cd.get("until", 0)):
+			# Server-enforced and silent for the DECLINER (nothing is ever pushed to them);
+			# only the inviter learns via this refusal reason.
+			return {"ok": false, "reason": "invite_cooldown"}
+		ledger.erase(pair_key)  # cooldown lapsed — fresh budget
 	var pid: int = store["party_of"].get(inviter, -1)
 	if pid != -1:
 		var party: Dictionary = store["parties"][pid]
@@ -31,16 +58,21 @@ static func invite(store: Dictionary, inviter: int, invitee: int) -> Dictionary:
 			return {"ok": false, "reason": "not_leader"}
 		if party["members"].size() >= int(party.get("cap", MAX_PARTY)):
 			return {"ok": false, "reason": "party_full"}
-	store["pending"][invitee] = {"party_id": pid, "from": inviter}
+	store["pending"][invitee] = {
+		"party_id": pid, "from": inviter, "expires": now_ms + INVITE_TTL_MS, "key": pair_key
+	}
 	return {"ok": true, "reason": ""}
 
 
 # invitee accepts their pending invite. Lazily creates the party (with the inviter as
 # leader) on the first accept so a declined invite leaves no empty party behind.
-static func accept(store: Dictionary, invitee: int) -> Dictionary:
+static func accept(store: Dictionary, invitee: int, now_ms := 0) -> Dictionary:
 	var inv: Dictionary = store["pending"].get(invitee, {})
 	if inv.is_empty():
 		return {"ok": false, "reason": "no_invite"}
+	if now_ms > int(inv.get("expires", now_ms)):  # T-736: lapsed — the offer is gone
+		store["pending"].erase(invitee)
+		return {"ok": false, "reason": "invite_expired"}
 	store["pending"].erase(invitee)
 	if store["party_of"].has(invitee):
 		return {"ok": false, "reason": "already_in_party"}
@@ -77,8 +109,20 @@ static func _auto_subgroup(party: Dictionary) -> int:
 	return group_count - 1
 
 
-static func decline(store: Dictionary, invitee: int) -> Dictionary:
+# T-736 anti-grief: only a LIVE invite that is EXPLICITLY declined feeds the per-pair counter —
+# a lapsed offer or a stray /party decline with nothing pending bumps nothing. The counter is
+# read (and pruned) by invite() above; DECLINE_LIMIT arms the cooldown.
+static func decline(store: Dictionary, invitee: int, now_ms := 0) -> Dictionary:
+	var inv: Dictionary = store["pending"].get(invitee, {})
 	store["pending"].erase(invitee)
+	var key := str(inv.get("key", ""))
+	if inv.is_empty() or key == "" or now_ms > int(inv.get("expires", now_ms)):
+		return {"ok": true, "reason": ""}
+	var cd: Dictionary = store.get("declines", {}).get(key, {"count": 0, "until": 0})
+	cd["count"] = int(cd["count"]) + 1
+	if int(cd["count"]) >= DECLINE_LIMIT:
+		cd["until"] = now_ms + DECLINE_COOLDOWN_MS
+	store["declines"][key] = cd
 	return {"ok": true, "reason": ""}
 
 

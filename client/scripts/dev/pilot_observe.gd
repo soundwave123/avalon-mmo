@@ -53,6 +53,11 @@ static func build(raw: Dictionary, prev: Dictionary) -> Dictionary:
 		# T-721: the ability-press ledger (counts + recent events) — a combat QA agent can now SEE
 		# every press verdict (sent/blocked/result/rejected:<reason>) instead of inferring from logs.
 		"ability": raw.get("ability", {}) if raw.get("ability") is Dictionary else {},
+		# T-734: the synced day clock ({day_t, day_frozen}) — the two-client E2E's tolerance oracle.
+		"world": raw.get("world", {}) if raw.get("world") is Dictionary else {},
+		# T-730/T-738: {world_map:{open,zone,marker_kinds,marker_names}, minimap:{visible,rotate,
+		# zoom,counts}} — visual QA asserts marker presence here, never from a screenshot (T-559).
+		"map": raw.get("map", {}) if raw.get("map") is Dictionary else {},
 	}
 
 
@@ -139,9 +144,39 @@ static func gather(main: Node, prev: Dictionary) -> Dictionary:
 			"recent_log": _live_log(main),
 			"ui_panel": _live_ui_panel(main),
 			"ability": _live_ability(main),
+			"world": _live_world(main),
+			"map": _live_map(main),
 		},
 		prev
 	)
+
+
+# T-730/T-738: both map surfaces expose observe() (mounted panels, so they live under HUD by name
+# rather than as main fields — the pilot.gd _dump_state mounted-panel idiom).
+static func _live_map(main: Node) -> Dictionary:
+	var out := {}
+	var hud = main.get_node_or_null("HUD")
+	if hud == null:
+		return out
+	var world_map = hud.get_node_or_null("WorldMapPanel")
+	if world_map != null and world_map.has_method("observe"):
+		out["world_map"] = world_map.observe()
+	var minimap = hud.get_node_or_null("MinimapPanel")
+	if minimap != null and minimap.has_method("observe"):
+		out["minimap"] = minimap.observe()
+	return out
+
+
+# T-734: the synced world day clock — the E2E oracle for "both clients share one time of day"
+# (and a QA read: day_frozen shows whether AVALON_FREEZE_DAY is pinning this client).
+static func _live_world(main: Node) -> Dictionary:
+	var wv = main.get("world_view")
+	if wv == null:
+		return {}
+	return {
+		"day_t": snappedf(float(wv.get("_day_t")), 0.0001),
+		"day_frozen": bool(wv.get("_day_frozen")),
+	}
 
 
 # T-721: the AbilityCastQueue ledger — whole-session press/verdict counters + recent events.

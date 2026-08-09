@@ -24,6 +24,7 @@ const DiscoveryStore := preload("res://scripts/discovery_store.gd")  # T-427: fi
 const MentorCreditStore := preload("res://scripts/mentor_credit_store.gd")  # T-481 prestige
 const WeeklyVaultStore := preload("res://scripts/weekly_vault_store.gd")  # T-480 weekly vault
 const OpsStore := preload("res://scripts/ops_store.gd")  # T-511 audited GM actions + account bans
+const WorldStateStore := preload("res://scripts/world_state_store.gd")  # T-734 world-global KV
 const FirstSessionFunnel := preload("res://scripts/first_session_funnel.gd")  # T-528 onramp funnel
 const RiftSeason := preload("res://scripts/rift_season.gd")  # T-393/T-394 rift ladder + seasons
 const AccountMastery := preload("res://scripts/account_mastery.gd")  # T-395 permanent mastery
@@ -84,19 +85,19 @@ func _ready() -> void:
 		)
 		get_tree().quit(1)
 		return
-	var err: int = _server.listen(ServerConfig.RPC_LISTEN_PORT, bind_addr)
+	var err: int = _server.listen(ServerConfig.listen_port(), bind_addr)
 	if err != OK:
 		print(
 			(
 				"[master] FATAL: failed to listen on port %d (error %d)"
-				% [ServerConfig.RPC_LISTEN_PORT, err]
+				% [ServerConfig.listen_port(), err]
 			)
 		)
 		get_tree().quit(1)
 		return
 
 	_running = true
-	print("[master] listening on ws://%s:%d" % [bind_addr, ServerConfig.RPC_LISTEN_PORT])
+	print("[master] listening on ws://%s:%d" % [bind_addr, ServerConfig.listen_port()])
 
 
 # T-378: the boot-guard predicate — pure + static so tests exercise the refuse path without a
@@ -208,6 +209,9 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = OpsStore.apply(params)
 		"ops_tail":
 			result = OpsStore.tail(params)
+		# T-734: world-global scalar checkpoints (day/night clock) — world owns live, master persists.
+		"world_state_op":
+			result = WorldStateStore.handle(params)
 		# T-528: read-only first-session funnel rollup over the T-186 log (GM console section).
 		"first_session_funnel":
 			result = FirstSessionFunnel.rollup(params)
@@ -725,13 +729,6 @@ func _achievement_op(params: Dictionary) -> Dictionary:
 	return AchievementStore.list(int(character.get("id", -1)))
 
 
-# T-367: fold any newly-earned achievements into a credit result so the world can toast the earner.
-func _merge_achievements(result: Dictionary, observed: Dictionary) -> void:
-	var earned: Array = observed.get("newly_earned", [])
-	if not earned.is_empty():
-		result["achievements"] = (result.get("achievements", []) as Array) + earned
-
-
 # T-427: no client dispatch reaches this method; world supplies an authored node after authoritative
 # movement. DiscoveryStore revalidates the definition and owns the atomic persisted reward gate.
 func _discover(username: String, node: Dictionary) -> Dictionary:
@@ -770,7 +767,7 @@ func _credit_reach(username: String, target: String, quest_defs: Dictionary) -> 
 		return {"credited": []}
 	var cid := int(character.get("id", -1))
 	var result: Dictionary = CharacterManager.credit_reach(cid, target, quest_defs)
-	_merge_achievements(result, AchievementStore.observe(cid, "reach", target))  # T-367: exploration
+	AchievementStore.merge_into(result, AchievementStore.observe(cid, "reach", target))  # T-367
 	return result
 
 
@@ -818,7 +815,7 @@ func _turn_in(
 		# T-058: provided quest items are quest-bound — they leave when the quest completes.
 		CharacterManager.remove_provided_items(character_id, quest)
 		var qid := str(quest.get("id", ""))  # T-367 achievements + T-536 mastery: server-observed
-		_merge_achievements(result, AchievementStore.observe(character_id, "quest", qid))
+		AchievementStore.merge_into(result, AchievementStore.observe(character_id, "quest", qid))
 		# T-679: roster-total quests, credited to the actor's current guild (no-op if guildless).
 		KillCreditOps.credit_guild(result, character_id, "guild_quest", qid)
 		AccountMastery.observe(username, character_id, "quest_complete", 1)
@@ -826,7 +823,7 @@ func _turn_in(
 		TutorialOps.note_quest_completion(username, qid)  # T-426 funnel + T-550 account graduation
 		var new_level := int(result.get("leveling", {}).get("level", 0))
 		if new_level > 0:
-			_merge_achievements(
+			AchievementStore.merge_into(
 				result, AchievementStore.observe(character_id, "level", "*", new_level)
 			)
 		var daily := DailyAppointmentStore.complete_quest(

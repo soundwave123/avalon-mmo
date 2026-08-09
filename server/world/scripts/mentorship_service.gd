@@ -153,18 +153,29 @@ func handle_party(msg_type: String, peer: int, player: Dictionary, data: Diction
 			if target == -1:
 				result = {"ok": false, "reason": "player_not_found"}
 			else:
-				result = _PL.invite(_party_store, peer, target)
+				# T-736: username pair key — the decline cooldown must survive a relog (peer ids
+				# are session-scoped); expiry/cooldowns ride the injected monotonic clock.
+				var pair := "%s>%s" % [str(player.get("username", "")), str(data.get("target", ""))]
+				result = _PL.invite(_party_store, peer, target, Time.get_ticks_msec(), pair)
 				if result.get("ok", false):
-					_reply.call(
-						target, {"type": "party_invite", "from": str(player.get("username", ""))}
+					(
+						_reply
+						. call(
+							target,
+							{
+								"type": "party_invite",
+								"from": str(player.get("username", "")),
+								"ttl_ms": _PL.INVITE_TTL_MS,  # T-736: drives the modal countdown
+							}
+						)
 					)
 		"party_accept":
-			result = _PL.accept(_party_store, peer)
+			result = _PL.accept(_party_store, peer, Time.get_ticks_msec())
 			if result.get("ok", false):
 				var joined := _members_of(int(result.get("party_id", -1)))
 				_notify_members(joined)
 		"party_decline":
-			result = _PL.decline(_party_store, peer)
+			result = _PL.decline(_party_store, peer, Time.get_ticks_msec())
 		"party_leave":
 			var affected := _members_of(int(_party_store["party_of"].get(peer, -1)))
 			result = _PL.leave(_party_store, peer)

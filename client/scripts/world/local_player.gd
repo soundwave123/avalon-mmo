@@ -10,6 +10,10 @@ extends CharacterBody3D
 # y-up with the ground on (x, z). So server (sx, sy, sz) -> Godot (sx, sz, sy), and a Godot ground
 # move (gx, gz) is sent as the server (x, y) delta.
 
+# T-736: a right-click RELEASE that never travelled past the deadzone (i.e. NOT a mouse-look) —
+# main-side wiring ray-picks the position for the party-invite context menu.
+signal right_clicked(pos: Vector2)
+
 const MovementPredictor = preload("res://scripts/world/movement_predictor.gd")
 const AnimStateMachine = preload("res://scripts/world/anim_state_machine.gd")  # T-123
 const PlayerCamera = preload("res://scripts/world/player_camera.gd")  # T-126: camera-feel math
@@ -67,6 +71,9 @@ var _typing_check: Callable = Callable()
 var _gameplay_input_check: Callable = Callable()
 
 var _looking: bool = false  # T-077: RIGHT-drag held — turns the CHARACTER (body yaw)
+var _look_armed: bool = false  # T-736: right button down but not yet past the deadzone
+var _rmb_press_pos: Vector2 = Vector2.ZERO  # T-736/T-739: RMB press anchor (own accumulator —
+var _rmb_drag_px: float = 0.0  # the LEFT orbit owns _press_pos/_drag_px; both can be held)
 var _orbiting: bool = false  # T-321: LEFT-drag held + moved — orbits the CAMERA only (body kept)
 var _orbit_armed: bool = false  # T-321: left button down but not yet dragged (a pending click)
 # T-739: every cursor capture/restore goes through this (see mouse_capture.gd for why).
@@ -93,6 +100,8 @@ var _gear_applied: bool = true
 # T-697 fix 8: cached /root/Main/AudioManager — the footstep hook resolved the string path every
 # physics tick.
 var _audio_manager: Node = null
+var _main: Node = null  # T-737: cached /root/Main (for the T-187 interior gate -> wood footfalls)
+var _cadence := FootstepCadence.new()  # T-737: distance-keyed footfall scheduler
 var _anim: Dictionary = AnimStateMachine.new_state()  # T-123: locomotion + action state
 # T-573: last APPLIED mount state (poll-on-change, not per-frame rebuild) — _tick_mount compares
 # the T-572 server-confirmed cache against this and only spawns/frees the MountVisual on a real
@@ -304,13 +313,28 @@ func _unhandled_input(event: InputEvent) -> void:
 			# set_mouse_mode(VISIBLE) here fired on EVERY left release — including target clicks.
 			_mouse_capture.release()
 		return
+	# T-736: the right button now mirrors the T-739 left-button deadzone — capture is DEFERRED
+	# until real travel, so a still press/release is a CLICK (context-menu affordance on the
+	# hovered entity) and only a real drag becomes mouse-look. Below the deadzone nothing swings
+	# and the cursor is never touched (exactly the left-orbit promotion rule).
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
-		_looking = event.pressed
 		if event.pressed:
-			_cam_orbit_yaw = 0.0  # WoW: right-drag re-centres the camera behind the character
-			_mouse_capture.capture(event.position)  # T-739: anchor the restore at the press
+			_look_armed = true
+			_rmb_press_pos = event.position  # capture anchor if this press becomes a look
+			_rmb_drag_px = 0.0
 		else:
-			_mouse_capture.release()  # T-739: cursor returns to where mouse-look began (T-077)
+			if _looking:
+				_mouse_capture.release()  # T-739: cursor returns to where mouse-look began
+			elif _look_armed and not _is_gameplay_input_disabled():
+				right_clicked.emit(event.position)  # T-736: a still RMB release is a click
+			_look_armed = false
+			_looking = false
+	elif event is InputEventMouseMotion and _look_armed and not _looking:
+		_rmb_drag_px += event.relative.length()
+		if _rmb_drag_px >= ORBIT_DEADZONE_PX:
+			_looking = true
+			_cam_orbit_yaw = 0.0  # WoW: right-drag re-centres the camera behind the character
+			_mouse_capture.capture(_rmb_press_pos)  # T-739: anchor the restore at the PRESS
 	elif event is InputEventMouseMotion and _looking:
 		var sens := MOUSE_SENSITIVITY * sensitivity_mult  # T-078: user sensitivity
 		_yaw -= event.relative.x * sens
@@ -423,13 +447,28 @@ func _physics_process(delta: float) -> void:
 	_tick_anim(speed)
 	# T-698: coalesce — sum this frame's ACTUAL displacement; _flush_move_intent sends at 20 Hz.
 	_move_send_accum += Vector2(actual.x, actual.z)  # Godot ground (x, z) -> server (x, y)
-	if not _airborne:  # T-111: footstep cadence while walking on the ground
-		# T-697 fix 8: resolve the AudioManager once and reuse it (the absolute-path get_node walk
-		# ran every moving physics tick); revalidated in case the manager is ever rebuilt.
-		if _audio_manager == null or not is_instance_valid(_audio_manager):
-			_audio_manager = get_node_or_null("/root/Main/AudioManager")
-		if _audio_manager != null:
-			_audio_manager.footstep_if_due()
+	_tick_footsteps(delta, speed)
+
+
+# T-737: your own footfalls. Keyed to DISTANCE travelled off the same measured-displacement speed
+# that drives the animation above — so a wall-blocked push stays silent, and slowing down thins
+# the footfalls out smoothly instead of stepping between two fixed rates. Replaces the T-111
+# `footstep_if_due(340ms)` hook, which fired one sample at one rate at one volume forever.
+func _tick_footsteps(delta: float, speed: float) -> void:
+	# T-697 fix 8: resolve the AudioManager once and reuse it (the absolute-path get_node walk
+	# ran every moving physics tick); revalidated in case the manager is ever rebuilt.
+	if _audio_manager == null or not is_instance_valid(_audio_manager):
+		_audio_manager = get_node_or_null("/root/Main/AudioManager")
+	if _audio_manager == null:
+		return
+	if _main == null or not is_instance_valid(_main):
+		_main = get_node_or_null("/root/Main")
+	# T-187's interior tracker doubles as the wood-floor cue: indoors overrides the terrain paint.
+	var gate = _main.get("interior_gate") if _main != null else null
+	var indoors: bool = gate != null and bool(gate.is_indoors())
+	var surface := TerrainSurface.surface_at(global_position.x, global_position.z, indoors)
+	var events := _cadence.tick(delta, speed, _mounted_shown, surface, _airborne)
+	LocomotionAudio.play_own_steps(_audio_manager, events)
 
 
 # T-698: the request_move coalescer — accumulate per-frame displacement, send at MOVE_SEND_HZ.
@@ -579,7 +618,10 @@ func _apply_mount_visual() -> void:
 		old.queue_free()
 	var body := get_node_or_null("BodyVisual") as Node3D
 	if body != null:
+		# T-728: dismounting restores the on-foot stance — origin AND facing, or a seat with a yaw
+		# correction would leave the rider walking around permanently turned in its saddle.
 		body.position = Vector3.ZERO
+		body.rotation.y = 0.0
 	if not _mounted_shown:
 		return
 	var mount := MountVisuals.make_mount(_mount_id_shown)
@@ -587,7 +629,10 @@ func _apply_mount_visual() -> void:
 		return  # asset not landed yet — no visual, no seat lift, no error spam (T-573 contract)
 	add_child(mount)
 	if body != null:
-		body.position = MountVisuals.seat_offset(_mount_id_shown)
+		# T-728: snap the rider into the saddle the mount's OWN rig defines, not the model origin.
+		var seat := MountVisuals.rider_seat(mount)
+		body.position = seat.origin
+		body.rotation.y = seat.basis.get_euler().y
 
 
 # T-306/T-124/T-123: recompute locomotion from real speed + airborne, then push the resolved

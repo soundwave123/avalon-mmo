@@ -24,6 +24,7 @@ const _ROWS: Array = [
 	{"action": "Quest log", "keys": [KEY_L]},
 	{"action": "Character", "keys": [KEY_C]},
 	{"action": "Talents", "keys": [KEY_N]},
+	{"action": "World map", "keys": [KEY_T]},
 	{"action": "Wardrobe", "keys": [KEY_V]},
 	{"action": "Cosmetics store", "keys": [KEY_H]},
 	{"action": "Menu / cancel", "keys": [KEY_ESCAPE]},

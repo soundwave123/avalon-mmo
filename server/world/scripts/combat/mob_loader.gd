@@ -41,25 +41,38 @@ static func load_spawn_table_filtered(dir_path: String, regions, allowed: Array)
 		if mob_file == "" or base_id < 1000 or positions.is_empty():
 			printerr("[mob_loader] skipping malformed spawn entry: %s" % str(entry))
 			continue
-		# T-411: rare/VR spawn tuning is authored on the ENTRY (fail-open — an entry that omits
-		# these fields loads exactly as before: always-present, global respawn dwell).
-		var spawn_chance: float = clampf(float(entry.get("spawn_chance", 1.0)), 0.0, 1.0)
-		var respawn_ticks: int = maxi(1, int(entry.get("respawn_ticks", _SC.MOB_RESPAWN_TICKS)))
 		for i in range(positions.size()):
 			var pos: Array = positions[i]
 			# T-594: keep the entity_id stable per position slot even when a region is filtered out,
 			# so residency never renumbers a mob (kill-credit aliases + threat keys stay valid).
 			if filtering and not allowed.has(regions.region_index(float(pos[0]), float(pos[1]))):
 				continue
-			var mob = load_from_file(dir_path.path_join(mob_file), base_id + i)
+			var mob = load_seeded(dir_path.path_join(mob_file), base_id + i, entry)
 			if mob == null:
 				continue
 			mob.position = Vector3(float(pos[0]), float(pos[1]), 0.0)
 			mob.spawn_position = mob.position
-			mob.spawn_chance = spawn_chance
-			mob.respawn_ticks = respawn_ticks
 			mobs[mob.entity_id] = mob
 	return mobs
+
+
+# T-725: load a mob AND apply the spawn-entry tuning in one call — the single door every spawn
+# source (open-world spawns.json, instance_service._seed) goes through, so entry-authored dwell
+# means the same thing everywhere instead of being re-read per call site.
+static func load_seeded(path: String, entity_id: int, entry: Dictionary):
+	var mob = load_from_file(path, entity_id)
+	if mob != null:
+		apply_spawn_tuning(mob, entry)
+	return mob
+
+
+# T-411: rare/VR spawn tuning is authored on the ENTRY (fail-open — an entry that omits these
+# fields loads exactly as before: always-present, at the global respawn dwell). T-725: instanced
+# spawn sets read the SAME two keys, which is how the Shallow Graves buys its long trash dwell
+# without a kind-switch in code and without touching its bosses (they simply omit the key).
+static func apply_spawn_tuning(mob, entry: Dictionary) -> void:
+	mob.spawn_chance = clampf(float(entry.get("spawn_chance", 1.0)), 0.0, 1.0)
+	mob.respawn_ticks = maxi(1, int(entry.get("respawn_ticks", _SC.MOB_RESPAWN_TICKS)))
 
 
 # T-594: the distinct terrain-region indices (into `regions`) that hold at least one spawn — the set

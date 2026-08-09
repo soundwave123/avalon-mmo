@@ -409,6 +409,7 @@ func _accept_quest(peer_id: int, player: Dictionary, data: Dictionary) -> void:
 	# T-565: level-trigger — credit any reach objective the player is ALREADY standing inside at
 	# accept time (reach_service.credit_on_activate; see it for the softlock this closes).
 	_reach.credit_on_activate(peer_id, username, player.get("pos", Vector3.ZERO))
+	await _flight.grant_for_quest(username, quest)  # T-689: authored roost grant, on ACCEPT
 
 
 func _turn_in(peer_id: int, player: Dictionary, data: Dictionary) -> void:

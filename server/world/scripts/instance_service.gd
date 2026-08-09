@@ -48,6 +48,11 @@ const CRYPT_EXIT := Vector3(12.0, -10.5, 0.0)  # churchyard surface, clear of th
 # surface (the fiction is one-way; a real return waypoint is deferred to the systems milestone).
 const ASHMOOR_ARRIVAL := Vector3(-420.0, -5.0, 0.0)
 const RIFT_RETURN := Vector3(420.0, -41.5, 0.0)
+# T-684 (owner decision 2026-07-22): the rift is EARNED, but by EITHER capstone — a PARALLEL key,
+# not the crypt's private one, so T-627's crypt-free solo spine earns its own crossing (the quest
+# that SENDS you to the Sky Dock is itself the grant). Neither door widens. Deliberately absent:
+# q_wold_kingsroad_ashmoor (L10, no prereq) — see T-684 Work item 3, an open owner call.
+const RIFT_CAPSTONES := ["q_rift_vault_counted", "q_wold_moor_road_ashmoor"]
 # T-369: the ERA-2 respawn / graveyard point. A death in the Ashmoor offset region must respawn IN
 # Ashmoor (the era-2 graveyard, the pauper's field SW of the arrival plaza), NEVER at the era-1
 # world origin (Vector3.ZERO) or the crypt vestibule — that would strand a dead era-2 player 840 m
@@ -254,8 +259,9 @@ func handle(msg_type: String, peer_id: int, data: Dictionary) -> void:
 # quest whose OWN prerequisite is the Era-1 capstone (q_crypt_restless_dead complete), so touching
 # the monolith only crosses if Osric has sent you. The T-347 TODO said no completion query existed;
 # it was there all along — master's `quest_entry` returns the persisted {state}, so we query it
-# honestly. Dev/QA backdoor: AVALON_RIFT_UNGATED=1 bypasses the gate. Unit tests inject no master
-# (_master == null) → ungated, preserving test_rift_era's pure-move contract.
+# honestly (T-684 added the solo capstone as a SECOND key — see RIFT_CAPSTONES). Dev/QA backdoor:
+# AVALON_RIFT_UNGATED=1 bypasses it; unit tests inject no master (null) → ungated, preserving
+# test_rift_era's pure-move contract.
 func enter_era(peer_id: int) -> void:
 	# T-369 case 2 — DEATH DURING THE CROSSING. The teleport is atomic w.r.t. combat state: reject the
 	# cross while DEAD (checked BEFORE the master round-trip so a corpse never even queries the gate).
@@ -309,20 +315,20 @@ func enter_era(peer_id: int) -> void:
 	print("[rift] peer %d crossed to Ashmoor (open region, instance 0)" % peer_id)
 
 
-# T-352: the rift eligibility predicate. UNGATED (true) when no master is wired (unit tests) or the
-# QA backdoor env is set; otherwise the crossing requires q_rift_vault_counted to be active OR
-# complete for this peer's character (Osric's arrival quest — its own prereq is the Era-1 capstone).
+# T-352/T-684: ungated with no master (unit tests) or the QA backdoor; else ANY capstone, as above.
 func _rift_eligible(peer_id: int) -> bool:
 	if _master == null or OS.get_environment("AVALON_RIFT_UNGATED") == "1":
 		return true
 	var username: String = str(_PS.get_player(peer_id).get("username", ""))
 	if username == "":
 		return false
-	var resp: Dictionary = await _master.call_master(
-		"quest_entry", {"username": username, "quest_id": "q_rift_vault_counted"}
-	)
-	var state: String = str((resp.get("entry", {}) as Dictionary).get("state", ""))
-	return state == "active" or state == "complete"
+	for quest_id: String in RIFT_CAPSTONES:
+		var resp: Dictionary = await _master.call_master(
+			"quest_entry", {"username": username, "quest_id": quest_id}
+		)
+		if str((resp.get("entry", {}) as Dictionary).get("state", "")) in ["active", "complete"]:
+			return true
+	return false
 
 
 # Dev-only return (the fiction is one-way). Pure session move back to the crypt Vault surface; the
@@ -830,7 +836,7 @@ func _free_if_torn_down(r: Dictionary) -> void:
 # the instance_id and a collision-free entity_id. Returns the seeded entity_ids (for teardown).
 # T-393: hp/dmg multipliers scale a Rift Trial's seed the same way T-294 bakes elite multipliers
 # into the derived resources — downstream damage/AI math needs zero tier-awareness. Defaults (1.0)
-# keep the crypt/Vault seed byte-for-byte.
+# keep the crypt/Vault seed byte-for-byte. T-725: load_seeded applies each ENTRY's respawn tuning.
 func _seed(
 	iid: int, spawn_file: String = _SPAWN_FILE, hp_mult: float = 1.0, dmg_mult: float = 1.0
 ) -> Array:
@@ -849,7 +855,7 @@ func _seed(
 		var mob_file: String = str(entry.get("mob_file", ""))
 		for pos in entry.get("positions", []):
 			var eid: int = _EID_BASE + iid * 1000 + idx
-			var mob = _ML.load_from_file(_MOB_DIR.path_join(mob_file), eid)
+			var mob = _ML.load_seeded(_MOB_DIR.path_join(mob_file), eid, entry)
 			if mob == null:
 				continue
 			mob.instance_id = iid

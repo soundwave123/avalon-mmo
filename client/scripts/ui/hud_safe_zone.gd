@@ -34,6 +34,11 @@ const ACTION_BAR_RECT := Rect2(379.0, 580.0, 522.0, 52.0)
 # CompassStrip (compass_strip.gd: offset_left/right -70/70 off centre, offset_top/bottom 10/52).
 const COMPASS_RECT := Rect2(570.0, 10.0, 140.0, 42.0)
 
+# T-738 MinimapPanel: top-right corner (minimap_panel.gd: right-anchored, offset_left/right
+# -170/-20, offset_top/bottom 10/160 -> 1110..1260 x 10..160 at the 1280x720 base). Reserved so
+# future panels never clip the always-on minimap the way the T-608/T-634 offenders clipped vitals.
+const MINIMAP_RECT := Rect2(1110.0, 10.0, 150.0, 150.0)
+
 # The minimum `offset_top` a bottom-anchored (anchor_bottom=1), left-fixed panel needs so its top
 # edge clears VITALS_RECT's bottom edge (117) with a small margin. Shared by quest_log_panel.gd /
 # character_sheet_panel.gd / talent_panel.gd (T-640 shipped this value first as its own local
@@ -57,3 +62,7 @@ static func intersects_action_bar(rect: Rect2) -> bool:
 
 static func intersects_compass(rect: Rect2) -> bool:
 	return rect.intersects(COMPASS_RECT)
+
+
+static func intersects_minimap(rect: Rect2) -> bool:
+	return rect.intersects(MINIMAP_RECT)

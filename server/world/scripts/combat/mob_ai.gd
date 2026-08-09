@@ -110,6 +110,20 @@ static func _tick_idle(mob, players: Dictionary, threat_table = null, rng = null
 		var top_pos: Vector3 = players[top_id].get("position", Vector3.ZERO)
 		if mob.spawn_position.distance_to(top_pos) <= mob.leash_radius:
 			return _aggro_result(mob, top_id)
+		# T-726: the attacker holding threat stands OUTSIDE the leash circle, so this mob can never
+		# legally engage them — the branch above just refused to. Standing there absorbing free hits
+		# is the door-pull cheese the Shallow Graves repro measured: TRIAL_ENTRANCE is 15.16 m from
+		# Pallbearer Ost's spawn, past his 12 m leash, while every caster nuke reaches 25-30 units,
+		# so a lone mage took him from 333 to 229 HP in 45 s while he sat at ai_state IDLE with
+		# target_id -1 and never reset. The engaged states (_tick_aggroed/_tick_melee/_tick_ranged)
+		# already answer an out-of-leash target with _enter_evading; IDLE was the one state that
+		# didn't, so damage taken there was the only damage in the game that could never be undone.
+		# Reuse the SAME transition: full restore now, threat cleared when it reaches home a tick
+		# later (it is already standing on its spawn, so the reset is effectively immediate).
+		# Guarded on damage actually taken, so an untouched idle mob with stale distant threat never
+		# churns evade events — and a full-HP mob has nothing to reset anyway.
+		if mob.resources.hp < mob.resources.max_hp:
+			return _enter_evading(mob)
 
 	# T-564: retaliate-only — this mob never proximity-aggros (report #18: the tutorial sparring
 	# effigy was auto-meleeing an idle new player walking up to the quest giver, before the trainee

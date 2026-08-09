@@ -172,3 +172,40 @@ func test_player_and_target_frames_form_deboxed_top_left_cluster() -> void:
 	)
 	for child in hud.target_frame.get_children():
 		assert_false(child is Panel, "target frame has no filled whole-surface panel")
+
+
+# ---- T-736: the frame's right-click affordance -------------------------------------------
+
+
+func _tf_rmb(pressed: bool, global_pos: Vector2) -> InputEventMouseButton:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_RIGHT
+	ev.pressed = pressed
+	ev.global_position = global_pos
+	return ev
+
+
+func test_frame_root_stops_mouse_for_its_own_right_click() -> void:
+	var f: TargetFrame = TargetFrame.new()
+	add_child_autofree(f)  # _ready applies the filter + connects gui_input
+	assert_eq(f.mouse_filter, Control.MOUSE_FILTER_STOP, "root owns clicks now (T-736)")
+
+
+func test_right_click_release_on_frame_emits_with_screen_pos() -> void:
+	var f: TargetFrame = TargetFrame.new()
+	add_child_autofree(f)
+	watch_signals(f)
+	f._on_gui_input(_tf_rmb(true, Vector2(300, 40)))
+	f._on_gui_input(_tf_rmb(false, Vector2(302, 41)))  # within click slop
+	assert_signal_emitted(f, "right_clicked")
+
+
+func test_right_drag_off_the_frame_is_not_a_click() -> void:
+	var f: TargetFrame = TargetFrame.new()
+	add_child_autofree(f)
+	watch_signals(f)
+	f._on_gui_input(_tf_rmb(true, Vector2(300, 40)))
+	f._on_gui_input(_tf_rmb(false, Vector2(340, 60)))  # dragged well past the slop
+	assert_signal_not_emitted(f, "right_clicked", "a drag is neither click nor look")
+	f._on_gui_input(_tf_rmb(false, Vector2(340, 60)))  # stray release with no press: no-op
+	assert_signal_not_emitted(f, "right_clicked")

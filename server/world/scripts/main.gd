@@ -37,6 +37,7 @@ const _TI = preload("res://scripts/combat/training_interrupt.gd")  # T-426: inte
 const _CFETCH = preload("res://scripts/combat_fetch.gd")  # T-426: combat fetch (cap carve)
 const _QAPROBE = preload("res://scripts/qa_sentinel_probe.gd")  # T-561: runtime anomaly sentinel
 const _SZ = preload("res://scripts/sleeping_zones.gd")  # T-594: empty-zone mob-tick gate + snapshot
+const _WCLOCK = preload("res://scripts/world_clock.gd")  # T-734: server-authoritative day clock
 const _WR = preload("res://scripts/world_regions.gd")  # T-594: region table for the sleeping gate
 
 const HANDSHAKE_TIMEOUT_SEC := 10.0
@@ -90,6 +91,7 @@ var _recap = preload("res://scripts/performance_recap_service.gd").new()
 var _fall = preload("res://scripts/fall_damage.gd").new()  # T-586: descent-run fall damage
 var _pvp_ok := Callable()  # T-381: player→player consent predicate (bound in _ready)
 var _ops = null  # T-511: loopback-only GM channel; constructed only when the world enters the tree
+var _world_clock = _WCLOCK.new()  # T-734: owns day_t + resync pushes + master checkpoints
 
 
 func _ready() -> void:
@@ -152,6 +154,8 @@ func _ready() -> void:
 		_party_store
 	)
 	_recap.setup(_send_to_peer, ServerConfig.TICK_RATE_HZ, _events.combat, _telemetry.record)
+	_world_clock.setup(_master_client, Callable(self, "_send_to_peer"))  # T-734: shared day clock
+	add_child(_world_clock)
 	# T-586: fall landings damage through the SAME stores/event/death paths as any other hit.
 	_fall.wire(_combat_resources, _connected_players, _events.combat, _check_death_player, _tel)
 
@@ -333,26 +337,9 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	_release_local_peer_state(peer_id)  # T-181: shared with the duplicate-login kick
 
 
-# T-181: idempotent per-peer teardown (disconnect + dup-login kick); clears combat/threat caches.
+# T-181: idempotent per-peer teardown — body carved to peer_lifecycle for T-734 headroom.
 func _release_local_peer_state(peer_id: int) -> void:
-	_connected_players.erase(peer_id)
-	_equipped.erase(peer_id)
-	_titles.erase(peer_id)  # T-401
-	_instance_svc.on_peer_gone(peer_id)  # T-331: drop instance membership + free spawns if last out
-	_social_svc.forget(peer_id)  # T-361/T-363: chat window + ignore cache; cancels a live trade
-	_mount_svc.forget(peer_id)
-	_mentor_svc.peer_gone(peer_id)  # T-280/T-452: leave party + restore surviving mentors
-	_handshake_timers.erase(peer_id)
-	for c in [_combat_states, _combat_resources, _char_stats, _char_class, _talent_ability_mods]:
-		c.erase(peer_id)  # combat/class/talent caches (T-020/T-063/T-064)
-	_fall.erase(peer_id)  # T-586: drop any open descent run with the session
-	_char_gender.erase(peer_id)  # T-597: persisted-gender cache
-	_move_limiter.forget(peer_id)  # T-074
-	_intent_limiter.forget(peer_id)  # T-382
-	if _telemetry != null:
-		_telemetry.forget_peer(peer_id)  # T-705: once-per-session markers die with the session
-	# T-051: a disconnected player must not keep mob aggro or be credited a kill via threat.
-	_threat_table.remove_attacker_everywhere(peer_id)
+	_PEERS.release_local_state(self, peer_id)
 
 
 @rpc("any_peer", "reliable")  # called when a client sends a message via ENet
@@ -510,6 +497,7 @@ func _on_session_handshake(peer_id: int, data: Dictionary) -> void:
 	_mount_svc.seed(peer_id, combat.get("mount_profile", {}))
 
 	var hs := {"type": "handshake_ok", "username": username, "daily": result.get("daily", {})}
+	hs["day_t"] = _world_clock.day_t()  # T-734: join snapshot — the client snaps once, here only
 	hs["account_onboarding"] = combat.get("account_onboarding", {})  # T-550: alt tutorial-skip + hints
 	_send_to_peer(peer_id, hs)
 	_ops.on_login(peer_id)

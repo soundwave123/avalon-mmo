@@ -47,3 +47,12 @@ const AUCTION_LISTING_FEE_BPS := 200  # + this many basis points (2%) of min_bid
 const VAULT_TIER_BASE_SLOTS := 12  # tier 0 capacity (matches VaultLogic.VAULT_SLOTS)
 const VAULT_TIER_SLOTS_PER := 6  # additional vault slots granted per purchased tier
 const VAULT_TIER_COSTS := [500, 1500, 4000]  # to reach tier 1, 2, 3 (data-tunable)
+
+
+# T-736 (T-745 isolation rule): a harness master must be able to bind OFF the live :9100 —
+# AVALON_MASTER_PORT overrides the listen port (the same env the world already reads to find
+# its master). Default unchanged; the DB side is already env-tunable (pg_query.sh reads
+# PG_HOST/PG_PORT with the subprocess driver).
+static func listen_port() -> int:
+	var env := OS.get_environment("AVALON_MASTER_PORT")
+	return int(env) if env != "" else RPC_LISTEN_PORT

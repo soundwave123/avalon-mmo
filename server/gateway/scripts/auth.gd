@@ -21,6 +21,10 @@ const USERNAME_PATTERN := "^[a-z0-9_-]{3,20}$"
 const AUTH_MODE_ACCOUNTS := "accounts"
 const AUTH_MODE_DEV := "dev"
 
+# T-740: the only rule on a player-chosen password. Friends-and-family playtest — length is the
+# one constraint that buys real strength; complexity rules just push people to Passw0rd!.
+const MIN_PASSWORD_LENGTH := 8
+
 static var _auth_mode: String = AUTH_MODE_ACCOUNTS
 static var _test_accounts_enabled: bool = false
 static var _test_accounts: Dictionary = {}
@@ -135,29 +139,98 @@ static func valid_username(username: String) -> bool:
 
 static func validate_login(username: String, password: String) -> bool:
 	"""Validate dev credentials or an owner-provisioned active account. Always fail closed."""
+	return bool(check_login(username, password).get("ok", false))
+
+
+static func check_login(username: String, password: String) -> Dictionary:
+	"""
+	T-740: one credential check, two answers — are these credentials good, and is this still the
+	one-time password we handed out? Both come from the SAME account row, so a caller can never
+	act on a stale or client-supplied notion of "this account still owes us a password change".
+	Returns {"ok": bool, "password_is_otp": bool}. Always fails closed.
+	"""
+	var denied := {"ok": false, "password_is_otp": false}
 	if not valid_username(username):
-		return false
+		return denied
 	if _auth_mode == AUTH_MODE_DEV:
-		return password == "dev"
+		return {"ok": password == "dev", "password_is_otp": false}
 	var account := _lookup_account(username)
 	if account.is_empty() or str(account.get("username", "")) != username:
-		return false
+		return denied
 	if not _db_bool(account.get("is_active", false)):
+		return denied
+	if not PasswordHash.verify(password, str(account.get("password_hash", ""))):
+		return denied
+	return {"ok": true, "password_is_otp": _db_bool(account.get("password_is_otp", false))}
+
+
+static func set_password(
+	username: String, one_time_password: String, new_password: String
+) -> Dictionary:
+	"""
+	T-740: spend the one-time password and install the player's own.
+
+	The OTP is re-validated here against the live row — the gateway never trusts a client that
+	says "you told me to change this". The UPDATE is guarded on password_is_otp still being true,
+	so a replayed OTP (two clients, or a captured frame) finds nothing left to change and the
+	second attempt fails as invalid credentials.
+
+	Returns {"ok": true, "reason": ""} or {"ok": false, "reason": String}.
+	"""
+	var check := check_login(username, one_time_password)
+	if not bool(check.get("ok", false)):
+		return _password_error("invalid_credentials")
+	if not bool(check.get("password_is_otp", false)):
+		return _password_error("not_required")
+	if new_password.length() < MIN_PASSWORD_LENGTH:
+		return _password_error("password_too_short")
+	if new_password == one_time_password:
+		return _password_error("password_unchanged")
+	var encoded := PasswordHash.encode(new_password, PasswordHash.generate_salt())
+	if encoded.is_empty():
+		return _password_error("hash_failed")
+	if not _store_password(username, encoded):
+		return _password_error("update_failed")
+	return {"ok": true, "reason": ""}
+
+
+static func _password_error(reason: String) -> Dictionary:
+	return {"ok": false, "reason": reason}
+
+
+static func _store_password(username: String, password_hash: String) -> bool:
+	"""Write the new hash and clear the OTP flag in ONE guarded statement (see set_password)."""
+	if _test_accounts_enabled:
+		if not _test_accounts.has(username):
+			return false
+		var account: Dictionary = _test_accounts[username]
+		if not _db_bool(account.get("password_is_otp", false)):
+			return false
+		account["password_hash"] = password_hash
+		account["password_is_otp"] = false
+		_test_accounts[username] = account
+		return true
+	var db := _open_database()
+	if db == null:
 		return false
-	return PasswordHash.verify(password, str(account.get("password_hash", "")))
+	var sql := (
+		"UPDATE auth.accounts SET password_hash = $2, password_is_otp = false "
+		+ "WHERE username = $1 AND password_is_otp = true RETURNING username"
+	)
+	var err: int = db.execute_query(sql, [username, password_hash])
+	var rows: Variant = db.query_result() if err == OK else null
+	db.close_db()
+	return err == OK and rows != null and not rows.is_empty()
 
 
 static func _lookup_account(username: String) -> Dictionary:
 	if _test_accounts_enabled:
 		return (_test_accounts.get(username, {}) as Dictionary).duplicate()
-	var Database := load("res://addons/database/database.gd")
-	if Database == null:
-		return {}
-	var db: Object = Database.new()
-	if db.open_db("") != OK:
+	var db := _open_database()
+	if db == null:
 		return {}
 	var sql := (
-		"SELECT username, password_hash, is_active FROM auth.accounts "
+		"SELECT username, password_hash, is_active, password_is_otp FROM auth.accounts "
 		+ "WHERE username = $1 LIMIT 1"
 	)
 	if db.execute_query(sql, [username]) != OK:
@@ -168,6 +241,17 @@ static func _lookup_account(username: String) -> Dictionary:
 	if rows == null or rows.is_empty():
 		return {}
 	return (rows[0] as Dictionary).duplicate()
+
+
+static func _open_database() -> Object:
+	"""The single load site for the database addon. Returns null when it cannot be opened."""
+	var Database := load("res://addons/database/database.gd")
+	if Database == null:
+		return null
+	var db: Object = Database.new()
+	if db.open_db("") != OK:
+		return null
+	return db
 
 
 static func _db_bool(value: Variant) -> bool:
@@ -356,10 +440,18 @@ static func set_test_auth_mode(mode: String) -> void:
 	_auth_mode = AUTH_MODE_DEV if mode == AUTH_MODE_DEV else AUTH_MODE_ACCOUNTS
 
 
-static func set_test_account(username: String, password_hash: String, is_active: bool) -> void:
+static func set_test_account(
+	username: String, password_hash: String, is_active: bool, password_is_otp: bool = false
+) -> void:
 	_test_accounts_enabled = true
 	_test_accounts[username] = {
 		"username": username,
 		"password_hash": password_hash,
 		"is_active": is_active,
+		"password_is_otp": password_is_otp,
 	}
+
+
+static func test_account_row(username: String) -> Dictionary:
+	"""T-740: read back the stored row so a test can prove the flag/hash actually changed."""
+	return (_test_accounts.get(username, {}) as Dictionary).duplicate()

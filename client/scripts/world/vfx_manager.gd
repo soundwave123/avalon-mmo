@@ -23,6 +23,11 @@ const FROST_ABILITY_ID := 204
 # T-350: the "satisfying shot" flash/tracer colours (see the gun pools built in _build_gun).
 const GUN_FLASH := Color(1.0, 0.82, 0.45)
 const GUN_TRACER := Color(1.0, 0.95, 0.7)
+# T-732: the channel re-pulse cadence for the house cast style — just under the hand-glow's own
+# 0.6 s light life / 0.7 s mote life, so a multi-second cast glows CONTINUOUSLY instead of flashing
+# once at the start. A lance-styled ability uses its own anticipation buildup (see start_channel).
+const CHANNEL_PULSE_S := 0.5
+const CHANNEL_FADE_S := 0.18  # the hand-glow fades out on stop rather than snapping to black
 
 # T-351: the §11 per-era ABILITY re-skin — region -> era preset set (the T-343 preset system IS the
 # vehicle; NO new VFX modules). Era 1 keeps the SHIPPED Ice Lance (13); inside the Ashmoor district
@@ -64,6 +69,15 @@ var _proj_speed := 20.0  # flight speed of the active projectile look (house com
 var _cast_light: OmniLight3D = null
 var _cast_light_energy := 0.0
 var _cast_light_life := 0.6
+var _cast_light_tw: Tween = null  # T-732: a channel re-pulses the light — never stack tweens on it
+
+# T-732: CHANNEL state — the sustained wind-up while a cast-time spell is being cast (see
+# start_channel). Not a new VFX module: the active cast style is re-pulsed on its own cadence.
+var _channel_on := false
+var _channel_ability := -1
+var _channel_pos := Vector3.ZERO
+var _channel_t := 0.0
+var _channel_period := CHANNEL_PULSE_S
 
 # T-350: the "satisfying shot" pools (ashmoor-direction §7). Preset-independent (a gunshot is not a
 # spell), so built ONCE in _ready and never touched by apply_preset. Muzzle flash burst + a short
@@ -116,6 +130,7 @@ func _build_house() -> void:
 
 # T-343: rebuild every pool from another preset (used by the gallery harness to record variants).
 func apply_preset(index: int) -> void:
+	stop_channel()  # T-732: never leave a channel pulsing into pools that are about to be freed
 	for p in _cast + _impact + _heal:
 		p.queue_free()
 	for pr in _proj:
@@ -127,6 +142,7 @@ func apply_preset(index: int) -> void:
 		_frost_lance.queue_free()
 		_frost_lance = null
 	if _cast_light != null:
+		_kill_cast_light_tween()
 		_cast_light.queue_free()
 		_cast_light = null
 	_cast.clear()
@@ -257,7 +273,56 @@ func set_era(era: int) -> void:
 		_frost_lance.setup(VfxPresets.resolve(_frost_preset()))
 
 
+# T-732: the CHANNEL — the sustained wind-up a cast-time spell shows WHILE it is being cast (the
+# "hands glow / charge-up" half of the ticket), started off the server's cast_started and stopped on
+# its completion/cancellation by CastFx. It is NOT a new VFX module: it re-pulses the ACTIVE cast
+# style — the house hand-glow (motes + its OmniLight), or a lance-styled ability's own anticipation
+# aura/vapor/creep — on that style's own cadence, so a 3 s cast glows for 3 s. The caster can't move
+# during a cast (T-426: movement interrupts it), so the position is fixed at the start; no per-frame
+# follow, and nothing to unwind if the client drops the terminal event (any later result clears it).
+func start_channel(pos: Vector3, ability_id := -1) -> void:
+	_channel_on = true
+	_channel_ability = ability_id
+	_channel_pos = pos
+	var lance := _lance_for(ability_id)
+	_channel_period = lance.antic_buildup_s() if lance != null else CHANNEL_PULSE_S
+	_channel_t = _channel_period
+	set_process(true)
+	_pulse_channel()
+
+
+func stop_channel() -> void:
+	if not _channel_on:
+		return
+	_channel_on = false
+	_channel_ability = -1
+	if _cast_light != null:  # fade the hand-glow out rather than snapping it to black
+		_kill_cast_light_tween()
+		_cast_light_tw = create_tween()
+		_cast_light_tw.tween_property(_cast_light, "light_energy", 0.0, CHANNEL_FADE_S)
+	set_process(_spinning)
+
+
+func is_channeling() -> bool:
+	return _channel_on
+
+
+func _pulse_channel() -> void:
+	spawn_cast(_channel_pos, _channel_ability)
+
+
+func _kill_cast_light_tween() -> void:
+	if _cast_light_tw != null and _cast_light_tw.is_valid():
+		_cast_light_tw.kill()
+	_cast_light_tw = null
+
+
 func _process(_delta: float) -> void:
+	if _channel_on:  # T-732: re-pulse the wind-up style for as long as the cast runs
+		_channel_t -= _delta
+		if _channel_t <= 0.0:
+			_channel_t = _channel_period
+			_pulse_channel()
 	if not _spinning:
 		return
 	for p in _proj:
@@ -379,8 +444,9 @@ func spawn_cast(pos: Vector3, ability_id := -1) -> void:
 	if _cast_light != null:  # house hand-glow windup: a brief warm pulse at the hand
 		_cast_light.global_position = at
 		_cast_light.light_energy = _cast_light_energy
-		var tw := create_tween()
-		tw.tween_property(_cast_light, "light_energy", 0.0, _cast_light_life)
+		_kill_cast_light_tween()  # T-732: a channel re-pulses this light every period
+		_cast_light_tw = create_tween()
+		_cast_light_tw.tween_property(_cast_light, "light_energy", 0.0, _cast_light_life)
 
 
 func spawn_impact(pos: Vector3) -> void:

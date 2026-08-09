@@ -48,8 +48,26 @@ func setup(master, reply: Callable, path: String = "res://data/travel/flight_nod
 
 # Talking is the discovery event. npc_id is already known+proximity-gated by WorldRpc._talk.
 func discover(_peer_id: int, username: String, npc_id: String) -> void:
-	var node := str(_npc_nodes.get(npc_id, ""))
-	if node == "" or username == "":
+	await grant_node(username, str(_npc_nodes.get(npc_id, "")))
+
+
+# T-689: the AUTHORED grant — the same master verb talking to a flightmaster fires, addressed by
+# NODE id (flight_nodes.json `id`) instead of npc_id, and NOT proximity-gated (only WorldRpc._talk
+# is). Quest accepts use it to pre-seed the roost a quest sends the player to (`grants_flight_node`)
+# so "ride the sky-lane west" is a legal route rather than a chicken-and-egg lie. Unknown node ids
+# are authoring bugs, so they warn and no-op rather than reaching master.
+func grant_for_quest(username: String, quest) -> void:
+	# Object.get + null-check tolerates the duck-typed quest fixtures older tests inject (a missing
+	# property reads back as null), so the accept path stays a single unconditional line.
+	var node = quest.get("grants_flight_node") if quest != null else null
+	await grant_node(username, "" if node == null else str(node))
+
+
+func grant_node(username: String, node: String) -> void:
+	if username == "" or node == "":
+		return
+	if not _nodes.has(node):
+		push_warning("[flight] grant_node: unknown roost %s" % node)
 		return
 	await _master.call_master(
 		"flight_op", {"username": username, "action": "discover", "node": node}

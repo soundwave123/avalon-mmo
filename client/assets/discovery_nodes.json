@@ -1,0 +1,108 @@
+{
+  "_comment": "T-427 server-authoritative exploration nodes. level gates gray XP; rewards are paid once per character. Coordinates are server world (x,y).",
+  "nodes": [
+    {
+      "id": "hamlet_churchyard",
+      "name": "The Hamlet Churchyard",
+      "zone": "era_1_hamlet",
+      "x": 14.0,
+      "y": -12.5,
+      "radius": 4.0,
+      "level": 2,
+      "xp": 30,
+      "lore": "Old stones remember every bell, even when the village does not."
+    },
+    {
+      "id": "hamlet_old_well",
+      "name": "The Fevered Well",
+      "zone": "era_1_hamlet",
+      "x": 42.0,
+      "y": -13.0,
+      "radius": 3.0,
+      "level": 4,
+      "xp": 40,
+      "coins": 10,
+      "lore": "Black roots lace the stones beneath the old road."
+    },
+    {
+      "id": "ashmoor_arrival_plaza",
+      "name": "Ashmoor Arrival Plaza",
+      "zone": "ashmoor",
+      "x": -420.0,
+      "y": -7.0,
+      "radius": 3.0,
+      "level": 20,
+      "xp": 150,
+      "lore": "The rift closes behind you; soot and gaslight stretch ahead."
+    },
+    {
+      "id": "ashmoor_high_street",
+      "name": "Ashmoor High Street",
+      "zone": "ashmoor",
+      "x": -420.0,
+      "y": 0.0,
+      "radius": 3.5,
+      "level": 21,
+      "xp": 175,
+      "lore": "Every lit window keeps its own account of the street."
+    },
+    {
+      "id": "ashmoor_constabulary",
+      "name": "The Ashmoor Constabulary",
+      "zone": "ashmoor",
+      "x": -412.75,
+      "y": 4.0,
+      "radius": 3.0,
+      "level": 22,
+      "xp": 200,
+      "coins": 25,
+      "lore": "The law here wears soot on its cuffs and keeps two ledgers."
+    },
+    {
+      "id": "hw_farmland_shrine",
+      "name": "The Vale Wayshrine",
+      "zone": "heartwold",
+      "x": 501.6,
+      "y": 245.5,
+      "radius": 4.0,
+      "level": 5,
+      "xp": 45,
+      "lore": "A field-edge shrine the reapers still leave bread on."
+    },
+    {
+      "id": "hw_diggings_mouth",
+      "name": "The Sealed Gallery",
+      "zone": "heartwold",
+      "x": -121.8,
+      "y": 58.6,
+      "radius": 4.0,
+      "level": 7,
+      "xp": 55,
+      "lore": "The kobolds broke into something older than the mine.",
+      "coins": 15
+    },
+    {
+      "id": "hw_darkwood_stones",
+      "name": "The Thornwood Stones",
+      "zone": "heartwold",
+      "x": -85.0,
+      "y": 228.3,
+      "radius": 4.0,
+      "level": 9,
+      "xp": 65,
+      "lore": "Nine stones, and the wood grows wrong between them."
+    },
+    {
+      "id": "hw_moor_barrow",
+      "name": "The Weeping Barrow",
+      "zone": "heartwold",
+      "x": -189.7,
+      "y": -464.2,
+      "radius": 4.5,
+      "level": 15,
+      "xp": 110,
+      "lore": "Wind off the moor carries a name no register holds.",
+      "coins": 30
+    }
+  ]
+}

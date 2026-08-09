@@ -21,6 +21,7 @@ const _QK := [
 	"location_hint",  # T-293: display copy — where to hunt the target
 	"recommended_players",  # T-293: suggested group size
 	"retired",  # T-707: kept loadable for mid-quest characters, but never offered/accepted again
+	"grants_flight_node",  # T-689: roost id pre-seeded on accept so the route the text promises works
 ]
 const _RARITIES := ["junk", "common", "uncommon", "rare", "epic", "legendary"]  # T-230
 const _IK := [
@@ -390,6 +391,7 @@ static func _quest(data: Dictionary):
 	quest.location_hint = str(data.get("location_hint", ""))  # T-293
 	quest.recommended_players = int(data.get("recommended_players", 1))  # T-293
 	quest.retired = bool(data.get("retired", false))  # T-707
+	quest.grants_flight_node = str(data.get("grants_flight_node", ""))  # T-689
 	return quest
 
 

@@ -22,4 +22,10 @@ var recommended_players: int = 1
 # T-707: a retired quest stays loadable (mid-quest characters can finish/abandon/turn in) but is
 # never offered and never accepts again — the content-side soft delete.
 var retired: bool = false
+# T-689: a flight-node id (travel/flight_nodes.json `id`, NOT an npc_id) pre-seeded on ACCEPT. The
+# genre convention is "a roost is earned by visiting its flightmaster", with one deliberate
+# exception: the roost a quest SENDS you to is granted by the quest, or the route it promises is a
+# chicken-and-egg lie ("fly to the place you must already have walked to"). Empty on every quest
+# that promises no route.
+var grants_flight_node: String = ""
 var _source_keys: Array = []

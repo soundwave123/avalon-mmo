@@ -15,9 +15,16 @@ const _ED = preload("res://scripts/event_dispatch.gd")
 const _PL = preload("res://scripts/party_logic.gd")
 const PlayerSessions = preload("res://scripts/player_sessions.gd")
 
+const _SRESP = preload("res://scripts/spawn_respawn.gd")
+
 const _MOBS_DIR := "res://data/mobs"
 const _TRASH_ID := "mob_grave_husk"
 const _BOSS_IDS := ["mob_pallbearer_ost", "mob_sexton_marrow"]
+
+# T-725 (owner-decided 2026-08-09): the trial's trash dwell, in server ticks. 6000 / 20 Hz = 300 s.
+const TRIAL_DWELL_TICKS := 6000
+# mob_loader._RARE_CYCLE_CAP — the worst-case dormant cycles a variable-ratio source can draw.
+const RARE_CYCLE_CAP := 12
 
 # The modeled squishiest fresh L2 (mage/priest): stamina 11 -> stat_converter 50 + 11*5 = 105 HP,
 # and a deliberately pessimistic sustained 10 damage/second with the starter weapon plus Kessa's
@@ -351,3 +358,87 @@ func test_the_run_carries_a_fresh_graduate_past_level_four() -> void:
 	for f in ["grave_husk.json", "grave_husk.json", "pallbearer_ost.json", "sexton_marrow.json"]:
 		earned += _def(f).xp
 	assert_gt(earned, L4_TOTAL_XP, "%d XP clears the level-4 bar (%d)" % [earned, L4_TOTAL_XP])
+
+
+# ---- T-725: the trash dwell is a LONG one, and it is the trial's own data that says so ----
+
+
+func test_the_trial_trash_dwells_five_minutes_before_it_comes_back() -> void:
+	# The measured 30 s dwell is open-world density tuning; in a teaching space it re-aggros a slow
+	# first-timer from behind while they read quest text. The owner's call: ~5 minutes.
+	var svc = _service({1: 2})
+	svc.enter(1)
+	var pack: Array = _seeded_of(_TRASH_ID)
+	assert_eq(pack.size(), 2, "both husks seeded")
+	for husk in pack:
+		assert_eq(
+			int(husk.respawn_ticks),
+			TRIAL_DWELL_TICKS,
+			"%s waits the authored long dwell, not the global default" % husk.mob_id
+		)
+	assert_eq(
+		float(TRIAL_DWELL_TICKS) / float(_SC.TICK_RATE_HZ), 300.0, "which is 300 s at the tick rate"
+	)
+	assert_eq(TRIAL_DWELL_TICKS, _SC.MOB_RESPAWN_TICKS * 10, "ten times the open-world dwell")
+
+
+func test_the_long_dwell_never_reaches_the_bosses() -> void:
+	# Boss lifecycle is ENCOUNTER-scoped (retaliate_only, one pull, its own loot schedule). This
+	# ticket tunes trash pacing only, so the boss entries omit the key and keep the default —
+	# proof that the override is per-ENTRY data, not an instance-wide or instance-kind switch.
+	var svc = _service({1: 2})
+	svc.enter(1)
+	for boss_id in _BOSS_IDS:
+		var boss = _seeded_of(boss_id)[0]
+		assert_eq(
+			int(boss.respawn_ticks),
+			_SC.MOB_RESPAWN_TICKS,
+			"%s keeps the default dwell — its lifecycle is untouched" % boss_id
+		)
+		assert_eq(float(boss.spawn_chance), 1.0, "%s is not a variable-ratio source" % boss_id)
+
+
+func test_the_open_world_keeps_its_own_dwells() -> void:
+	# The same loader feeds both worlds: instanced tuning must not leak into spawns.json, and the
+	# T-411 dwells already authored out there must survive the shared-tuning refactor.
+	var world: Dictionary = _ML.load_spawn_table(_MOBS_DIR)
+	assert_gt(world.size(), 0, "the open-world table loads")
+	var defaults := 0
+	for eid in world:
+		assert_ne(
+			int(world[eid].respawn_ticks),
+			TRIAL_DWELL_TICKS,
+			"no open-world spawn picked up the trial's dwell"
+		)
+		if int(world[eid].respawn_ticks) == _SC.MOB_RESPAWN_TICKS:
+			defaults += 1
+	assert_gt(defaults, 0, "the un-authored majority still inherits the global default")
+	assert_eq(int(world[1101].respawn_ticks), 300, "the authored wolf dwell survives")
+	assert_eq(int(world[2051].respawn_ticks), 2400, "so does the Ashmoor rare's")
+	assert_almost_eq(float(world[2051].spawn_chance), 0.2, 0.001, "and its rare spawn_chance")
+
+
+func test_the_long_dwell_still_folds_the_variable_ratio_roll() -> void:
+	# T-414 semantics are unchanged by the longer base: an always-present source returns exactly
+	# its dwell, and a rare one stays gone for a whole number of THOSE dwells, bounded by the cap.
+	var svc = _service({1: 2})
+	svc.enter(1)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 725
+	var husk = _seeded_of(_TRASH_ID)[0]
+	assert_eq(
+		_ML.next_respawn_ticks(husk, rng),
+		TRIAL_DWELL_TICKS,
+		"spawn_chance 1.0 -> exactly the dwell"
+	)
+	husk.spawn_chance = 0.25
+	for _i in range(50):
+		var ticks: int = _ML.next_respawn_ticks(husk, rng)
+		assert_eq(ticks % TRIAL_DWELL_TICKS, 0, "a rare returns on a whole dwell boundary")
+		assert_gte(ticks, TRIAL_DWELL_TICKS, "never shorter than one dwell")
+		assert_lte(ticks, TRIAL_DWELL_TICKS * RARE_CYCLE_CAP, "and bounded by the rare cycle cap")
+	assert_eq(
+		_SRESP.next_ticks(TRIAL_DWELL_TICKS, 0.0, rng, RARE_CYCLE_CAP),
+		TRIAL_DWELL_TICKS * RARE_CYCLE_CAP,
+		"spawn_chance 0 is the floor, never 'gone forever'"
+	)

@@ -20,6 +20,12 @@ const HINTS: Array = [
 		"text": "Target locked — press 1-5 to use an ability, or ` to auto-attack.",
 	},
 	{
+		# T-736: fires the first time a FRIENDLY player is targeted (PartyInviteFlow seam) —
+		# the party system existed since T-280 with no player-facing way to discover it.
+		"id": "party_invite",
+		"text": "That's another adventurer — right-click them (or their frame) to invite them.",
+	},
+	{
 		"id": "quest",
 		"text": "A gold ! over a townsfolk means work — left-click them to talk (? turns in).",
 	},

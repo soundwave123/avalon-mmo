@@ -27,6 +27,7 @@ const KEYBINDS := [
 	["Bags", "I"],
 	["Talents", "N"],
 	["Character sheet", "C"],
+	["World map", "T"],
 	["Options / cancel", "Esc"],
 ]
 
@@ -135,6 +136,10 @@ var _music_slider: HSlider = null  # T-416: trims the dedicated "Music" bus (sco
 var _sfx_slider: HSlider = null
 var _sens_slider: HSlider = null
 var _class_color_check: CheckButton = null  # T-286: color friendly plates by class
+var _minimap_visible_check: CheckButton = null  # T-738: corner minimap on/off
+var _minimap_rotate_check: CheckButton = null  # T-738: rotate-with-facing vs north-locked
+var _minimap_zoom := 1  # T-738: zoom step (set by wheel-over-minimap via notify_minimap_zoom)
+var _minimap = null  # T-738: the bound MinimapPanel (MapUi hands it over)
 var _scroll: ScrollContainer = null  # T-400: internal scroll so the window can't overflow 720p
 var _box: VBoxContainer = null  # T-400: the scrolled content column (height measured for the cap)
 
@@ -192,6 +197,14 @@ func _ready() -> void:
 	_add_header(box, "Nameplates")
 	# T-286: WoW parity — off = flat green friendly plates; on = friendly plates by class color.
 	_class_color_check = _add_check(box, "Class-Color Plates", false, _on_class_colors)
+	_add_header(box, "Minimap")
+	# T-738: visibility + rotate mode; the zoom step rides the mouse wheel over the minimap itself
+	# and persists through notify_minimap_zoom (this panel stays the ONE settings.cfg writer —
+	# a second writer would clobber sections it doesn't know).
+	_minimap_visible_check = _add_check(box, "Show Minimap", true, _on_minimap_changed)
+	_minimap_rotate_check = _add_check(
+		box, "Minimap Rotates With Facing", false, _on_minimap_changed
+	)
 
 	var close := Button.new()
 	close.text = "Close"
@@ -477,6 +490,37 @@ func _on_sensitivity(_value: float) -> void:
 	save()
 
 
+# ---- minimap (T-738) ----
+
+
+func _on_minimap_changed(_v: bool) -> void:
+	if _loading:
+		return
+	_apply_minimap()
+	save()
+
+
+func _apply_minimap() -> void:
+	if _minimap != null:
+		_minimap.apply_settings(
+			_minimap_visible_check.button_pressed,
+			_minimap_rotate_check.button_pressed,
+			_minimap_zoom
+		)
+
+
+# MapUi hands the panel over; the saved config applies immediately (boot restore).
+func bind_minimap(minimap) -> void:
+	_minimap = minimap
+	_apply_minimap()
+
+
+# Wheel-over-minimap zoom persists through the one settings.cfg writer.
+func notify_minimap_zoom(idx: int) -> void:
+	_minimap_zoom = idx
+	save()
+
+
 # ---- persistence (ConfigFile at user://settings.cfg) ----
 
 
@@ -492,6 +536,9 @@ func save(path := CONFIG_PATH) -> void:
 	cfg.set_value("audio", "sfx", _sfx_slider.value)
 	cfg.set_value("controls", "sensitivity", _sens_slider.value)
 	cfg.set_value("nameplates", "class_colors", _class_color_check.button_pressed)
+	cfg.set_value("minimap", "visible", _minimap_visible_check.button_pressed)
+	cfg.set_value("minimap", "rotate", _minimap_rotate_check.button_pressed)
+	cfg.set_value("minimap", "zoom", _minimap_zoom)
 	cfg.save(path)
 
 
@@ -512,7 +559,15 @@ func load_settings(path := CONFIG_PATH) -> void:
 	_class_color_check.button_pressed = bool(
 		cfg.get_value("nameplates", "class_colors", _class_color_check.button_pressed)
 	)
+	_minimap_visible_check.button_pressed = bool(
+		cfg.get_value("minimap", "visible", _minimap_visible_check.button_pressed)
+	)
+	_minimap_rotate_check.button_pressed = bool(
+		cfg.get_value("minimap", "rotate", _minimap_rotate_check.button_pressed)
+	)
+	_minimap_zoom = int(cfg.get_value("minimap", "zoom", _minimap_zoom))
 	_loading = false
+	_apply_minimap()  # bound panel (if any) picks up the restored state
 
 
 # ---- UI builders ----

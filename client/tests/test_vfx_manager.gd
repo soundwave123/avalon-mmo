@@ -110,3 +110,49 @@ func test_spawn_gunshot_null_shooter_is_safe() -> void:
 	v.spawn_gunshot(null, Vector3(3.0, 0.0, 3.0))
 	assert_eq(v._gmi, 1, "muzzle flash still fires with no shooter node")
 	assert_false(v._gun_tracers[0].visible, "no tracer drawn for a directionless shot")
+
+
+# ---- T-732: the cast CHANNEL ---------------------------------------------------------------------
+
+
+func test_start_channel_pulses_the_cast_style_and_keeps_processing() -> void:
+	# The wind-up a cast-time spell shows WHILE it casts: the active cast style re-pulsed on its own
+	# cadence (here the house hand-glow), not one flash at the press.
+	var v = _v()
+	v.start_channel(Vector3(2.0, 0.0, 3.0))
+	assert_true(v.is_channeling(), "the channel is live")
+	assert_eq(v._ci, 1, "the first pulse fired the cast pool immediately")
+	assert_gt(v._cast_light.light_energy, 0.0, "the hands are glowing")
+	assert_true(v.is_processing(), "the manager ticks so it can re-pulse the wind-up")
+	assert_almost_eq(v._channel_period, v.CHANNEL_PULSE_S, 0.001, "house cadence for a house style")
+
+
+func test_channel_repulses_on_its_period() -> void:
+	var v = _v()
+	v.start_channel(Vector3.ZERO)
+	v._process(v.CHANNEL_PULSE_S * 0.5)
+	assert_eq(v._ci, 1, "half a period in, no second pulse yet")
+	v._process(v.CHANNEL_PULSE_S)
+	assert_eq(v._ci, 2, "a full period re-lights the wind-up")
+
+
+func test_stop_channel_releases_and_is_idempotent() -> void:
+	var v = _v()
+	v.start_channel(Vector3.ZERO)
+	v.stop_channel()
+	assert_false(v.is_channeling(), "the cast finished/was interrupted — the glow releases")
+	assert_false(v.is_processing(), "and the manager goes idle again (nothing is spinning)")
+	v.stop_channel()  # a second terminal event (result after a cancel) must be a safe no-op
+	assert_false(v.is_channeling(), "still released")
+
+
+func test_frost_channel_uses_the_lances_own_buildup_cadence() -> void:
+	# A lance-styled ability (the frost bolt) channels through its OWN anticipation stage, so the
+	# re-pulse period is the lance's buildup rather than the house cadence.
+	var v = _v()
+	v.start_channel(Vector3.ZERO, v.FROST_ABILITY_ID)
+	assert_true(v.is_channeling(), "the frost wind-up is live")
+	assert_almost_eq(
+		v._channel_period, v._frost_lance.antic_buildup_s(), 0.001, "lance buildup drives the pulse"
+	)
+	assert_gt(v._channel_period, 0.0, "and it is a real duration")

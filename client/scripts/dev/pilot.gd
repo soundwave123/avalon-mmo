@@ -150,6 +150,8 @@ func _run(id: int, cmd: Dictionary) -> void:
 		"nameplates":
 			_set_nameplates(bool(cmd.get("visible", true)))
 			_ack(id, {"ok": true, "visible": bool(cmd.get("visible", true))})
+		"rclick":  # T-736: real RMB press+release on a named entity (see pilot_mouse.gd)
+			_ack(id, PilotMouse.rclick(self, str(cmd.get("name", ""))))
 		"party":
 			_party_action(str(cmd.get("action", "")), str(cmd.get("target", "")))
 			_ack(id, {"ok": true})

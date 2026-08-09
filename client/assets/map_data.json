@@ -1,0 +1,71 @@
+{
+	"_doc": "T-730/T-738: the ONE authored map file — zone frames (map framing rects, NOT a copy of regions.json: a map zone is a presentation unit, e.g. Highkeep city inside the wold region) plus the landmark entries no existing data file carries (hubs + dungeon surface entrances, with the one-line hover descriptions). Everything else on the maps is DERIVED: flight points from flight_nodes.json, landmark POIs from discovery_nodes.json, quest !/? + gather nodes + party members from live feeds. zonegen --check validates presence + containment of this file. rect = [min_x, min_z, size_x, size_z] in world ground coords (planar y == ground z).",
+	"zones": [
+		{
+			"id": "heartwold",
+			"name": "The Heartwold",
+			"rect": [-500.0, -500.0, 1000.0, 1000.0],
+			"desc": "The green vale of the first era — Elmsvale, the King's Road, and the wilds between."
+		},
+		{
+			"id": "highkeep",
+			"name": "Highkeep",
+			"rect": [-130.0, -360.0, 260.0, 260.0],
+			"desc": "The walled capital of the Wold — keep, streets, and the roost above the gate."
+		},
+		{
+			"id": "ashmoor",
+			"name": "Ashmoor",
+			"rect": [-620.0, -180.0, 360.0, 360.0],
+			"desc": "The gaslit second-era city beyond the rift — soot, canals, and two ledgers for every account."
+		},
+		{
+			"id": "greyrise",
+			"name": "Greyrise Reach",
+			"rect": [-560.0, -1960.0, 1120.0, 1120.0],
+			"desc": "The third-era arrival district, grown around the Old Keep's bones."
+		}
+	],
+	"landmarks": [
+		{
+			"id": "hub_elmsvale",
+			"kind": "hub",
+			"name": "Elmsvale Village",
+			"x": -12.0,
+			"y": -8.0,
+			"desc": "A farming village on Crystal Lake — every road in the vale leads home here."
+		},
+		{
+			"id": "hub_highkeep",
+			"kind": "hub",
+			"name": "Highkeep",
+			"x": 0.0,
+			"y": -240.0,
+			"desc": "The walled capital of the Wold, seat of the crown."
+		},
+		{
+			"id": "hub_ashmoor",
+			"kind": "hub",
+			"name": "Ashmoor City",
+			"x": -420.0,
+			"y": 0.0,
+			"desc": "The gaslit city beyond the rift — streetlamps that never sleep."
+		},
+		{
+			"id": "hub_greyrise",
+			"kind": "hub",
+			"name": "Greyrise Arrival",
+			"x": 0.0,
+			"y": -1400.0,
+			"desc": "The modern district around the Old Keep heritage rise."
+		},
+		{
+			"id": "dungeon_hollowed_crypt",
+			"kind": "dungeon",
+			"name": "The Hollowed Crypt",
+			"x": 14.0,
+			"y": -12.5,
+			"desc": "A stair beneath the churchyard — the vale's first delve."
+		}
+	]
+}

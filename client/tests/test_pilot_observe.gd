@@ -259,3 +259,21 @@ func test_live_player_falls_back_when_panel_has_no_stats_yet() -> void:
 	assert_eq(player["level"], 3, "level from entry when panel stats empty")
 	assert_eq(player["max_mana"], 50, "max_mana from entry when panel stats empty")
 	main.queue_free()
+
+
+# ---- T-730/T-738: the map key ----
+
+
+func test_build_passes_map_state_through() -> void:
+	var raw := _mock_raw()
+	raw["map"] = {
+		"world_map": {"open": true, "zone": "heartwold", "marker_kinds": {"hub": 2}},
+		"minimap": {"visible": true, "rotate": false, "zoom": 1, "counts": {"quest": 3}},
+	}
+	var snap := PilotObserve.build(raw, {})
+	assert_eq(snap["map"]["world_map"]["zone"], "heartwold")
+	assert_eq(int(snap["map"]["minimap"]["counts"]["quest"]), 3)
+
+
+func test_build_defaults_map_to_empty_dict() -> void:
+	assert_eq(PilotObserve.build(_mock_raw(), {})["map"], {}, "no map raw -> {}")

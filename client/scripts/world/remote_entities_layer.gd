@@ -201,6 +201,8 @@ func _process(delta: float) -> void:
 		planar.y = 0.0
 		node.global_position = pos
 		var speed := planar.length() / delta if delta > 0.0 else 0.0
+		# T-737: this entity's positional footfalls (players AND mobs), trimmed under your own.
+		LocomotionAudio.tick_entity(e, node, delta, speed)
 		# T-124/T-125 (visual half): drive idle/walk/run from actual movement + face travel dir.
 		var moving := speed > 0.5  # >0.5 m/s reads as moving (facing-turn threshold, unchanged)
 		if moving:
@@ -370,6 +372,7 @@ func _set_mount(e: Dictionary, p: Dictionary) -> void:
 	var rider := e.get("visual", null) as Node3D
 	if rider != null:
 		rider.position = Vector3.ZERO
+		rider.rotation.y = 0.0  # T-728: dismount restores the on-foot stance (origin AND facing)
 	if not mounted:
 		return
 	var mount := MountVisuals.make_mount(visual_id)
@@ -377,7 +380,10 @@ func _set_mount(e: Dictionary, p: Dictionary) -> void:
 		return  # asset not landed yet — no visual, no seat lift, no error spam
 	node.add_child(mount)
 	if rider != null:
-		rider.position = MountVisuals.seat_offset(visual_id)
+		# T-728: the same rig-derived saddle the local rider gets — one seat, both render paths.
+		var seat := MountVisuals.rider_seat(mount)
+		rider.position = seat.origin
+		rider.rotation.y = seat.basis.get_euler().y
 
 
 func _remap(d: Dictionary) -> Vector3:

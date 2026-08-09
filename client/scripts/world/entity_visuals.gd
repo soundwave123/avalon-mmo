@@ -330,11 +330,11 @@ const STATE_CLIPS := {
 	"cast": ["cast", "Spell_Simple_Shoot", "Spellcast_Raise"],
 	"hit": ["hit", "Hit_Chest", "Hit_Head", "Hit_A"],
 	"death": ["death", "Death01", "Death_A"],
-	# T-573: the seated rider pose while mounted. The hero rigs carry no Ride_Seated clip today, so
-	# this resolves to the idle family (a calm seated stand-in) — the moment a Ride_Seated clip is
-	# baked onto the rigs it wins automatically. What matters is what's ABSENT: no run/jog synonym,
-	# so the on-foot run clip can never play under a rider.
-	"mounted": ["Ride_Seated", "Ride_Idle", "idle", "Idle_Loop", "Idle", "Unarmed_Idle"],
+	# T-728: the seated rider pose. UAL ships no ride/saddle clip, so T-728 baked its two honest
+	# stand-ins onto the player rigs — Driving (upright, hands at rein height) ahead of Sitting_Idle
+	# (chair sit); QA A/Bs by swapping them. Still no run/jog synonym: no run clip under a rider.
+	# Both import _Loop-stripped, verified on all six player rigs (they resolve "Driving").
+	"mounted": ["Ride_Seated", "Driving", "Sitting_Idle", "idle", "Idle_Loop", "Idle"],
 	# T-397: social emotes retargeted from the UAL/Quaternius CC0 library onto the hero rigs.
 	# The catalog's `clip` field (server/world/data/social/emotes.json) names one of these state
 	# keys; only these three of the 12 emotes have an honest CC0 source clip. As one-shots (not in

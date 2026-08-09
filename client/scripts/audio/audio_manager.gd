@@ -70,6 +70,31 @@ const SFX := {
 	"holy_impact": "res://assets/audio/holy_impact.wav",
 	"heal_chime": "res://assets/audio/heal_chime.wav",
 	"shadow_cast": "res://assets/audio/shadow_cast.wav",
+	# T-737 locomotion: four footfall VARIATIONS per surface (grass/dirt/stone/wood) plus the
+	# gryphon mount's paw-fall set. FootstepCadence names these via clip_for(); the four-per-family
+	# count is what lets its shuffle bag rotate without ever repeating a clip back-to-back. All
+	# one-shots — their imports must keep loop OFF (T-415 discipline, inverted; asserted in
+	# test_locomotion_audio.gd, because a looping footstep would never stop).
+	"step_grass_1": "res://assets/audio/step_grass_1.wav",
+	"step_grass_2": "res://assets/audio/step_grass_2.wav",
+	"step_grass_3": "res://assets/audio/step_grass_3.wav",
+	"step_grass_4": "res://assets/audio/step_grass_4.wav",
+	"step_dirt_1": "res://assets/audio/step_dirt_1.wav",
+	"step_dirt_2": "res://assets/audio/step_dirt_2.wav",
+	"step_dirt_3": "res://assets/audio/step_dirt_3.wav",
+	"step_dirt_4": "res://assets/audio/step_dirt_4.wav",
+	"step_stone_1": "res://assets/audio/step_stone_1.wav",
+	"step_stone_2": "res://assets/audio/step_stone_2.wav",
+	"step_stone_3": "res://assets/audio/step_stone_3.wav",
+	"step_stone_4": "res://assets/audio/step_stone_4.wav",
+	"step_wood_1": "res://assets/audio/step_wood_1.wav",
+	"step_wood_2": "res://assets/audio/step_wood_2.wav",
+	"step_wood_3": "res://assets/audio/step_wood_3.wav",
+	"step_wood_4": "res://assets/audio/step_wood_4.wav",
+	"mount_step_1": "res://assets/audio/mount_step_1.wav",
+	"mount_step_2": "res://assets/audio/mount_step_2.wav",
+	"mount_step_3": "res://assets/audio/mount_step_3.wav",
+	"mount_step_4": "res://assets/audio/mount_step_4.wav",
 }
 
 # T-503: the frostbolt CHARGE-UP layer — a sustained, LOOPING menacing icy drone played under the
@@ -105,7 +130,6 @@ var charge: AudioStreamPlayer = null  # T-503: the sustained frostbolt cast-char
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sfx_idx := 0
 var _cache := {}
-var _last_step_ms := 0
 var _sfx_volume_db := 0.0  # T-078: user SFX offset (dB) added to every one-shot; 0 = design level
 var _ambient_volume_db := 0.0  # T-078: user ambience offset (dB) on top of AMBIENT_BASE_DB
 var _indoor_muffle_db := 0.0  # T-187: extra attenuation while indoors, layered on the user offset
@@ -295,14 +319,6 @@ func set_indoor_muffle(indoors: bool) -> void:
 func _apply_ambient_volume() -> void:
 	if ambient != null:
 		ambient.volume_db = AMBIENT_BASE_DB + _ambient_volume_db + _indoor_muffle_db
-
-
-# Rate-limited footstep — call every frame while moving; it fires at a walking cadence.
-func footstep_if_due(interval_ms := 340) -> void:
-	var now := Time.get_ticks_msec()
-	if now - _last_step_ms >= interval_ms:
-		_last_step_ms = now
-		play_sfx("footstep", -14.0)
 
 
 # T-305: day-gate the birdsong bed — full daylight level by day, faded to ~silence at night. Reads

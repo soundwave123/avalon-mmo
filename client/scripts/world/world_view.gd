@@ -153,9 +153,7 @@ const ERA_ATMOS_RATE := 0.4  # T-408: blend units/sec -> ~2.5s smooth rift cross
 const ERA_LUT_STEPS := 12  # T-408: throttled LUT rebuilds across a crossing (smog 0 == base grade)
 const DAY_SECONDS := 1200.0  # T-137: one in-game day
 const SUN_ELEV_PEAK_DEG := 55.0  # T-289: noon elevation for a temperate latitude (45-60 range)
-const CLOUD_COUNT := 22  # T-303: fair-weather cumulus deck over the meadow/Highkeep approach
-# T-697: cloud-card baking extracted to cloud_texture.gd (this file sits at the 1000-line cap).
-const CLOUD_TEXTURE := preload("res://scripts/world/cloud_texture.gd")
+const CLOUD_DECK := preload("res://scripts/world/cloud_deck.gd")  # T-303 (T-734 headroom carve)
 # T-417: night cloud albedo dims toward this cool moonlit fog-band grey (~0.2 luma), not day-white.
 const CLOUD_NIGHT_TINT := Color(0.22, 0.25, 0.30)
 # T-085 weather look bounds — how far rain dims the sky without fighting the T-289 sun arc to black.
@@ -192,6 +190,8 @@ var _day_t := 0.34
 # QA freeze: AVALON_FREEZE_DAY holds the sun still (optionally at a given 0..1 day_t) so
 # screenshot passes can't be cut short by an in-session sunset (the "day-cycle race").
 var _day_frozen := false
+# T-734: server-clock sync brain (snap on join / big drift, rate-capped slew otherwise).
+var _day_sync = preload("res://scripts/world/day_clock_sync.gd").new()
 # T-408: per-region atmosphere. set_era_atmosphere flips _era_target (SAME EraSkin resolution the
 # VFX re-skin rides); _era_blend tweens toward it in _process, overlaying the lerped ERA_ATMOS
 # on the sun-arc + weather base. era 0 == byte-identical home.
@@ -235,7 +235,7 @@ func _ready() -> void:
 	_night_sky = NIGHT_SKY.new()  # T-404: needs the camera (dome anchors to it) — build after it
 	_night_sky.build(self)
 	_build_weather()
-	_build_clouds()
+	CLOUD_DECK.build(self)  # T-303 cumulus cards (T-734 headroom carve — populates _clouds)
 	_weather_ctl = WeatherController.new()
 	_weather_ctl.setup(_foliage_wind_mats)
 	# T-697 fix 4: keep the night-lights cache honest across prop streaming — any tree change
@@ -799,49 +799,12 @@ func _collect_foliage_wind_mat(mesh: Mesh) -> void:
 		_foliage_wind_mats.append(m)
 
 
-# T-303: fair-weather cumulus deck — soft FBM-noise cloud cards laid as near-horizontal planes high
-# over the meadow; viewed from below a horizontal alpha-cutout plane reads as a cloud. Three
-# noise-seeded variants avoid a "stamped" repeat across 22 cards; positions/sizes randomize once at
-# boot, then drift in _process. Cheap: unshaded, unlit, no shadows.
-func _build_clouds() -> void:
-	var variants: Array[Texture2D] = [
-		CLOUD_TEXTURE.make(311, 0.018),
-		CLOUD_TEXTURE.make(747, 0.024),
-		CLOUD_TEXTURE.make(1290, 0.015),
-	]
-	_cloud_materials.clear()
-	for tex in variants:
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_texture = tex
-		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-		mat.disable_receive_shadows = true
-		_cloud_materials.append(mat)
-
-	var container := Node3D.new()
-	container.name = "CloudLayer"
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 20260709
-	_clouds.clear()
-	for i in range(CLOUD_COUNT):
-		var quad := QuadMesh.new()
-		var w := rng.randf_range(70.0, 150.0)
-		quad.size = Vector2(w, w * rng.randf_range(0.6, 0.9))
-		quad.material = _cloud_materials[i % _cloud_materials.size()]
-		var mesh_inst := MeshInstance3D.new()
-		mesh_inst.mesh = quad
-		# lie flat, normal down toward the player; a random yaw keeps the noise shapes varied.
-		mesh_inst.rotation_degrees = Vector3(90.0, 0.0, rng.randf_range(0.0, 360.0))
-		mesh_inst.position = Vector3(
-			rng.randf_range(-360.0, 360.0),
-			rng.randf_range(115.0, 165.0),
-			rng.randf_range(-380.0, 140.0)
-		)
-		mesh_inst.set_meta("drift_speed", rng.randf_range(0.5, 1.4))
-		container.add_child(mesh_inst)
-		_clouds.append(mesh_inst)
-	add_child(container)
+# T-734: server truth for the day clock (day_t in handshake_ok, then "world_clock" resyncs).
+# Frozen wins: AVALON_FREEZE_DAY is the QA pin pilots rely on — while frozen, server sync is
+# ignored entirely (precedence documented in day_clock_sync.gd + the T-734 ticket).
+func server_day_sync(t: float) -> void:
+	if not _day_frozen:
+		_day_t = _day_sync.on_server_day_t(t, _day_t)
 
 
 # T-137/T-289: day/night cycle — the sun sweeps a true compass arc: rises due EAST (day_t=0),
@@ -854,7 +817,9 @@ func _process(delta: float) -> void:
 	if sun == null:
 		return
 	if not _day_frozen:
-		_day_t = fmod(_day_t + delta / DAY_SECONDS, 1.0)
+		# T-734: shared-rate walk + a rate-capped slew toward the last server resync (the old
+		# free-run plus gentle correction — same fmod rate, never a visible sun-snap).
+		_day_t = _day_sync.advance(_day_t, delta)
 	var arc := sin(_day_t * TAU)  # -1..1 over the day; elevation envelope (negative = below horizon)
 	var elev_deg := SUN_ELEV_PEAK_DEG * arc
 	# Compass azimuth: 90=east (sunrise), 180=south (noon), 270=west (sunset), 360/0=north (midnight).

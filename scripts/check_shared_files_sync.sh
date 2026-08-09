@@ -36,6 +36,11 @@ SHARED_FILES=(
     # it there; the visual lane owns the formula) — the world server samples byte-identical ground
     # for movement (height is derived from (x, z) on each side, never wired).
     "client/scripts/world/terrain_field.gd|server/world/scripts/terrain_field.gd"
+    # T-730/T-738: the map system derives flight-point and landmark markers from the SAME data the
+    # server serves (one POI pipeline, no re-authored lists) — the server files stay canonical and
+    # the client ships byte-identical mirrors it reads at res://assets/.
+    "server/world/data/travel/flight_nodes.json|client/assets/flight_nodes.json"
+    "server/world/data/discovery_nodes.json|client/assets/discovery_nodes.json"
 )
 
 FAIL=0
