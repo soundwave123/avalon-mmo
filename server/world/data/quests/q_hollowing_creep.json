@@ -1,0 +1,21 @@
+{
+    "id": "q_hollowing_creep",
+    "title": "The Hollowing Creeps Up",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 15,
+    "prerequisite_quest": "q_crypt_restless_dead",
+    "description": "You put the deep dead back to rest, but Father Osric is grimmer than ever. Since you cleared the galleries the grip has climbed UP — bones are breaking the churchyard sod in daylight now, above the crypt entirely. The Hollowing is not spent; it is spreading. Walk the graves, and put down whatever has clawed its way to the surface before the village sees it.",
+    "location_hint": "The village churchyard",
+    "objectives": [
+        { "type": "reach", "target": "loc_churchyard_graves", "count": 1, "desc": "Walk the churchyard graves for fresh-broken sod", "x": 12.5, "y": -13.5, "radius": 4.0 },
+        { "type": "kill", "target": "mob_skeletal_warrior", "count": 4, "desc": "Put down the risen breaking ground in daylight" }
+    ],
+    "rewards": {
+        "xp": 1150,
+        "coins": 260,
+        "items": [
+            { "item": "itm_osric_ward_censer", "count": 1 }
+        ]
+    }
+}

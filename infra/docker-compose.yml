@@ -1,0 +1,54 @@
+# Avalon dev infrastructure
+# Brought up via: make dev-up
+# Brought down via: make dev-down
+# Compatible with both docker-compose and podman-compose
+
+version: "3.9"
+
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    container_name: avalon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: avalon
+      POSTGRES_PASSWORD: avalon_dev_only_not_for_prod
+      POSTGRES_DB: avalon
+      # Performance for dev — not safe for prod
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - avalon-pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avalon -d avalon"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: docker.io/library/redis:8-alpine
+    container_name: avalon-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - "512mb"
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - avalon-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  avalon-pgdata:
+  avalon-redisdata:

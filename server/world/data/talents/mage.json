@@ -1,0 +1,798 @@
+{
+    "trees": [
+        {
+            "id": "fire",
+            "role": "dps"
+        },
+        {
+            "id": "frost",
+            "role": "dps"
+        },
+        {
+            "id": "arcane",
+            "role": "utility"
+        }
+    ],
+    "talents": [
+        {
+            "id": "tal_mag_imp_fireball",
+            "name": "Improved Fireball",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 201,
+                "pct_per_rank": 5
+            },
+            "desc": "Fireball +5% damage per rank"
+        },
+        {
+            "id": "tal_mag_burning_mind",
+            "name": "Burning Mind",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_ignite",
+            "name": "Ignite",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 202,
+                "pct_per_rank": 6
+            },
+            "desc": "Fire Blast +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_pyromania",
+            "name": "Pyromania",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_mag_imp_fireball",
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 201,
+                "pct_per_rank": 10
+            },
+            "desc": "Fireball mana cost -10% per rank"
+        },
+        {
+            "id": "tal_mag_combustion",
+            "name": "Combustion",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 5
+            },
+            "desc": "All damage +5%"
+        },
+        {
+            "id": "tal_mag_imp_frostbolt",
+            "name": "Improved Frostbolt",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 204,
+                "pct_per_rank": 5
+            },
+            "desc": "Frostbolt +5% damage per rank"
+        },
+        {
+            "id": "tal_mag_frost_focus",
+            "name": "Frost Focus",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 204,
+                "pct_per_rank": 7
+            },
+            "desc": "Frostbolt mana cost -7% per rank"
+        },
+        {
+            "id": "tal_mag_permafrost",
+            "name": "Permafrost",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 203,
+                "pct_per_rank": 8
+            },
+            "desc": "Frost Nova mana cost -8% per rank"
+        },
+        {
+            "id": "tal_mag_shatter",
+            "name": "Shatter",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_mag_imp_frostbolt",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 204,
+                "pct_per_rank": 8
+            },
+            "desc": "Frostbolt +8% damage per rank"
+        },
+        {
+            "id": "tal_mag_deep_freeze",
+            "name": "Deep Freeze",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 5
+            },
+            "desc": "All damage +5%"
+        },
+        {
+            "id": "tal_mag_arcane_mind",
+            "name": "Arcane Mind",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_meditation",
+            "name": "Meditation",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_mag_clarity",
+            "name": "Clarity",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 4
+            },
+            "desc": "All costs -4% per rank"
+        },
+        {
+            "id": "tal_mag_arcane_power",
+            "name": "Arcane Power",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_mag_arcane_mind",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All damage +3% per rank"
+        },
+        {
+            "id": "tal_mag_presence",
+            "name": "Presence of Mind",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 203,
+                "pct_per_rank": 30
+            },
+            "desc": "Frost Nova costs 30% less \u2014 control on demand"
+        },
+        {
+            "id": "tal_mag_imp_counterspell",
+            "name": "Arcane Denial",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 206,
+                "pct_per_rank": 15
+            },
+            "desc": "Counterspell mana cost -15% per rank"
+        },
+        {
+            "id": "tal_mag_incinerate",
+            "name": "Incinerate",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 205,
+                "pct_per_rank": 6
+            },
+            "desc": "Scorch +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_flame_attunement",
+            "name": "Flame Attunement",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_fire_power",
+            "name": "Fire Power",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_mag_imp_scorch",
+            "name": "Improved Scorch",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 205,
+                "pct_per_rank": 8
+            },
+            "desc": "Scorch mana cost -8% per rank"
+        },
+        {
+            "id": "tal_mag_blast_wave",
+            "name": "Blast Wave",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 202,
+                "pct_per_rank": 5
+            },
+            "desc": "Fire Blast +5% damage per rank"
+        },
+        {
+            "id": "tal_mag_critical_mass",
+            "name": "Critical Mass",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_mag_fire_power",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 201,
+                "pct_per_rank": 4
+            },
+            "desc": "Fireball +4% damage per rank"
+        },
+        {
+            "id": "tal_mag_burning_soul",
+            "name": "Burning Soul",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_mag_searing_heat",
+            "name": "Searing Heat",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 202,
+                "pct_per_rank": 6
+            },
+            "desc": "Fire Blast +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_pyroclasm",
+            "name": "Pyroclasm",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_hellfire",
+            "name": "Hellfire",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_mag_incinerate",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 205,
+                "pct_per_rank": 6
+            },
+            "desc": "Scorch +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_pyroblast",
+            "name": "Pyroblast",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 201,
+                "pct_per_rank": 25
+            },
+            "desc": "Capstone: Fireball +25% damage \u2014 the Fire nuke"
+        },
+        {
+            "id": "tal_mag_ember_thrift",
+            "name": "Ember Thrift",
+            "class": "mage",
+            "tree": "fire",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All mana costs -3% per rank"
+        },
+        {
+            "id": "tal_mag_ice_shards",
+            "name": "Ice Shards",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 204,
+                "pct_per_rank": 6
+            },
+            "desc": "Frostbolt +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_frozen_mind",
+            "name": "Frozen Mind",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_winters_chill",
+            "name": "Winter's Chill",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_mag_imp_nova",
+            "name": "Improved Nova",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 203,
+                "pct_per_rank": 8
+            },
+            "desc": "Frost Nova mana cost -8% per rank"
+        },
+        {
+            "id": "tal_mag_cold_snap",
+            "name": "Cold Snap",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 203,
+                "pct_per_rank": 5
+            },
+            "desc": "Frost Nova +5% damage per rank"
+        },
+        {
+            "id": "tal_mag_piercing_ice",
+            "name": "Piercing Ice",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_mag_winters_chill",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 204,
+                "pct_per_rank": 4
+            },
+            "desc": "Frostbolt +4% damage per rank"
+        },
+        {
+            "id": "tal_mag_frost_ward",
+            "name": "Frost Ward",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_mag_deep_chill",
+            "name": "Deep Chill",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 204,
+                "pct_per_rank": 5
+            },
+            "desc": "Frostbolt mana cost -5% per rank"
+        },
+        {
+            "id": "tal_mag_frostbite",
+            "name": "Frostbite",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_glacial_spike",
+            "name": "Glacial Spike",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_mag_ice_shards",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 204,
+                "pct_per_rank": 6
+            },
+            "desc": "Frostbolt +6% damage per rank"
+        },
+        {
+            "id": "tal_mag_glacial_wrath",
+            "name": "Glacial Wrath",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all damage +10% \u2014 the Frost storm"
+        },
+        {
+            "id": "tal_mag_boreal_thrift",
+            "name": "Boreal Thrift",
+            "class": "mage",
+            "tree": "frost",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All mana costs -3% per rank"
+        },
+        {
+            "id": "tal_mag_mind_spring",
+            "name": "Mind Spring",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_mag_greater_intellect",
+            "name": "Greater Intellect",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_arcane_focus",
+            "name": "Arcane Focus",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All mana costs -2% per rank"
+        },
+        {
+            "id": "tal_mag_spell_weaving",
+            "name": "Spell Weaving",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All damage +2% per rank"
+        },
+        {
+            "id": "tal_mag_deep_reserves",
+            "name": "Deep Reserves",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_mag_arcane_instability",
+            "name": "Arcane Instability",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_mag_spell_weaving",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All damage +2% per rank"
+        },
+        {
+            "id": "tal_mag_ley_attunement",
+            "name": "Ley Attunement",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_nova_mastery",
+            "name": "Nova Mastery",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 203,
+                "pct_per_rank": 8
+            },
+            "desc": "Frost Nova mana cost -8% per rank"
+        },
+        {
+            "id": "tal_mag_transcendence",
+            "name": "Transcendence",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_mag_temporal_grace",
+            "name": "Temporal Grace",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_mag_arcane_focus",
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All mana costs -2% per rank"
+        },
+        {
+            "id": "tal_mag_arcane_ascension",
+            "name": "Arcane Ascension",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all mana costs -10% \u2014 the Arcane engine"
+        },
+        {
+            "id": "tal_mag_mind_over_matter",
+            "name": "Mind over Matter",
+            "class": "mage",
+            "tree": "arcane",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All damage +2% per rank"
+        }
+    ]
+}

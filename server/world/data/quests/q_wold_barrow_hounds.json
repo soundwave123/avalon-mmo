@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_barrow_hounds",
+    "title": "Hounds of the Barrow",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 16,
+    "prerequisite_quest": "q_wold_fenmire_cull",
+    "description": "The old barrows on the moor were quiet for a hundred years. Now something dens in them, and the barrow hounds range out at dusk in a pack that no lone shepherd survives. Break the pack.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_barrow_hound",
+            "count": 8,
+            "desc": "Break the barrow-hound pack"
+        }
+    ],
+    "rewards": {
+        "xp": 580,
+        "coins": 100,
+        "items": [
+            {
+                "item": "itm_potion_greater_healing",
+                "count": 2
+            }
+        ]
+    }
+}

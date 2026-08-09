@@ -1,0 +1,19 @@
+{
+    "id": "q_tut_03",
+    "title": "Read the Fight",
+    "giver_npc": "npc_drillmaster",
+    "turnin_npc": "npc_drillmaster",
+    "min_level": 1,
+    "prerequisite_quest": "q_tut_02",
+    "description": "Hale points his baton at the straw effigy in the ring. \"Swinging is the easy part. Surviving is reading. That effigy winds up a big move — you'll see it gather itself, slow and obvious. Don't just stand there eating it. Hit it hard while it winds up, or cut it off with a real interrupt, and you break the move before it lands. Go read it, and don't let it finish.\"",
+    "turnin_text": "Hale lowers the baton. \"That's everything a ring can teach you. The rest is road — and the road runs SOUTH. Highkeep has work that pays better than my thanks, and the Regent's courier is waiting by the well right now with a letter that needs legs.\" He glances past you, toward the churchyard, and the humour goes out of him. \"Keep your eyes open on the way. Father Osric's been burying folk that don't stay buried. They're calling it the Hollowing. Sooner or later somebody's going to have to walk down there and find where it started.\"",
+    "objectives": [
+        { "type": "interrupt", "target": "mob_training_effigy", "count": 1,
+          "desc": "Break the effigy's wind-up (interrupt its channel)" }
+    ],
+    "rewards": {
+        "xp": 80,
+        "coins": 40,
+        "items": []
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "character",
+  "_comment_scope": "T-678 owner decision 2026-08-08: per-character on the achievement-credit seam; account-wide is a possible later migration (schema keeps it cheap), do not build it here.",
+  "_comment_pacing": "FFXIV-like duration target WITHOUT its daily throttle: no cap/lockout anywhere — a 6-hour Saturday banks 6 hours of renown. Exalted = 11000/50 = 220 hub quest turn-ins (~weeks of normal play, tunable here).",
+  "sources": {
+    "quest_turnin": 50
+  },
+  "_comment_hubs": "Hub attribution: quests carry no zone field, so the turn-in NPC id prefix is the hub signal (see RenownStore.hub_for_quest). Per already-shipped zone hub only; add hubs here as zones ship.",
+  "hubs": {
+    "highkeep": { "name": "Highkeep", "npc_prefixes": ["npc_hk_"] },
+    "ashmoor": { "name": "Ashmoor", "npc_prefixes": ["npc_ashmoor_"] }
+  },
+  "ranks": [
+    { "rank": 1, "name": "Stranger", "points": 0 },
+    { "rank": 2, "name": "Newcomer", "points": 400 },
+    { "rank": 3, "name": "Familiar", "points": 1000 },
+    { "rank": 4, "name": "Respected", "points": 2000 },
+    { "rank": 5, "name": "Trusted", "points": 3500 },
+    { "rank": 6, "name": "Honored", "points": 5500 },
+    { "rank": 7, "name": "Esteemed", "points": 8000 },
+    { "rank": 8, "name": "Exalted", "points": 11000 }
+  ]
+}

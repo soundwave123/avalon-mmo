@@ -1,0 +1,57 @@
+{
+    "mob_type_id": 3,
+    "mob_id": "mob_kobold_miner",
+    "name": "Kobold Miner",
+    "difficulty": 2,
+    "level": 6,
+    "xp": 14,
+    "str": 12,
+    "int": 8,
+    "dex": 15,
+    "stamina": 8,
+    "spirit": 5,
+    "weapon_speed": 2.0,
+    "aggro_radius": 5.0,
+    "leash_radius": 15.0,
+    "melee_range": 2.0,
+    "spawn_x": -20.0,
+    "spawn_y": 25.0,
+    "skills": {
+        "Swordsmanship": 8,
+        "Tactics": 8
+    },
+    "base_damage": 6,
+    "variance_min": 0.85,
+    "variance_max": 1.0,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.0,
+    "parry_chance": 0.05,
+    "crit_chance": 0.0,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_copper_ore",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 2
+        },
+        {
+            "item_id": "itm_rugged_fiber",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 2
+        },
+        {
+            "item_id": "itm_worn_kobold_coin",
+            "chance": 0.8,
+            "count_min": 1,
+            "count_max": 3
+        }
+    ],
+    "patrol_radius": 4.0
+}

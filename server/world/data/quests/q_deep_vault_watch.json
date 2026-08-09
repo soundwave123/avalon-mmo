@@ -1,0 +1,22 @@
+{
+    "id": "q_deep_vault_watch",
+    "title": "The Deep Vault Watch",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 17,
+    "prerequisite_quest": "q_ward_the_graves",
+    "description": "The surface wards will hold a season, no more. The rot climbs from the deepest Vault — the one the old village walled the Hollowing into — and Osric can no longer pretend the seal down there is intact. He needs eyes on it. Descend past the galleries to the Vault approach, count what stands guard, and thin it: whatever the seal is failing to hold is massing on the far side of it.",
+    "location_hint": "The Vault approach, beneath the crypt",
+    "objectives": [
+        { "type": "reach", "target": "loc_vault_approach", "count": 1, "desc": "Descend to the Vault approach and eye the deep seal", "x": 400.0, "y": -42.0, "radius": 4.0 },
+        { "type": "kill", "target": "mob_skeletal_warrior", "count": 3, "desc": "Break the honor guard of risen warriors at the seal" },
+        { "type": "kill", "target": "mob_crypt_ghoul", "count": 3, "desc": "Clear the ghoul-packs massing against the seal" }
+    ],
+    "rewards": {
+        "xp": 1450,
+        "coins": 320,
+        "items": [
+            { "item": "itm_deepvault_hood", "count": 1 }
+        ]
+    }
+}

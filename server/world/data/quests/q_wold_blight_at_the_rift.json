@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_blight_at_the_rift",
+    "title": "Blight at the Rift-Scar",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 19,
+    "prerequisite_quest": "q_wold_apex_predators",
+    "description": "Where the moor ends the ground is wrong \u2014 a scar in the world the old folk call the rift-echo, and the bloodthorn there has grown into horrors that no fire kills for long. Cut the blightthorn horrors back from the scar. Past them, the western sky-lane runs to Ashmoor, and to whatever waits beyond the wold.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_blightthorn",
+            "count": 6,
+            "desc": "Cut back the blightthorn horrors at the rift-scar"
+        }
+    ],
+    "rewards": {
+        "xp": 720,
+        "coins": 140,
+        "items": [
+            {
+                "item": "itm_riftward_blade",
+                "count": 1
+            }
+        ]
+    }
+}

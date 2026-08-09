@@ -1,0 +1,21 @@
+{
+    "id": "qb01",
+    "title": "Bounty: Greymaw the Alpha",
+    "giver_npc": "npc_hk_bounty_board",
+    "turnin_npc": "npc_hk_bounty_board",
+    "min_level": 3,
+    "prerequisite_quest": null,
+    "description": "An alpha wolf, Greymaw, leads the pack that harries the northern wolds. He is too strong for a lone hunter — muster a party and put him down.",
+    "bounty": true,
+    "repeatable": true,
+    "recommended_players": 3,
+    "location_hint": "Northern wolds, north-east of the village (48, 40).",
+    "objectives": [
+        { "type": "kill", "target": "mob_greymaw", "count": 1, "desc": "Slay Greymaw the Alpha" }
+    ],
+    "rewards": {
+        "xp": 600,
+        "coins": 150,
+        "items": []
+    }
+}

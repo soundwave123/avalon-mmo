@@ -1,0 +1,14 @@
+{
+ "id": 203,
+ "name": "Frost Nova",
+ "icon": "frost_nova",
+ "char_class": "mage",
+ "effect": "control",
+ "cast_ticks": 0,
+ "resource_cost": 6,
+ "range_units": 8.0,
+ "base_damage": 0,
+ "control_kind": "root",
+ "control_ticks": 80,
+ "trained": true
+}

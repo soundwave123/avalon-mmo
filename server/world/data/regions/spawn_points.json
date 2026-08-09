@@ -1,0 +1,21 @@
+{
+  "_doc": "T-373 spawn & quest-hub dispersion (capacity lever 4). Fresh logins are round-robin'd across these hubs (+ small jitter) instead of all piling onto world origin (0,0), so the spawn crowd is broken up at the source and the T-370 AOI filter can actually disperse it. Each hub is a planar [x, z] anchor. Every hub is VALIDATED at boot by spawn_dispersion.gd against the terrain field (flat walkable ground) and movement_collision (T-379: not inside the curtain wall or a building footprint); an invalid hub is dropped and if the whole set is invalid the server falls back to origin. T-515 (2026-07-16, tester playtest bug 'I spawn next to level 12-14 mobs and die instantly'): the original 8 anchors round-robin'd fresh level-1 players onto hubs sitting INSIDE the aggro range (AGGRO_MAX=20 m, plus the 6 m jitter disc) of level 6-9 mobs — hub[-46,-36] was 9.8 m from an L9 elderthorn_guardian, hub[-36,18] was 15.6 m from an L6 kobold. The hub set was reduced to the four anchors that are >=35 m from every mob above L3 (comfortably outside aggro even after jitter), so a fresh character can never be instantly killed at spawn. hub[40,-14] also sits ~35 m from the L3 starter wolves, giving level-appropriate first content. INVARIANT (regression-tested in test_spawn_safety.gd): keep every shipped hub >=30 m from any spawn of a mob above SAFE_MOB_LEVEL. When authoring new hubs, re-run that clearance check against server/world/data/mobs/spawns.json AND the T-373 terrain/prop audit.",
+  "hubs": [
+    [
+      40.0,
+      -14.0
+    ],
+    [
+      50.0,
+      -46.0
+    ],
+    [
+      6.0,
+      72.0
+    ],
+    [
+      -10.0,
+      -104.0
+    ]
+  ]
+}

@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_darkwood_stalkers",
+    "title": "Stalkers in the Dark",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 11,
+    "prerequisite_quest": "q_wold_dire_treeline",
+    "description": "Something worse hunts the deep wood \u2014 lean grey shapes that pace a traveller for a mile before they strike. Sylas has lost two scouts to them. Put the darkwood stalkers down and the wood-road is walkable again.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_darkwood_stalker",
+            "count": 8,
+            "desc": "Slay the darkwood stalkers"
+        }
+    ],
+    "rewards": {
+        "xp": 410,
+        "coins": 60,
+        "items": [
+            {
+                "item": "itm_novice_cloak",
+                "count": 1
+            }
+        ]
+    }
+}

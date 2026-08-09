@@ -1,0 +1,16 @@
+{
+    "id": "q_wold_road_to_highkeep",
+    "title": "The Road to Highkeep",
+    "giver_npc": "npc_regents_courier",
+    "turnin_npc": "npc_hk_flightmaster",
+    "min_level": 5,
+    "prerequisite_quest": null,
+    "description": "You have earned a name in the wold. The Regent's Courier marks the King's Road north for you and bids you present yourself at the Highkeep Roost — the capital's gate stands open to anyone the vale speaks well of. Follow the road; the roost-master will see you settled.",
+    "objectives": [
+        { "type": "reach", "target": "loc_highkeep_roost", "count": 1, "desc": "Follow the King's Road to the Highkeep Roost", "x": 8.0, "y": -118.0, "radius": 6.0 }
+    ],
+    "rewards": {
+        "xp": 60,
+        "items": []
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "id": 105,
+  "name": "Cleave",
+  "icon": "cleave",
+  "char_class": "warrior",
+  "effect": "damage",
+  "cast_ticks": 0,
+  "resource_cost": 20,
+  "range_units": 2.5,
+  "base_damage": 26,
+  "attacker_stat_coeffs": {
+    "str": 0.6
+  },
+  "threat_multiplier": 1.5,
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "trained": true
+}

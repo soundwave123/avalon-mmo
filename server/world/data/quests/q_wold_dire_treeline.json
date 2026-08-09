@@ -1,0 +1,33 @@
+{
+    "id": "q_wold_dire_treeline",
+    "title": "The Dire Treeline",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 10,
+    "prerequisite_quest": null,
+    "description": "Ranger Sylas has followed the rot deeper than the vale \u2014 into the darkwood itself, where the wolves have grown to twice their size and the bloodthorn coils thick as a man's arm. The path south toward the lake is a killing floor now. Thin the dire wolves and the thornback growth before it swallows the last of the wood-road.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_dire_wolf",
+            "count": 6,
+            "desc": "Cull the dire wolves along the darkwood road"
+        },
+        {
+            "type": "kill",
+            "target": "mob_thornback_lasher",
+            "count": 5,
+            "desc": "Burn back the thornback lashers"
+        }
+    ],
+    "rewards": {
+        "xp": 380,
+        "coins": 55,
+        "items": [
+            {
+                "item": "itm_leather_cap",
+                "count": 1
+            }
+        ]
+    }
+}

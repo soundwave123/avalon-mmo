@@ -1,0 +1,26 @@
+{
+  "id": 107,
+  "name": "Concussive Blow",
+  "icon": "sunder_armor",
+  "char_class": "warrior",
+  "effect": "control",
+  "school": "physical",
+  "cast_ticks": 0,
+  "resource_cost": 20,
+  "range_units": 3.0,
+  "base_damage": 0,
+  "control_kind": "stun",
+  "control_ticks": 30,
+  "control_dr_category": "stun",
+  "cooldown_ticks": 600,
+  "ranks": [
+    {"min_level": 1, "resource_cost": 20, "control_ticks": 30, "cooldown_ticks": 600},
+    {"min_level": 6, "resource_cost": 18, "control_ticks": 35, "cooldown_ticks": 560},
+    {"min_level": 12, "resource_cost": 16, "control_ticks": 40, "cooldown_ticks": 520},
+    {"min_level": 18, "resource_cost": 14, "control_ticks": 45, "cooldown_ticks": 480},
+    {"min_level": 24, "resource_cost": 12, "control_ticks": 50, "cooldown_ticks": 440},
+    {"min_level": 30, "resource_cost": 10, "control_ticks": 55, "cooldown_ticks": 400},
+    {"min_level": 36, "resource_cost": 8, "control_ticks": 60, "cooldown_ticks": 360},
+    {"min_level": 40, "resource_cost": 6, "control_ticks": 65, "cooldown_ticks": 320}
+  ]
+}

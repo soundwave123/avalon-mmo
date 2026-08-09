@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_deep_diggings",
+    "title": "The Deep Diggings",
+    "giver_npc": "npc_scout_mira",
+    "turnin_npc": "npc_scout_mira",
+    "min_level": 6,
+    "prerequisite_quest": null,
+    "description": "Scout Mira has tracked the kobolds of the western diggings breaking into an old sealed gallery — and the ore they haul up since comes fouled and grey, the same grey creeping through the sick. Whatever they woke down there is spreading. Thin the diggers and seize the tainted ore before it reaches a smith's forge.",
+    "objectives": [
+        { "type": "kill", "target": "mob_kobold_miner", "count": 10, "desc": "Break up the kobold diggers" },
+        { "type": "collect", "target": "itm_copper_ore", "count": 8, "desc": "Seize fouled ore from the sealed gallery" }
+    ],
+    "rewards": {
+        "xp": 340,
+        "coins": 50,
+        "items": [
+            { "item": "itm_salvaging_kit", "count": 1 }
+        ]
+    }
+}

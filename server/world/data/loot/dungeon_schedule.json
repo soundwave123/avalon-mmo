@@ -1,0 +1,51 @@
+{
+  "_comment": "T-333: honest per-character named-blue odds; guaranteed greens remain repeatable.",
+  "bosses": {
+    "mob_pallbearer_ost": {
+      "_comment": "T-719 tutorial capstone, boss 1. Guaranteed uncommon, NO gated drop — a first-timer's first boss must never end in nothing, and the one lottery in the run belongs to the finale below.",
+      "guaranteed_green": ["itm_gravewatch_shoulders"],
+      "blue_chance": 0.0,
+      "named_blue_pool": []
+    },
+    "mob_sexton_marrow": {
+      "_comment": "T-719 tutorial capstone, boss 2 (the climax). Guaranteed uncommon so the run always pays, plus a 0.12 per-character named-rare — the 'reason to come back' the campaign asks for lives in a drop that is deliberately NOT guaranteed.",
+      "guaranteed_green": ["itm_sexton_lantern"],
+      "blue_chance": 0.12,
+      "named_blue_pool": ["itm_marrow_bellhammer"]
+    },
+    "mob_crypt_aldric": {
+      "guaranteed_green": ["itm_cryptkeeper_chain"],
+      "blue_chance": 0.18,
+      "named_blue_pool": ["itm_aldric_oathblade", "itm_aldric_broken_vow"]
+    },
+    "mob_crypt_vharis": {
+      "guaranteed_green": ["itm_bonepriest_wraps"],
+      "blue_chance": 0.16,
+      "named_blue_pool": ["itm_vharis_censer", "itm_vharis_flooded_signet"]
+    },
+    "mob_crypt_maldrath": {
+      "guaranteed_green": ["itm_unhallowed_guard"],
+      "blue_chance": 0.14,
+      "named_blue_pool": ["itm_maldrath_gravetide", "itm_maldrath_last_shroud"]
+    },
+    "mob_vault_sentinel": {
+      "_comment": "T-473 Era-1 raid tier (Vault of the First Hollowing). cadence=weekly re-locks the gated drop to the ISO week; the pool is EPIC and rolls ONCE per kill for the whole raid (round_robin via the T-472 loot_rule seam), so 0.40 is a per-KILL chance, not per-member like the crypt's per-person 0.14-0.18.",
+      "cadence": "weekly",
+      "guaranteed_green": ["itm_cryptkeeper_chain"],
+      "blue_chance": 0.4,
+      "named_blue_pool": ["itm_sentinel_warplate", "itm_sentinel_gravewall"]
+    },
+    "mob_vault_dirgemother": {
+      "cadence": "weekly",
+      "guaranteed_green": ["itm_bonepriest_wraps"],
+      "blue_chance": 0.4,
+      "named_blue_pool": ["itm_dirgemother_knell", "itm_dirgemother_palls"]
+    },
+    "mob_vault_hollow_king": {
+      "cadence": "weekly",
+      "guaranteed_green": ["itm_unhallowed_guard"],
+      "blue_chance": 0.45,
+      "named_blue_pool": ["itm_maldrath_hollow_crown", "itm_hollow_king_greaves"]
+    }
+  }
+}

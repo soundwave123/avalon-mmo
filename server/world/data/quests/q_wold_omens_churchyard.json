@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_omens_churchyard",
+    "title": "Omens in the Churchyard",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 9,
+    "prerequisite_quest": "q_wold_physicians_plea",
+    "description": "Father Osric has buried more of the fevered than he can count, and now the fresh graves settle wrong in the dark and the earth over them will not stay flat. He is not ready to say the word for it. Walk the churchyard, mark the crypt door where the oldest dead lie, and carry his warning to Cleric Ansa — this is the last quiet before something below stops staying buried.",
+    "objectives": [
+        { "type": "reach", "target": "loc_crypt_porch", "count": 1, "desc": "Walk the churchyard and mark the crypt door", "x": 14.0, "y": -12.5, "radius": 3.0 },
+        { "type": "talk", "target": "npc_cleric", "count": 1, "desc": "Carry Osric's warning to Cleric Ansa" }
+    ],
+    "rewards": {
+        "xp": 440,
+        "coins": 90,
+        "items": [
+            { "item": "itm_antidote", "count": 5 }
+        ]
+    }
+}

@@ -1,0 +1,16 @@
+{
+	"_doc": "T-392: the PUBLISHED matchmaking + loss-aversion params (data-tuned, same honest-contract discipline as pvp_rewards.json). band: the MMR tolerance a pair must fall inside to be matched — base_band is the tightest floor (a fresh queuer only faces a near-peer), widening by widen_per_sec each second they wait, hard-capped at max_band (SBMM lesson: fair matches keep casuals showing up, but nobody waits forever). shield: the derank / loss-aversion guardrail on rating updates. charges = losses buffered at a tier boundary before an actual demotion fires (Valorant-style rank-shield, blunts loss-aversion). placement_games = the provisional window during which a new player NEVER deranks below the tier they're calibrating in (new-player placement grace). damp_below_rating + loss_damp_factor = bottom-of-ladder loss-streak damping: below damp_below_rating a loss only sheds loss_damp_factor of the raw Elo drop, so the floor of the ladder keeps playing (bounded, never below min_rating). nudge_after_games = the gift-framed 'good stopping point' signal fires only AFTER a win once a session is at least this many games — a suggestion to stop on a high note, never a lockout or a FOMO streak-timer.",
+	"band": {
+		"base_band": 100,
+		"widen_per_sec": 8,
+		"max_band": 600
+	},
+	"shield": {
+		"charges": 3,
+		"placement_games": 5,
+		"damp_below_rating": 1300,
+		"loss_damp_factor": 0.5,
+		"min_rating": 100,
+		"nudge_after_games": 8
+	}
+}

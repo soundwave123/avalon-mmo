@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_fenmire_cull",
+    "title": "The Fenmire Cull",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 15,
+    "prerequisite_quest": "q_wold_moor_watch",
+    "description": "Where the moor sinks to bog, the bloodthorn has drowned and risen again as something that lurks under the water and drags. The fen lurkers have taken three sheep and a shepherd. Wade in and thin them.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_fen_lurker",
+            "count": 8,
+            "desc": "Slay the fen lurkers in the mire"
+        }
+    ],
+    "rewards": {
+        "xp": 540,
+        "coins": 90,
+        "items": [
+            {
+                "item": "itm_field_repair_kit",
+                "count": 1
+            }
+        ]
+    }
+}

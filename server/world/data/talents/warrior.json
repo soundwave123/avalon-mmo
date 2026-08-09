@@ -1,0 +1,798 @@
+{
+    "trees": [
+        {
+            "id": "arms",
+            "role": "dps"
+        },
+        {
+            "id": "fury",
+            "role": "dps"
+        },
+        {
+            "id": "protection",
+            "role": "tank"
+        }
+    ],
+    "talents": [
+        {
+            "id": "tal_war_might",
+            "name": "Might",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "str",
+                "per_rank": 2
+            },
+            "desc": "+2 Strength per rank"
+        },
+        {
+            "id": "tal_war_imp_heroic",
+            "name": "Improved Heroic Strike",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 5
+            },
+            "desc": "Heroic Strike +5% damage per rank"
+        },
+        {
+            "id": "tal_war_tactics",
+            "name": "Tactical Training",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "dex",
+                "per_rank": 2
+            },
+            "desc": "+2 Dexterity per rank"
+        },
+        {
+            "id": "tal_war_deep_wounds",
+            "name": "Deep Wounds",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": "tal_war_imp_heroic",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All damage +2% per rank"
+        },
+        {
+            "id": "tal_war_executioner",
+            "name": "Executioner",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 15
+            },
+            "desc": "Heroic Strike +15% damage"
+        },
+        {
+            "id": "tal_war_bloodrage",
+            "name": "Bloodrage",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 101,
+                "pct_per_rank": 8
+            },
+            "desc": "Heroic Strike rage cost -8% per rank"
+        },
+        {
+            "id": "tal_war_toughness",
+            "name": "Toughness",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_war_frenzy",
+            "name": "Frenzy",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 104,
+                "pct_per_rank": 6
+            },
+            "desc": "Revenge +6% damage per rank"
+        },
+        {
+            "id": "tal_war_battle_shout",
+            "name": "Battle Focus",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_war_bloodrage",
+            "effect": {
+                "kind": "stat_add",
+                "stat": "str",
+                "per_rank": 3
+            },
+            "desc": "+3 Strength per rank"
+        },
+        {
+            "id": "tal_war_rampage",
+            "name": "Rampage",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 5
+            },
+            "desc": "All damage +5%"
+        },
+        {
+            "id": "tal_war_shield_wall",
+            "name": "Iron Skin",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 3
+            },
+            "desc": "+3 Stamina per rank"
+        },
+        {
+            "id": "tal_war_imp_taunt",
+            "name": "Defiance",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 1,
+            "max_ranks": 2,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 104,
+                "pct_per_rank": 8
+            },
+            "desc": "Revenge +8% damage per rank (threat)"
+        },
+        {
+            "id": "tal_war_imp_sunder",
+            "name": "Improved Sunder",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 103,
+                "pct_per_rank": 8
+            },
+            "desc": "Sunder Armor cost -8% per rank"
+        },
+        {
+            "id": "tal_war_vengeance",
+            "name": "Vengeance",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": "tal_war_imp_taunt",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 104,
+                "pct_per_rank": 5
+            },
+            "desc": "Revenge +5% damage per rank"
+        },
+        {
+            "id": "tal_war_bastion",
+            "name": "Bastion",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 8
+            },
+            "desc": "+8 Stamina"
+        },
+        {
+            "id": "tal_war_imp_pummel",
+            "name": "Relentless Pummel",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 106,
+                "pct_per_rank": 15
+            },
+            "desc": "Pummel rage cost -15% per rank"
+        },
+        {
+            "id": "tal_war_sweeping_edge",
+            "name": "Sweeping Edge",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 105,
+                "pct_per_rank": 6
+            },
+            "desc": "Cleave +6% damage per rank"
+        },
+        {
+            "id": "tal_war_iron_grip",
+            "name": "Iron Grip",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "str",
+                "per_rank": 2
+            },
+            "desc": "+2 Strength per rank"
+        },
+        {
+            "id": "tal_war_weapon_mastery",
+            "name": "Weapon Mastery",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_war_impale",
+            "name": "Impale",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 4
+            },
+            "desc": "Heroic Strike +4% damage per rank"
+        },
+        {
+            "id": "tal_war_overpower",
+            "name": "Overpower",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 105,
+                "pct_per_rank": 8
+            },
+            "desc": "Cleave rage cost -8% per rank"
+        },
+        {
+            "id": "tal_war_blood_frenzy",
+            "name": "Blood Frenzy",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_war_weapon_mastery",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All damage +2% per rank"
+        },
+        {
+            "id": "tal_war_second_wind",
+            "name": "Second Wind",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_war_concussive_force",
+            "name": "Concussive Force",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 107,
+                "pct_per_rank": 8
+            },
+            "desc": "Concussive Blow +8% damage per rank"
+        },
+        {
+            "id": "tal_war_strength_of_arms",
+            "name": "Strength of Arms",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "str",
+                "per_rank": 3
+            },
+            "desc": "+3 Strength per rank"
+        },
+        {
+            "id": "tal_war_mortal_rend",
+            "name": "Mortal Rend",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_war_impale",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 5
+            },
+            "desc": "Heroic Strike +5% damage per rank"
+        },
+        {
+            "id": "tal_war_mortal_strike",
+            "name": "Mortal Strike",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 25
+            },
+            "desc": "Capstone: Heroic Strike +25% damage \u2014 the Arms executioner"
+        },
+        {
+            "id": "tal_war_endless_rage",
+            "name": "Endless Rage",
+            "class": "warrior",
+            "tree": "arms",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All rage costs -3% per rank"
+        },
+        {
+            "id": "tal_war_cruelty",
+            "name": "Cruelty",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_war_battle_trance",
+            "name": "Battle Trance",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "dex",
+                "per_rank": 2
+            },
+            "desc": "+2 Dexterity per rank"
+        },
+        {
+            "id": "tal_war_enrage",
+            "name": "Enrage",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_war_imp_cleave",
+            "name": "Improved Cleave",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 105,
+                "pct_per_rank": 5
+            },
+            "desc": "Cleave +5% damage per rank"
+        },
+        {
+            "id": "tal_war_reckless_charge",
+            "name": "Reckless Assault",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 101,
+                "pct_per_rank": 6
+            },
+            "desc": "Heroic Strike rage cost -6% per rank"
+        },
+        {
+            "id": "tal_war_flurry",
+            "name": "Flurry",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_war_enrage",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 101,
+                "pct_per_rank": 4
+            },
+            "desc": "Heroic Strike +4% damage per rank"
+        },
+        {
+            "id": "tal_war_unbridled_wrath",
+            "name": "Unbridled Wrath",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "str",
+                "per_rank": 2
+            },
+            "desc": "+2 Strength per rank"
+        },
+        {
+            "id": "tal_war_brutal_pummel",
+            "name": "Brutal Pummel",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 106,
+                "pct_per_rank": 8
+            },
+            "desc": "Pummel +8% damage per rank"
+        },
+        {
+            "id": "tal_war_blood_craze",
+            "name": "Blood Craze",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 3
+            },
+            "desc": "+3 Stamina per rank"
+        },
+        {
+            "id": "tal_war_slaughter",
+            "name": "Slaughter",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_war_imp_cleave",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 105,
+                "pct_per_rank": 6
+            },
+            "desc": "Cleave +6% damage per rank"
+        },
+        {
+            "id": "tal_war_bloodthirst",
+            "name": "Bloodthirst",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all damage +10% \u2014 the Fury berserker"
+        },
+        {
+            "id": "tal_war_relentless",
+            "name": "Relentless",
+            "class": "warrior",
+            "tree": "fury",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All rage costs -3% per rank"
+        },
+        {
+            "id": "tal_war_shield_discipline",
+            "name": "Shield Discipline",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 103,
+                "pct_per_rank": 8
+            },
+            "desc": "Sunder Armor cost -8% per rank"
+        },
+        {
+            "id": "tal_war_stalwart",
+            "name": "Stalwart",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_war_bulwark",
+            "name": "Bulwark",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_war_menace",
+            "name": "Menace",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 104,
+                "pct_per_rank": 5
+            },
+            "desc": "Revenge +5% damage per rank (threat)"
+        },
+        {
+            "id": "tal_war_guarded_stance",
+            "name": "Guarded Stance",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 104,
+                "pct_per_rank": 7
+            },
+            "desc": "Revenge rage cost -7% per rank"
+        },
+        {
+            "id": "tal_war_fortress",
+            "name": "Fortress",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_war_bulwark",
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_war_concussive_guard",
+            "name": "Concussive Guard",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 107,
+                "pct_per_rank": 8
+            },
+            "desc": "Concussive Blow +8% damage per rank"
+        },
+        {
+            "id": "tal_war_oaken_resolve",
+            "name": "Oaken Resolve",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_war_unbreakable",
+            "name": "Unbreakable",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 3
+            },
+            "desc": "+3 Stamina per rank"
+        },
+        {
+            "id": "tal_war_sunder_mastery",
+            "name": "Sunder Mastery",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_war_shield_discipline",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 103,
+                "pct_per_rank": 8
+            },
+            "desc": "Sunder Armor +8% damage per rank (threat)"
+        },
+        {
+            "id": "tal_war_avatar_bulwark",
+            "name": "Avatar of the Bulwark",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 12
+            },
+            "desc": "Capstone: +12 Stamina \u2014 the Protection wall"
+        },
+        {
+            "id": "tal_war_vigilance",
+            "name": "Vigilance",
+            "class": "warrior",
+            "tree": "protection",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All rage costs -3% per rank"
+        }
+    ]
+}

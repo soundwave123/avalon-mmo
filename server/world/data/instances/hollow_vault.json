@@ -1,0 +1,14 @@
+{
+  "_comment": "T-473 Vault of the First Hollowing spawn set — the Era-1 10-man raid on the T-331 soft-instance seam. A roofed box on the dead-flat plain NORTH of the Hollowed Crypt in the same (420,0) offset region (crypt runs y -7..-43; the Vault runs y +66..+99, ~70u clear, same T-371 region bucket so the T-355 capacity levers apply unchanged). Consumed by instance_service._seed on a RAID's first descent (enter_raid_instance is gated to a T-472 raid of >5 members). 6 trash packs / 15 mobs reusing the T-341 undead family, PLUS the three T-473 bosses (vault_sentinel / vault_dirgemother / vault_hollow_king) at their authored anchors. Positions are server ground (x, y).",
+  "spawns": [
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.0, 66.0], [421.0, 66.0], [420.0, 67.2]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[417.5, 69.5], [422.5, 69.5]] },
+    { "mob_file": "restless_shade.json", "positions": [[420.0, 77.5], [418.5, 78.5]] },
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.0, 80.5], [421.0, 80.5], [420.0, 81.7]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[416.5, 88.5], [420.0, 89.5], [423.5, 88.5]] },
+    { "mob_file": "restless_shade.json", "positions": [[419.2, 92.0], [420.8, 92.0]] },
+    { "mob_file": "vault_sentinel.json", "positions": [[420.0, 72.0]] },
+    { "mob_file": "vault_dirgemother.json", "positions": [[420.0, 84.0]] },
+    { "mob_file": "vault_hollow_king.json", "positions": [[420.0, 97.0]] }
+  ]
+}

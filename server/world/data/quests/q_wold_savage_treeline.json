@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_savage_treeline",
+    "title": "The Savage Treeline",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 6,
+    "prerequisite_quest": null,
+    "description": "Ranger Sylas has watched the Whispering Vale turn against itself — the wolves rabid, the bloodthorn lashing at anything that breathes. Root and fang carry the same sickness now. Cull both back to the treeline so travellers can pass again, and mark where the rot runs deepest.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 8, "desc": "Put down rabid wolves in the Vale" },
+        { "type": "kill", "target": "mob_bloodthorn_lasher", "count": 5, "desc": "Burn back the lashing bloodthorn" }
+    ],
+    "rewards": {
+        "xp": 340,
+        "coins": 50,
+        "items": [
+            { "item": "itm_leather_cap", "count": 1 }
+        ]
+    }
+}

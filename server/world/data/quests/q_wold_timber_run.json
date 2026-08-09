@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_timber_run",
+    "title": "The Timber Run",
+    "giver_npc": "npc_scout_mira",
+    "turnin_npc": "npc_scout_mira",
+    "min_level": 6,
+    "prerequisite_quest": null,
+    "description": "Scout Mira needs the darkwood treeline cleared enough to raise a watch-post: seasoned timber cut and hauled, and the strays that circle the fellers driven off before they take a hand. Cut what the carpenters need and thin the wolves that harry the work.",
+    "objectives": [
+        { "type": "collect", "target": "itm_timber_rough", "count": 6, "desc": "Fell seasoned timber along the darkwood" },
+        { "type": "kill", "target": "mob_wolf", "count": 4, "desc": "Drive off the wolves circling the fellers" }
+    ],
+    "rewards": {
+        "xp": 330,
+        "coins": 45,
+        "items": [
+            { "item": "itm_trail_rations", "count": 2 }
+        ]
+    }
+}

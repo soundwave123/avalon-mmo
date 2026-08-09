@@ -1,0 +1,58 @@
+{
+    "_comment": "T-349 Syndicate street tier, WAVE 1 (no anim dependency). A HUMAN on the existing T-118 hero rig (entity_visuals maps mob_syndicate_legbreaker -> char_hero_warrior.glb with a charcoal-trenchcoat tint) — no new mesh/rig. The street bruiser: most HP of the wave-1 three, slow heavy swings, some parry. Melee only; the trench-club/brass-knuckles prop is cosmetic-deferred (no weapon GLB). L20-24 Ashmoor band (ashmoor-direction.md S4; era-direction S4.1). render_kind empty -> broadcast kind = mob_id, which is also the T-352 bounty kill-credit alias.",
+    "mob_type_id": 50,
+    "mob_id": "mob_syndicate_legbreaker",
+    "name": "Syndicate Legbreaker",
+    "difficulty": 3,
+    "level": 22,
+    "xp": 36,
+    "str": 26,
+    "int": 5,
+    "dex": 14,
+    "stamina": 34,
+    "spirit": 5,
+    "weapon_speed": 1.7,
+    "aggro_radius": 16.0,
+    "leash_radius": 20.0,
+    "melee_range": 2.2,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 45,
+        "Tactics": 30
+    },
+    "base_damage": 22,
+    "variance_min": 0.85,
+    "variance_max": 1.05,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.25
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.02,
+    "parry_chance": 0.08,
+    "crit_chance": 0.05,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 2,
+            "count_max": 6
+        },
+        {
+            "item_id": "itm_bootleg_gin",
+            "chance": 0.4,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_brass_knuckles",
+            "chance": 0.15,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 2.0
+}

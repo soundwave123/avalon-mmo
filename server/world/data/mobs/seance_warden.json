@@ -1,0 +1,58 @@
+{
+    "_comment": "T-349 Syndicate street tier, WAVE 1 — the occult TELL on the street (bridge to the S5 Gull Cellars dungeon). A HUMAN on the T-118 hero rig (entity_visuals maps mob_seance_warden -> char_hero_mage.glb, robe silhouette, dark tint + a sickly rift-green sigil accent on the trim). Reads as a caster via the mage rig + existing cast clips; mechanically a melee-range attacker on the shared mob swing path (the engine has no ranged/caster mob attack until T-350's keep-distance work — the restless-shade precedent: int-flavoured but melee). Squishiest of the wave-1 three, highest dodge, occult loot. L20-24 band.",
+    "mob_type_id": 52,
+    "mob_id": "mob_seance_warden",
+    "name": "Seance Warden",
+    "difficulty": 3,
+    "level": 20,
+    "xp": 39,
+    "str": 14,
+    "int": 24,
+    "dex": 20,
+    "stamina": 24,
+    "spirit": 12,
+    "weapon_speed": 1.5,
+    "aggro_radius": 16.0,
+    "leash_radius": 22.0,
+    "melee_range": 2.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 30,
+        "Tactics": 20
+    },
+    "base_damage": 20,
+    "variance_min": 0.9,
+    "variance_max": 1.15,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.12,
+    "parry_chance": 0.0,
+    "crit_chance": 0.08,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 4
+        },
+        {
+            "item_id": "itm_bootleg_gin",
+            "chance": 0.2,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_seance_sigil_chalk",
+            "chance": 0.2,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 1.5
+}

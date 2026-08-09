@@ -1,0 +1,87 @@
+{
+	"_doc": "T-391/T-410: the PUBLISHED PvP reward rates (honest-economy guardrail — these numbers are the contract; the UI reads them, the server enforces them). honor: per rated match — every participant earns participation_base (GW2-pips lesson: a loss still pays); the winner adds win_bonus; rating_bonus adds 1 per 100 rating above 1000 capped at rating_bonus_cap (WoW-arena climb incentive); upset_bonus pays a winner who beat a higher-rated opponent; catchup multiplies a LOSER's total when their rating is below catchup_below_rating (bounded loss-aversion antidote — the bottom of the ladder always progresses). tracks: selectable reward tracks; spending honor completes tiers in order; each tier lands ONE unlock on the T-375 cosmetic seam (title: ids are display-only titles). rarity may NEVER exceed 'rare' (power-never-for-sale charter; tested). pacing: the authoring contract T-410 added — total track honor / observed_honor_per_night, in weeks, must stay >= target_weeks_to_clear_tracks (a data lint so future authoring can't shrink the chase back to nights). commendation: T-410 terminal, repeatable sink — once a player has cleared the tracks they can afford, surplus honor buys seasonal commendations indefinitely at a data-tunable cost. Each buy is overdraft-guarded and ledgered (reason 'commendation'); the T-395 account-mastery floor will consume the accumulated count. Purely horizontal (no cosmetic, no power); it NEVER exhausts, so honor is never inert. season_payout: at season rollover each participant's best tier grants one prestige unlock, idempotent.",
+	"honor": {
+		"participation_base": 10,
+		"win_bonus": 8,
+		"rating_bonus_per_100_over_1000": 1,
+		"rating_bonus_cap": 10,
+		"upset_bonus": 5,
+		"catchup_below_rating": 900,
+		"catchup_multiplier": 1.5
+	},
+	"honor_bg": {
+		"participation_base": 20,
+		"win_bonus": 14,
+		"rating_bonus_per_100_over_1000": 1,
+		"rating_bonus_cap": 10,
+		"upset_bonus": 5,
+		"catchup_below_rating": 900,
+		"catchup_multiplier": 1.5,
+		"_doc": "T-413: published rates for the 'bg' bracket (Crownfield 3v3, 6 players/match after the 2026-07-16 owner ruling). Rates are PER PLAYER, so team size never moves the pacing floor. A BG match runs ~5-8 min vs a ~1 min duel, so it pays roughly double per match while a BG-only night stays at duel parity (see pacing.bg_matches_per_night). Same shape as 'honor': every participant earns participation_base (a loss still pays), winner adds win_bonus (+rating/upset bonuses), low-rated losers get the catch-up multiplier. Ledger reason is 'bg_match' (distinct from duels' 'match')."
+	},
+	"pacing": {
+		"observed_honor_per_night": 280,
+		"bg_matches_per_night": 10,
+		"target_weeks_to_clear_tracks": 3,
+		"_doc": "Observed rate (fun-audit run 2): ~20 rated duels/night at ~50% win = ~280 honor/night. Total track honor authored below is 7830 -> 7830/280 = 27.96 nights = 3.99 weeks. A high-rated earner (~330/night with rating+upset bonuses) still needs ~23.7 nights = 3.4 weeks. Both land inside the 3-4 week acceptance band; the terminal commendation sink covers everything after. T-413: a BG-only night is bg_matches_per_night matches at ~50% win on the honor_bg rates = 10 * (20 + 14/2) = 270/night <= 280, so the battleground cannot shrink the chase below the floor (linted in test_pvp_honor.gd). Rates are per-player, so the 2026-07-16 flip to 3v3 (6 players/match) leaves this pacing untouched."
+	},
+	"tracks": [
+		{
+			"id": "gaslight_regalia",
+			"name": "Gaslight Regalia",
+			"tiers": [
+				{"cost": 100, "unlock": "skin_gaslight_coat", "rarity": "uncommon"},
+				{"cost": 200, "unlock": "skin_gaslight_hat", "rarity": "uncommon"},
+				{"cost": 350, "unlock": "skin_gaslight_gloves", "rarity": "rare"},
+				{"cost": 500, "unlock": "skin_gaslight_mantle", "rarity": "rare"},
+				{"cost": 650, "unlock": "title:Gaslight Duelist", "rarity": "rare"}
+			]
+		},
+		{
+			"id": "wolf_of_the_vale",
+			"name": "Wolf of the Vale",
+			"tiers": [
+				{"cost": 120, "unlock": "skin_vale_wolf_cloak", "rarity": "uncommon"},
+				{"cost": 280, "unlock": "skin_vale_wolf_pelt", "rarity": "uncommon"},
+				{"cost": 480, "unlock": "skin_vale_wolf_helm", "rarity": "rare"},
+				{"cost": 650, "unlock": "title:Wolf of the Vale", "rarity": "rare"}
+			]
+		},
+		{
+			"id": "ashen_vanguard",
+			"name": "Ashen Vanguard",
+			"tiers": [
+				{"cost": 120, "unlock": "skin_ashen_tabard", "rarity": "uncommon"},
+				{"cost": 280, "unlock": "skin_ashen_bracers", "rarity": "uncommon"},
+				{"cost": 450, "unlock": "skin_ashen_greaves", "rarity": "rare"},
+				{"cost": 620, "unlock": "skin_ashen_warplate", "rarity": "rare"},
+				{"cost": 780, "unlock": "title:Ashen Vanguard", "rarity": "rare"}
+			]
+		},
+		{
+			"id": "tideborn_corsair",
+			"name": "Tideborn Corsair",
+			"tiers": [
+				{"cost": 120, "unlock": "skin_tideborn_sash", "rarity": "uncommon"},
+				{"cost": 280, "unlock": "skin_tideborn_coat", "rarity": "uncommon"},
+				{"cost": 450, "unlock": "skin_tideborn_tricorn", "rarity": "rare"},
+				{"cost": 620, "unlock": "skin_tideborn_greatcoat", "rarity": "rare"},
+				{"cost": 780, "unlock": "title:Tideborn Corsair", "rarity": "rare"}
+			]
+		}
+	],
+	"commendation": {
+		"cost": 250,
+		"mastery_id": "seasonal_commendation",
+		"reason": "commendation",
+		"_doc": "Repeatable, indefinite. Deducts `cost` honor (overdraft-guarded exactly like a track spend) and writes a ledger row with reason 'commendation'. Grants no cosmetic and no power — the accumulated count IS the record, which the T-395 account-mastery floor will later consume. Never exhausts, so a player who owns every affordable cosmetic still has an evergreen honor use."
+	},
+	"season_payout": {
+		"Bronze": {"unlock": "title:Season Duelist", "rarity": "common"},
+		"Silver": {"unlock": "title:Silver Blade", "rarity": "uncommon"},
+		"Gold": {"unlock": "skin_gilded_pauldron", "rarity": "uncommon"},
+		"Platinum": {"unlock": "skin_platinum_halfcape", "rarity": "rare"},
+		"Diamond": {"unlock": "skin_diamond_crest", "rarity": "rare"},
+		"Champion": {"unlock": "title:Champion of the Rift", "rarity": "rare"}
+	}
+}

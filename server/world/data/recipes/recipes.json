@@ -1,0 +1,139 @@
+{
+    "recipes": [
+        {
+            "id": "rec_minor_healing",
+            "name": "Minor Healing Potion",
+            "profession": "alchemy",
+            "trainer_id": "npc_alchemist",
+            "coin_cost": 40,
+            "inputs": [
+                {"item": "itm_herb_bloodthorn", "count": 2}
+            ],
+            "output": {"item": "itm_potion_minor_healing", "count": 1}
+        },
+        {
+            "id": "rec_greater_healing",
+            "name": "Greater Healing Potion",
+            "profession": "alchemy",
+            "trainer_id": "npc_alchemist",
+            "coin_cost": 120,
+            "inputs": [
+                {"item": "itm_herb_bloodthorn", "count": 1},
+                {"item": "itm_herb_marshmint", "count": 1},
+                {"item": "itm_reagent_venom_gland", "count": 1}
+            ],
+            "output": {"item": "itm_potion_greater_healing", "count": 1}
+        },
+        {
+            "id": "rec_travelers_ration",
+            "name": "Traveler's Ration",
+            "profession": "alchemy",
+            "trainer_id": "npc_alchemist",
+            "coin_cost": 40,
+            "inputs": [
+                {"item": "itm_herb_marshmint", "count": 2}
+            ],
+            "output": {"item": "itm_ration_travelers", "count": 1}
+        },
+        {
+            "id": "rec_field_repair_kit",
+            "name": "Field Repair Kit",
+            "profession": "alchemy",
+            "trainer_id": "npc_alchemist",
+            "coin_cost": 80,
+            "inputs": [
+                {"item": "itm_herb_emberroot", "count": 1},
+                {"item": "itm_reagent_venom_gland", "count": 1}
+            ],
+            "output": {"item": "itm_field_repair_kit", "count": 1}
+        },
+        {
+            "id": "rec_forgehand_broadsword",
+            "name": "Forgehand Broadsword",
+            "profession": "smithing",
+            "trainer_id": "npc_blacksmith",
+            "coin_cost": 60,
+            "inputs": [
+                {"item": "itm_ore_iron", "count": 3},
+                {"item": "itm_timber_rough", "count": 1}
+            ],
+            "output": {"item": "itm_smith_broadsword", "count": 1}
+        },
+        {
+            "id": "rec_riveted_buckler",
+            "name": "Riveted Oak Buckler",
+            "profession": "smithing",
+            "trainer_id": "npc_blacksmith",
+            "coin_cost": 50,
+            "inputs": [
+                {"item": "itm_ore_iron", "count": 1},
+                {"item": "itm_timber_rough", "count": 2},
+                {"item": "itm_copper_ore", "count": 1}
+            ],
+            "output": {"item": "itm_smith_buckler", "count": 1}
+        },
+        {
+            "id": "rec_smiths_repair_kit",
+            "name": "Smith's Repair Kit",
+            "profession": "smithing",
+            "trainer_id": "npc_hk_smith",
+            "coin_cost": 100,
+            "inputs": [
+                {"item": "itm_ore_iron", "count": 2},
+                {"item": "itm_timber_rough", "count": 1}
+            ],
+            "output": {"item": "itm_smiths_repair_kit", "count": 1}
+        },
+        {
+            "id": "rec_crystal_lake_fish",
+            "name": "Pan-Fried Crystal Lake Fish",
+            "profession": "cooking",
+            "trainer_id": "npc_hk_cook",
+            "coin_cost": 30,
+            "inputs": [
+                {"item": "itm_fish_lake_perch", "count": 1},
+                {"item": "itm_fish_reed_minnow", "count": 1}
+            ],
+            "output": {"item": "itm_food_pan_fried_fish", "count": 1}
+        },
+        {
+            "id": "rec_potent_healing",
+            "name": "Potent Healing Elixir",
+            "profession": "alchemy",
+            "trainer_id": "npc_alchemist",
+            "coin_cost": 200,
+            "inputs": [
+                {"item": "itm_herb_emberbloom", "count": 1},
+                {"item": "itm_herb_emberroot", "count": 1},
+                {"item": "itm_herb_bloodthorn", "count": 1}
+            ],
+            "output": {"item": "itm_potion_potent_healing", "count": 1}
+        },
+        {
+            "id": "rec_gemset_charm",
+            "name": "Gemset Charm",
+            "profession": "smithing",
+            "trainer_id": "npc_blacksmith",
+            "coin_cost": 180,
+            "inputs": [
+                {"item": "itm_gem_raw", "count": 1},
+                {"item": "itm_ore_iron", "count": 2},
+                {"item": "itm_copper_ore", "count": 1}
+            ],
+            "output": {"item": "itm_smith_gemset_charm", "count": 1}
+        },
+        {
+            "id": "rec_heartwood_longbow",
+            "name": "Heartwood Longbow",
+            "profession": "smithing",
+            "trainer_id": "npc_blacksmith",
+            "coin_cost": 160,
+            "inputs": [
+                {"item": "itm_timber_heartwood", "count": 1},
+                {"item": "itm_timber_rough", "count": 2},
+                {"item": "itm_ore_iron", "count": 1}
+            ],
+            "output": {"item": "itm_smith_heartwood_longbow", "count": 1}
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "id": "q004",
+    "title": "Taming the Wild",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 2,
+    "prerequisite_quest": null,
+    "description": "Ranger Sylas watches the Whispering Vale, where a rogue wolf has been stalking travellers. Bring it down. In time you may learn to tame such beasts — for now, learn to survive them.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 1, "desc": "Slay the rogue wolf" }
+    ],
+    "rewards": {
+        "xp": 175,
+        "items": [
+            { "item": "itm_trail_rations", "count": 5 }
+        ]
+    }
+}

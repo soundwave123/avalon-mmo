@@ -1,0 +1,726 @@
+{
+    "spawns": [
+        {
+            "mob_file": "dummy.json",
+            "entity_id_base": 1001,
+            "positions": [
+                [
+                    10.0,
+                    10.0
+                ]
+            ]
+        },
+        {
+            "_comment": "T-426 slice 4: the tactical-teaching sparring effigy, in Hale's training ring (~16,10, spaced from the dummy at 10,10 and the ring reach point at 14,10). Open-world spawn (instance 0); boss_mechanics.tick advances its training_dirge channel via the same instance_service.tick_bosses pass that drives the crypt bosses (the mob table is shared by reference). Only channels once a trainee engages it (is_active requires AGGROED/MELEE).",
+            "mob_file": "training_effigy.json",
+            "entity_id_base": 1051,
+            "positions": [
+                [
+                    16.0,
+                    10.0
+                ]
+            ]
+        },
+        {
+            "_comment": "T-708 (2026-08-04, supersedes the T-660 SOLO+DUO triple): three spawns could not feed the ~15 wolf kills the starter quest set demands (q001 8+~3-for-pelts, q010 3, q004 1), and the fun-audit re-flagged the (30,20)/(36,24) duo as the #52 chain-pull \u2014 a 2v1 against a fresh L1 following Kessa's very first real-mob quest. The starter band is now SIX ALL-SOLO spawns ringing the hamlet ((30,20) kept for the test-loot-loop 1101 fixture; (36,24) and (20,-30) relocated; three added on the far/west+south sides), every pair >=30m apart \u2014 T-708 asked >=15m, but 15-30m is exactly T-402's 8-30m dead zone, so the solo floor (1.5x AGGRO_MAX) is the honest spacing \u2014 and EVERY spawn >=30m from every spawn_points.json hub (the T-515 invariant extended to the L3 starter wolves now that respawn is fast: worst case 20m aggro + 6m hub jitter = 26m). Also kept: >=20m from every elite (T-617 escape buffer: Greymaw (48,40), Grexrok (-45,42), Elderthorn (-50,-45)), >=30m from the kobold/lasher camps (no cross-family chain), >=18m (wolf leash_radius) from every trainer/service NPC per test_trainer_spawn_safety.gd, and clear of the lake disc (18,22 r12). respawn_ticks 300 = ~15s at 20tps (starter-band only; the global 600 dwell stands elsewhere) so two simultaneous newcomers each sustain kill progress without >20s of no-target downtime. Spacing regression: test_spawn_safety.gd (starter-wolf density test) + test_spawn_spacing.gd's Wold dead-zone lint (starter solos; the heartwold duos still provide the cluster vocabulary).",
+            "mob_file": "wolf.json",
+            "entity_id_base": 1101,
+            "respawn_ticks": 300,
+            "positions": [
+                [
+                    30.0,
+                    20.0
+                ],
+                [
+                    16.0,
+                    -34.0
+                ],
+                [
+                    20.0,
+                    -66.0
+                ],
+                [
+                    -8.0,
+                    40.0
+                ],
+                [
+                    -12.0,
+                    -52.0
+                ],
+                [
+                    66.0,
+                    8.0
+                ]
+            ]
+        },
+        {
+            "_comment": "T-617 (2026-07-18/19, extends T-585/T-660): the T-585 placement put this pack ~7-10m off Grexrok the Deepwarden (-45,42) \u2014 inside a fleeing player's drag radius, so a survivable elite encounter compounded into an unsurvivable 3v1 (soak-12's full-HP L7 death; session-9 flagged the same adds). Elites now carry a TRASH-FREE ESCAPE BUFFER (test_spawn_spacing.gd's elite-isolation oracle: no non-elite spawn point inside minf(AGGRO_MAX, the elite's leash_radius) of any elite/rare spawn). The duo keeps the 'kobolds work the diggings below Grexrok's mine' read \u2014 same camp arrangement, same <=8m pack link (6.3m) \u2014 but sits 32.0m/30.4m from Grexrok: outside his 20m aggro clamp AND outside T-402's 30m separate-pull floor, so disengaging from Grexrok (or pulling the kobolds) can never chain the other fight. Still >=25m from every trainer/service NPC (test_trainer_spawn_safety.gd: alchemist (-20,20) is 26.0m/31.0m away).",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 1201,
+            "positions": [
+                [
+                    -44.0,
+                    10.0
+                ],
+                [
+                    -50.0,
+                    12.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 1301,
+            "positions": [
+                [
+                    -30.0,
+                    -25.0
+                ],
+                [
+                    -36.0,
+                    -30.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "greymaw_alpha.json",
+            "entity_id_base": 1901,
+            "positions": [
+                [
+                    48.0,
+                    40.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "grexrok_deepwarden.json",
+            "entity_id_base": 1911,
+            "positions": [
+                [
+                    -45.0,
+                    42.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "elderthorn_guardian.json",
+            "entity_id_base": 1921,
+            "positions": [
+                [
+                    -50.0,
+                    -45.0
+                ]
+            ]
+        },
+        {
+            "_pull_vocabulary_doc": "T-402 Ashmoor street-tier PULL VOCABULARY \u2014 the encounter grammar the T-399 live E2E lacked and the M6 crypt content reuses. Under the T-402 level-relative aggro model (mob_aggro.gd) these street mobs aggro at their WoW-shape base reach (~16-18m same-level, capped AGGRO_MAX=20), so spacing \u2014 not a near-contact radius \u2014 is what makes a pull SOLO, DUO, or PACK. THREE deliberate shapes: (a) SOLO = a lone mob whose nearest neighbour is >= 1.5*AGGRO_MAX (30m) away, so it can be engaged 1v1 (the T-399 winnable fight, unreachable before because every legbreaker had a constable ~5m off forcing a 2v1); (b) DUO/PACK = a cluster whose members sit <= 8m apart (they read as standing TOGETHER and are pulled as one honest group), the cluster itself >= 30m from every other group. The forbidden DEAD ZONE is 8-30m: two mobs that close chain by accident yet look separate \u2014 exactly the 4.9m legbreaker+constable trap. test_spawn_spacing.gd ASSERTS every Ashmoor pair is <=8m (same group) OR >=30m (separate pull); it fails CLOSED so future authoring can't silently recreate the trap. Every spawn is also >= AGGRO_MAX+margin from the ASHMOOR_ARRIVAL plaza (-420,-5) so a fresh rift arrival (possibly UNDER-level -> aggro grows toward the cap) is not swarmed on step-in (T-330 vestibule lesson). T-618 (2026-07-19): SOLO-A also has to clear the High Street SERVICE ROW (constabulary/Grey Gull/warehouse anchors at y=8, x -428.5..-412.75) by its own leash_radius (20m, live-proven: a L3 pilot was killed 14-16m off the row by the original (-420,22) spawn) \u2014 moved north to (-420,29), which is the only y on this x column that clears BOTH the row (>=20m, its true worst-case reach) AND PACK-D's dead zone (>=30m, nearest member is a gunsel at (-422,60)) simultaneously; see test_spawn_spacing.gd's service-hub exclusion test. GROUPS: SOLO-A legbreaker (-420,29); SOLO-B constable (-458,42); DUO-C legbreaker+constable (~-382,49); PACK-D seance_warden + gunsel x2 + torpedo (~-425,62) \u2014 the ranged hard pull.",
+            "mob_file": "syndicate_legbreaker.json",
+            "entity_id_base": 2001,
+            "positions": [
+                [
+                    -420.0,
+                    29.0
+                ],
+                [
+                    -380.0,
+                    48.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "constable_take.json",
+            "entity_id_base": 2011,
+            "positions": [
+                [
+                    -458.0,
+                    42.0
+                ],
+                [
+                    -385.0,
+                    51.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "seance_warden.json",
+            "entity_id_base": 2021,
+            "positions": [
+                [
+                    -425.0,
+                    62.0
+                ]
+            ]
+        },
+        {
+            "_comment": "T-402 PACK-D ranged core: the two gunsels + the torpedo cluster with the seance_warden above (all <= 8m apart) into ONE marked hard pull deep up High Street, >= 30m from every solo/duo and well clear of the arrival plaza. The gun mobs kite the PLAYER (mob_ai._tick_ranged), not their packmates, so the tight cluster is a firing line, not a self-jam.",
+            "mob_file": "syndicate_gunsel.json",
+            "entity_id_base": 2031,
+            "positions": [
+                [
+                    -428.0,
+                    60.0
+                ],
+                [
+                    -422.0,
+                    60.0
+                ]
+            ]
+        },
+        {
+            "mob_file": "syndicate_torpedo.json",
+            "entity_id_base": 2041,
+            "positions": [
+                [
+                    -425.0,
+                    64.5
+                ]
+            ]
+        },
+        {
+            "_comment": "T-411 RARE 'champion' spawn. spawn_chance/respawn_ticks are the new fail-open fields the T-402 loader consumes: after this rare is killed it stays dormant for a VARIABLE-RATIO (geometric) number of the long 2-minute dwells (mob_loader.next_respawn_ticks), so its return is unpredictable \u2014 the burst moment injected into the flat L20-40 grind. Placed SOLO south-west of the street tier: >= 30m from every other Ashmoor spawn and well outside the arrival-plaza aggro reach, so it satisfies the T-402 spacing lint (test_spawn_spacing.gd includes this file). NOTE (systems lane): terrain walkability at (-465,8) is orchestrator live-verify.",
+            "mob_file": "rare_ashmoor_kingpin.json",
+            "entity_id_base": 2051,
+            "spawn_chance": 0.2,
+            "respawn_ticks": 2400,
+            "positions": [
+                [
+                    -465.0,
+                    8.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "duo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 3001,
+            "positions": [
+                [
+                    293.8,
+                    -25.6
+                ],
+                [
+                    288.9,
+                    -22.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "duo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 3101,
+            "positions": [
+                [
+                    46.4,
+                    245.7
+                ],
+                [
+                    51.7,
+                    248.6
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "duo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 3201,
+            "positions": [
+                [
+                    436.5,
+                    56.1
+                ],
+                [
+                    431.4,
+                    59.3
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "solo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 3301,
+            "positions": [
+                [
+                    454.4,
+                    -147.9
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "solo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 3401,
+            "positions": [
+                [
+                    505.5,
+                    221.4
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "solo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 3501,
+            "positions": [
+                [
+                    109.3,
+                    240.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "eastern_farmland",
+            "_shape": "solo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 3601,
+            "positions": [
+                [
+                    158.3,
+                    -143.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "western_diggings",
+            "_shape": "duo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 3701,
+            "positions": [
+                [
+                    -193.8,
+                    69.7
+                ],
+                [
+                    -196.7,
+                    64.4
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "western_diggings",
+            "_shape": "duo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 3801,
+            "positions": [
+                [
+                    -189.8,
+                    -71.7
+                ],
+                [
+                    -195.6,
+                    -73.3
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "western_diggings",
+            "_shape": "duo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 3901,
+            "positions": [
+                [
+                    -93.5,
+                    287.9
+                ],
+                [
+                    -96.7,
+                    293.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "western_diggings",
+            "_shape": "solo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 4001,
+            "positions": [
+                [
+                    -149.6,
+                    289.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "western_diggings",
+            "_shape": "solo",
+            "mob_file": "kobold_miner.json",
+            "entity_id_base": 4101,
+            "positions": [
+                [
+                    -183.5,
+                    -2.5
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "duo",
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 4201,
+            "positions": [
+                [
+                    126.0,
+                    537.1
+                ],
+                [
+                    125.5,
+                    543.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "duo",
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 4301,
+            "positions": [
+                [
+                    223.3,
+                    290.4
+                ],
+                [
+                    218.8,
+                    294.3
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "duo",
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 4401,
+            "positions": [
+                [
+                    -107.3,
+                    494.8
+                ],
+                [
+                    -101.4,
+                    495.7
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "solo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 4501,
+            "positions": [
+                [
+                    128.3,
+                    412.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "solo",
+            "mob_file": "wolf.json",
+            "entity_id_base": 4601,
+            "positions": [
+                [
+                    -62.1,
+                    428.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "solo",
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 4701,
+            "positions": [
+                [
+                    275.6,
+                    369.1
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "southern_darkwood",
+            "_shape": "solo",
+            "mob_file": "bloodthorn_lasher.json",
+            "entity_id_base": 4801,
+            "positions": [
+                [
+                    -44.9,
+                    480.5
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "duo",
+            "mob_file": "dire_wolf.json",
+            "entity_id_base": 4901,
+            "positions": [
+                [
+                    64.8,
+                    483.6
+                ],
+                [
+                    67.3,
+                    478.2
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "dire_wolf.json",
+            "entity_id_base": 5001,
+            "positions": [
+                [
+                    120.1,
+                    488.3
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "duo",
+            "mob_file": "thornback_lasher.json",
+            "entity_id_base": 5101,
+            "positions": [
+                [
+                    214.6,
+                    391.5
+                ],
+                [
+                    208.6,
+                    392.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "thornback_lasher.json",
+            "entity_id_base": 5201,
+            "positions": [
+                [
+                    167.1,
+                    424.8
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "darkwood_stalker.json",
+            "entity_id_base": 5301,
+            "positions": [
+                [
+                    127.8,
+                    326.7
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "darkwood_stalker.json",
+            "entity_id_base": 5401,
+            "positions": [
+                [
+                    63.2,
+                    284.8
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "grovewarden_kobold.json",
+            "entity_id_base": 5501,
+            "positions": [
+                [
+                    229.0,
+                    423.6
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "deep_darkwood",
+            "_shape": "solo",
+            "mob_file": "direfang_matriarch.json",
+            "entity_id_base": 5601,
+            "positions": [
+                [
+                    182.2,
+                    277.2
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "duo",
+            "mob_file": "moor_stalker.json",
+            "entity_id_base": 5701,
+            "positions": [
+                [
+                    318.9,
+                    -246.2
+                ],
+                [
+                    316.7,
+                    -240.6
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "moor_stalker.json",
+            "entity_id_base": 5801,
+            "positions": [
+                [
+                    106.5,
+                    -411.9
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "fen_lurker.json",
+            "entity_id_base": 5901,
+            "positions": [
+                [
+                    275.8,
+                    -307.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "fen_lurker.json",
+            "entity_id_base": 6001,
+            "positions": [
+                [
+                    253.5,
+                    -367.0
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "duo",
+            "mob_file": "barrow_hound.json",
+            "entity_id_base": 6101,
+            "positions": [
+                [
+                    256.0,
+                    -272.7
+                ],
+                [
+                    251.3,
+                    -268.9
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "barrow_hound.json",
+            "entity_id_base": 6201,
+            "positions": [
+                [
+                    240.0,
+                    -398.7
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "crag_reaver.json",
+            "entity_id_base": 6301,
+            "positions": [
+                [
+                    159.4,
+                    -259.5
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "moor_direwolf.json",
+            "entity_id_base": 6401,
+            "positions": [
+                [
+                    207.9,
+                    -414.8
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "blightthorn.json",
+            "entity_id_base": 6501,
+            "positions": [
+                [
+                    155.0,
+                    -210.5
+                ]
+            ]
+        },
+        {
+            "_zone": "heartwold",
+            "_wing": "crypt_moor",
+            "_shape": "solo",
+            "mob_file": "grymm_moorlord.json",
+            "entity_id_base": 6601,
+            "positions": [
+                [
+                    322.6,
+                    -362.7
+                ]
+            ]
+        }
+    ]
+}

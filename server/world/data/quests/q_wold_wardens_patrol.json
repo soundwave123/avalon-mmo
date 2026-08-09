@@ -1,0 +1,21 @@
+{
+    "id": "q_wold_wardens_patrol",
+    "title": "The Warden's Patrol",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_outpost_guard",
+    "min_level": 8,
+    "prerequisite_quest": null,
+    "description": "The borderlands outpost stands half-manned — three of the sentry's watch are down with the fever and the King's Road runs unwatched. Walk the line for him: the outpost, the fouled well the water carries the sickness through, and back to Scout Mira who keeps the village end of the road. A patrol is only as good as the report it brings home.",
+    "objectives": [
+        { "type": "reach", "target": "loc_borderlands_outpost", "count": 1, "desc": "Muster at the borderlands outpost", "x": 60.0, "y": -30.0, "radius": 3.0 },
+        { "type": "reach", "target": "loc_old_well", "count": 1, "desc": "Check the fouled well on the road", "x": 42.0, "y": -13.0, "radius": 3.0 },
+        { "type": "talk", "target": "npc_scout_mira", "count": 1, "desc": "Close the patrol with Scout Mira" }
+    ],
+    "rewards": {
+        "xp": 380,
+        "coins": 70,
+        "items": [
+            { "item": "itm_novice_cloak", "count": 1 }
+        ]
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_mend_the_fold",
+    "title": "Mend the Fold",
+    "giver_npc": "npc_farmer_geld",
+    "turnin_npc": "npc_farmer_geld",
+    "min_level": 4,
+    "prerequisite_quest": null,
+    "description": "The strays are gone, but Geld's sheepfold stands half-broken and the wolds are never quiet for long. Cut rough timber from the forest edge to mend the rails, and put down any wolves already circling the fold before they find the gap. Do this and his ewes may yet see the spring.",
+    "objectives": [
+        { "type": "collect", "target": "itm_timber_rough", "count": 4, "desc": "Cut rough timber from the forest edge" },
+        { "type": "kill", "target": "mob_wolf", "count": 3, "desc": "Drive off the wolves circling the fold" }
+    ],
+    "rewards": {
+        "xp": 260,
+        "coins": 25,
+        "items": [
+            { "item": "itm_trail_rations", "count": 4 }
+        ]
+    }
+}

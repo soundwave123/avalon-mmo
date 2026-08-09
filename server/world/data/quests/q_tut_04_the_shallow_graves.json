@@ -1,0 +1,25 @@
+{
+    "id": "q_tut_04",
+    "title": "The Shallow Graves",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 1,
+    "prerequisite_quest": "q_tut_03",
+    "description": "Father Osric doesn't look up from the register. \"Hale sent you. Good — then you already know what's under my churchyard.\" He closes the book. \"The deep vault is beyond you, and beyond me. But the shallow graves, the upper galleries just past the stair, those I can still count. Two nights ago the counting stopped. Go down. Put the risen back to rest, and find whoever is holding the sexton's bell — go alone if you must, take friends if you have them. Either works. It is the coming back up that I care about.\"",
+    "turnin_text": "Osric takes the bell from you and holds it a long moment. \"Rest, then. You went down and you came back up — most people only manage the first half.\" He nods at the stair. \"That was the shallow end. The vault below it is another matter entirely: three of the old wardens still walk down there, and no one takes them alone. Come back to me at level twelve, and bring people — open the Guild or the group finder and say where you're going. Somebody always wants to see the crypt.\"",
+    "objectives": [
+        { "type": "reach", "target": "loc_crypt_stair", "count": 1,
+          "desc": "Take the crypt stair in the churchyard", "x": 14.0, "y": -12.5, "radius": 3.0 },
+        { "type": "kill", "target": "mob_grave_husk", "count": 2,
+          "desc": "Put down the grave-bound husks" },
+        { "type": "kill", "target": "mob_pallbearer_ost", "count": 1,
+          "desc": "Destroy Pallbearer Ost" },
+        { "type": "kill", "target": "mob_sexton_marrow", "count": 1,
+          "desc": "Silence Sexton Marrow's bell" }
+    ],
+    "rewards": {
+        "xp": 250,
+        "coins": 75,
+        "items": []
+    }
+}

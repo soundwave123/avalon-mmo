@@ -1,0 +1,13 @@
+-- T-716: name-at-creation. The in-world name step runs after class and before the Handbook, so the
+-- server needs to know whether a character still OWES that step.
+--
+-- `name` cannot be the lock the way `gender`/`class_locked` are: it is non-null from birth
+-- (master ensure_character seeds a fresh account's bootstrap character with the ACCOUNT name, so
+-- nothing downstream ever sees a nameless character). Hence an explicit flag.
+--
+-- DEFAULT true is deliberate: every character that exists TODAY keeps its name and is never
+-- re-asked (the ticket's "existing characters keep their names"), and so does every alt created
+-- through the gateway's char-select, where the player already typed a name. Only the master's
+-- bootstrap insert (coin_ledger.BOOTSTRAP_CHARACTER_INSERT_SQL) writes false — that is the one
+-- character whose name was picked FOR the player.
+ALTER TABLE chars.characters ADD COLUMN IF NOT EXISTS name_chosen BOOLEAN NOT NULL DEFAULT true;

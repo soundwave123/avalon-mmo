@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_foul_wellspring",
+    "title": "The Foul Wellspring",
+    "giver_npc": "npc_alchemist",
+    "turnin_npc": "npc_alchemist",
+    "min_level": 5,
+    "prerequisite_quest": null,
+    "description": "The wells south of the wolds run bitter, and the sick drink from them without knowing. Alchemist Vell suspects a bloom of bloodthorn has fouled the water table where its roots reach the old well. Go to the well, see what has taken it, and bring back live blossoms so she can trace the taint.",
+    "objectives": [
+        { "type": "reach", "target": "loc_old_well", "count": 1, "desc": "Inspect the fouled old well", "x": 42.0, "y": -13.0, "radius": 3.0 },
+        { "type": "collect", "target": "itm_herb_bloodthorn", "count": 6, "desc": "Cut live bloodthorn blossoms for analysis" }
+    ],
+    "rewards": {
+        "xp": 320,
+        "coins": 40,
+        "items": [
+            { "item": "itm_antidote", "count": 5 }
+        ]
+    }
+}

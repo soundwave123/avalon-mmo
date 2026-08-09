@@ -1,0 +1,20 @@
+{
+    "id": "q_rift_vault_counted",
+    "title": "What the Vault Counted",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_ashmoor_urchin",
+    "min_level": 19,
+    "prerequisite_quest": "q_the_seal_sings",
+    "description": "The dead are back in their graves, but Father Osric is not at peace. The registers he keeps counting point at the sealed monolith in the deepest Vault — and since you cleared the crypt the seal has begun to sing. The cracks have widened. Go back down, approach the rift, and see what a hundred years too old is reaching toward. Whatever waits on the other side, it already knows you're coming.",
+    "objectives": [
+        { "type": "reach", "target": "loc_vault_monolith", "count": 1, "desc": "Descend to the Vault and touch the unquiet era-rift monolith", "x": 424.3, "y": -45.3, "radius": 3.0 },
+        { "type": "talk", "target": "npc_ashmoor_urchin", "count": 1, "desc": "Get your bearings from the lookout in the arrival alley" }
+    ],
+    "rewards": {
+        "xp": 900,
+        "coins": 300,
+        "items": [
+            { "item": "itm_rift_worn_coat", "count": 1 }
+        ]
+    }
+}

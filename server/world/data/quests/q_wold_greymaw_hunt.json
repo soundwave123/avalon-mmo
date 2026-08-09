@@ -1,0 +1,21 @@
+{
+    "id": "q_wold_greymaw_hunt",
+    "title": "Head of the Pack",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 7,
+    "prerequisite_quest": null,
+    "description": "Warmaster Thane Bralt has read the reports: one great alpha, Greymaw, drives the fevered pack that harries the northern wolds, and the sickness dies down wherever he falls. The bounty board pays coin for the deed — the Warmaster wants it done as proof you can raise a party and lead it. Muster hunters and put Greymaw down.",
+    "recommended_players": 3,
+    "location_hint": "Northern wolds, north-east of the village (48, 40).",
+    "objectives": [
+        { "type": "kill", "target": "mob_greymaw", "count": 1, "desc": "Slay Greymaw the Alpha with a party" }
+    ],
+    "rewards": {
+        "xp": 420,
+        "coins": 80,
+        "items": [
+            { "item": "itm_iron_sword", "count": 1 }
+        ]
+    }
+}

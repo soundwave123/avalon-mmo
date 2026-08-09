@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_moor_watch",
+    "title": "The Moor Watch",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_outpost_guard",
+    "min_level": 14,
+    "prerequisite_quest": "q_wold_grove_rot",
+    "description": "Past the darkwood the land climbs into the high moor, and the sentry's writ runs thin up there. Moor stalkers have come down off the crag hills bolder than any wolf should be. Walk the moor watch and cull them before they reach the border road.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_moor_stalker",
+            "count": 8,
+            "desc": "Cull the moor stalkers on the high ground"
+        }
+    ],
+    "rewards": {
+        "xp": 500,
+        "coins": 80,
+        "items": [
+            {
+                "item": "itm_potion_greater_healing",
+                "count": 2
+            }
+        ]
+    }
+}

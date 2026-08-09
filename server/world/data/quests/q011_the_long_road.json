@@ -1,0 +1,16 @@
+{
+    "id": "q011",
+    "title": "The Long Road",
+    "giver_npc": "npc_regents_courier",
+    "turnin_npc": "npc_hk_watch_gate_east",
+    "min_level": 1,
+    "prerequisite_quest": "q010",
+    "description": "Carry word of Elmsvale's safety north. The Gate Watch at Highkeep is expecting you.",
+    "objectives": [
+        { "type": "reach", "target": "loc_highkeep_gate", "count": 1, "desc": "Reach the gates of Highkeep", "x": 4.0, "y": -143.0, "radius": 6.0 }
+    ],
+    "rewards": {
+        "xp": 200,
+        "items": []
+    }
+}

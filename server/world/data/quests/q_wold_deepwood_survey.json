@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_deepwood_survey",
+    "title": "Deepwood Survey",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 9,
+    "prerequisite_quest": null,
+    "description": "Before Sylas commits the muster to the southern thicket he wants it surveyed: how deep the rot runs, and how hard the bloodthorn fights near the old stones. Burn back a swathe of lashers and gather live blossoms to mark the sickest ground. Hard, but a seasoned hand can manage it alone.",
+    "objectives": [
+        { "type": "kill", "target": "mob_bloodthorn_lasher", "count": 6, "desc": "Burn back the deep bloodthorn" },
+        { "type": "collect", "target": "itm_herb_bloodthorn", "count": 4, "desc": "Mark the sickest ground with live blossoms" }
+    ],
+    "rewards": {
+        "xp": 440,
+        "coins": 90,
+        "items": [
+            { "item": "itm_leather_cap", "count": 1 }
+        ]
+    }
+}

@@ -1,0 +1,24 @@
+{
+  "id": 301,
+  "name": "Flash Heal",
+  "icon": "flash_heal",
+  "char_class": "priest",
+  "effect": "heal",
+  "cast_ticks": 0,
+  "resource_cost": 10,
+  "range_units": 30.0,
+  "heal_base": 20,
+  "targets_friendly": true,
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "ranks": [
+    { "min_level": 1, "heal_base": 20, "resource_cost": 10 },
+    { "min_level": 6, "heal_base": 30, "resource_cost": 14 },
+    { "min_level": 12, "heal_base": 44, "resource_cost": 20 },
+    { "min_level": 18, "heal_base": 62, "resource_cost": 28 },
+    { "min_level": 24, "heal_base": 84, "resource_cost": 38 },
+    { "min_level": 30, "heal_base": 110, "resource_cost": 50 },
+    { "min_level": 36, "heal_base": 140, "resource_cost": 64 },
+    { "min_level": 40, "heal_base": 174, "resource_cost": 80 }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+    "mob_type_id": 70,
+    "mob_id": "mob_dire_wolf",
+    "name": "Dire Wolf",
+    "difficulty": 3,
+    "level": 10,
+    "xp": 0,
+    "render_kind": "mob_wolf",
+    "str": 16,
+    "int": 5,
+    "dex": 28,
+    "stamina": 12,
+    "spirit": 5,
+    "weapon_speed": 1.5,
+    "aggro_radius": 6.0,
+    "leash_radius": 18.0,
+    "melee_range": 2.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 18,
+        "Tactics": 12
+    },
+    "base_damage": 8,
+    "variance_min": 0.85,
+    "variance_max": 1.0,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.05,
+    "parry_chance": 0.0,
+    "crit_chance": 0.05,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_wolf_pelt",
+            "chance": 0.6,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_wolf_fang",
+            "chance": 0.5,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_rugged_fiber",
+            "chance": 0.5,
+            "count_min": 1,
+            "count_max": 2
+        }
+    ],
+    "patrol_radius": 4.0
+}

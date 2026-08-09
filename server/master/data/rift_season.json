@@ -1,0 +1,18 @@
+{
+  "season": {
+    "floor_tier": 1,
+    "carry_fraction": 0.5
+  },
+  "reward_tiers": [
+    { "min_best_tier": 3, "unlock": "title:rift_delver" },
+    { "min_best_tier": 8, "unlock": "skin_cloak_riftbound" },
+    { "min_best_tier": 15, "unlock": "title:rift_conqueror" }
+  ],
+  "_milestones_comment": "T-538: the EVERGREEN cadence past the last authored cosmetic tier (15). Every `cadence` best-tiers from `first_best_tier` up, a season-settle grants the next numbered ascendant title (rift_ascendant_1, _2, ...), so an infinite ladder ALWAYS has a next visible prize. Cosmetic/title only, source 'season' = EARNED (T-482 charter: bought never outranks earned). Cadence/first/prefix are owner-tunable data. `max` bounds the loop against a pathological best (server truth, but belt-and-braces).",
+  "milestones": {
+    "first_best_tier": 20,
+    "cadence": 5,
+    "unlock_prefix": "title:rift_ascendant",
+    "max": 500
+  }
+}

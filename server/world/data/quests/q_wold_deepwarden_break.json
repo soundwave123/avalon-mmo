@@ -1,0 +1,21 @@
+{
+    "id": "q_wold_deepwarden_break",
+    "title": "Break the Deepwarden",
+    "giver_npc": "npc_hk_smith",
+    "turnin_npc": "npc_hk_smith",
+    "min_level": 8,
+    "prerequisite_quest": null,
+    "description": "Master Smith Gorran will not forge with fouled ore, and every load from the western diggings comes grey and brittle since Grexrok the Deepwarden rallied the kobolds over the sealed gallery. No lone hunter breaks a warband. Take a party west, put Grexrok in the dirt, and let honest ore come up again.",
+    "recommended_players": 3,
+    "location_hint": "Western diggings, west of the village (-45, 42).",
+    "objectives": [
+        { "type": "kill", "target": "mob_grexrok", "count": 1, "desc": "Slay Grexrok the Deepwarden with a party" }
+    ],
+    "rewards": {
+        "xp": 440,
+        "coins": 90,
+        "items": [
+            { "item": "itm_salvaging_kit", "count": 1 }
+        ]
+    }
+}

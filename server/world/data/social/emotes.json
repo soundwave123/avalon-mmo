@@ -1,0 +1,16 @@
+{
+	"_comment": "T-361 item 3 — the data-driven emote catalog (the ONLY source of valid emote ids). Each id maps to the actor's own line ('self') and the third-person line others see ('other', %s = actor name). 'clip' names an EntityVisuals emote STATE (resolved through STATE_CLIPS to a baked hero clip); empty '' = text-only. T-397 baked 3 of the 12 from the UAL/Quaternius CC0 library (dance/kneel/point — the only honest matches in that 45-clip locomotion pack); wave/bow/cheer/clap/laugh/salute/cry/thank/flex have no CC0 source clip and stay text-only until a dedicated emote pack or the T-119 text-to-anim path lands. The wire payload carries `clip` so avatar playback is a client-only add (no protocol change on this field). Add an emote by adding a row here.",
+
+	"wave":   {"self": "You wave.",              "other": "%s waves.",              "clip": ""},
+	"bow":    {"self": "You bow.",               "other": "%s bows.",               "clip": ""},
+	"cheer":  {"self": "You cheer!",             "other": "%s cheers!",             "clip": ""},
+	"clap":   {"self": "You clap.",              "other": "%s claps.",              "clip": ""},
+	"laugh":  {"self": "You laugh.",             "other": "%s laughs.",             "clip": ""},
+	"dance":  {"self": "You start dancing.",     "other": "%s starts dancing.",     "clip": "dance"},
+	"salute": {"self": "You salute.",            "other": "%s salutes.",            "clip": ""},
+	"kneel":  {"self": "You kneel.",             "other": "%s kneels.",             "clip": "kneel"},
+	"point":  {"self": "You point.",             "other": "%s points.",             "clip": "point"},
+	"cry":    {"self": "You cry.",               "other": "%s cries.",              "clip": ""},
+	"thank":  {"self": "You thank everyone.",    "other": "%s thanks everyone.",    "clip": ""},
+	"flex":   {"self": "You flex your muscles.", "other": "%s flexes their muscles.", "clip": ""}
+}

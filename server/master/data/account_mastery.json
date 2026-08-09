@@ -1,0 +1,24 @@
+{
+  "scope": "account",
+  "curve": {
+    "base_cost": 100,
+    "step_cost": 25
+  },
+  "_comment_world_boss": "T-536: world_boss (10) is a forward-declared key that awaits a world-boss system (no boss-kill seam exists yet) — intentionally dormant, NOT wired. All other sources have live server-observed hooks.",
+  "sources": {
+    "season_best_tier": 40,
+    "commendation": 25,
+    "achievement": 15,
+    "world_boss": 10,
+    "pvp_match": 5,
+    "quest_complete": 2
+  },
+  "reward_levels": [
+    { "level": 1, "unlock": "title:initiate_of_avalon" },
+    { "level": 2, "unlock": "title:wayfarer" },
+    { "level": 3, "unlock": "skin_cloak_masterworn" },
+    { "level": 5, "unlock": "title:stalwart_of_the_realm" },
+    { "level": 8, "unlock": "skin_cloak_eternal" },
+    { "level": 12, "unlock": "title:master_of_the_long_road" }
+  ]
+}

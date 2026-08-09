@@ -1,0 +1,788 @@
+{
+ "npcs": [
+  {
+   "id": "npc_farmer_geld",
+   "name": "Farmer Geld",
+   "x": 4.8,
+   "y": 1.5,
+   "gives_quests": [
+    "q001",
+    "q_wold_mend_the_fold",
+    "q_wold_fevered_flock"
+   ],
+   "talk_text": "Those wolves will be the end of me, friend.",
+   "wander": {"mode": "radius", "radius": 2.0, "pause_min": 5.0, "pause_max": 11.0},
+   "idle": {"turn_min": 5.0, "turn_max": 12.0},
+   "appearance": {"role": "peasant", "seed": "npc_farmer_geld"}
+  },
+  {
+   "id": "npc_scout_mira",
+   "name": "Scout Mira",
+   "x": 12.0,
+   "y": 8.0,
+   "gives_quests": [
+    "q_wold_deep_diggings",
+    "q_wold_timber_run",
+    "q_wold_deep_gate_road"
+   ],
+   "talk_text": "The wolves come from the northern treeline.",
+   "wander": {"mode": "radius", "radius": 2.5, "pause_min": 4.0, "pause_max": 9.0},
+   "idle": {"turn_min": 4.0, "turn_max": 9.0},
+   "appearance": {"role": "ranger", "sex": "f", "seed": "npc_scout_mira"}
+  },
+  {
+   "id": "npc_blacksmith",
+   "name": "Smith Dorrun",
+   "x": 12.3,
+   "y": -1.6,
+   "gives_quests": [
+    "q002",
+    "q_wold_smiths_copper",
+    "q_wold_iron_levy"
+   ],
+   "talk_text": "Gear breaks in this world, friend. Bring me the makings and I'll teach you to mend it.",
+   "idle": {"acts": ["hammer"], "act_min": 4.0, "act_max": 9.0, "act_dur": 1.8, "turn_min": 6.0, "turn_max": 12.0},
+   "appearance": {"role": "smith", "seed": "npc_blacksmith"}
+  },
+  {
+   "id": "npc_trainer",
+   "name": "Master-at-Arms Kessa",
+   "x": 11.5,
+   "y": 8.5,
+   "gives_quests": [
+    "q003"
+   ],
+   "talk_text": "Show me you can swing that thing. The dummies won't hit back... much.",
+   "trainer": true,
+   "service": "trainer:starter",
+   "idle": {"acts": ["gesture"], "act_min": 9.0, "act_max": 16.0, "turn_min": 4.0, "turn_max": 8.0},
+   "appearance": {"role": "guard", "sex": "f", "seed": "npc_trainer"}
+  },
+  {
+   "id": "npc_ranger",
+   "name": "Ranger Sylas",
+   "x": 25.0,
+   "y": 15.0,
+   "gives_quests": [
+    "q004",
+    "q_wold_stray_wolves",
+    "q_wold_savage_treeline",
+    "q_wold_ancient_thorn",
+    "q_wold_cull_the_diggings",
+    "q_wold_deepwood_survey",
+    "q_wold_dire_treeline",
+    "q_wold_darkwood_stalkers"
+   ],
+   "talk_text": "Something's been stalking the Vale. Deal with it before it deals with you.",
+   "idle": {"turn_min": 6.0, "turn_max": 13.0},
+   "appearance": {"role": "ranger", "seed": "npc_ranger"}
+  },
+  {
+   "id": "npc_alchemist",
+   "name": "Alchemist Vell",
+   "x": -20.0,
+   "y": 20.0,
+   "gives_quests": [
+    "q005",
+    "q_wold_foul_wellspring",
+    "q_wold_thornroot_cuttings",
+    "q_wold_grove_rot"
+   ],
+   "talk_text": "Bloodthorn, fresh from the bog's edge. Mind the thorns \u2014 and what lives in the mud.",
+   "idle": {"acts": ["gesture"], "act_min": 12.0, "act_max": 22.0, "turn_min": 5.0, "turn_max": 11.0},
+   "appearance": {"role": "mage", "seed": "npc_alchemist"}
+  },
+  {
+   "id": "npc_courier",
+   "name": "Courier Bram",
+   "x": 3.6,
+   "y": 4.9,
+   "gives_quests": [
+    "q006"
+   ],
+   "talk_text": "A bag for the Borderlands outpost. Dangerous run. You flagged for it?",
+   "wander": {"mode": "waypoints", "waypoints": [[3.6, 4.9], [2.2, 2.0], [5.5, 1.2], [7.4, 1.0], [7.2, 4.9]], "speed": 1.4, "pause_min": 2.0, "pause_max": 5.0},
+   "idle": {"turn_min": 3.0, "turn_max": 7.0},
+   "appearance": {"role": "peasant", "seed": "npc_courier"}
+  },
+  {
+   "id": "npc_outpost_guard",
+   "name": "Outpost Sentry",
+   "x": 60.0,
+   "y": -30.0,
+   "gives_quests": [
+    "q_wold_wardens_patrol",
+    "q_wold_wardens_toll",
+    "q_wold_last_patrol",
+    "q_wold_kingsroad_ashmoor",
+    "q_wold_moor_watch",
+    "q_wold_moor_road_ashmoor"
+   ],
+   "talk_text": "Rival colors out here. You're either brave or lost. Hand it over.",
+   "appearance": {"role": "guard", "seed": "npc_outpost_guard"}
+  },
+  {
+   "id": "npc_regents_courier",
+   "name": "Regent's Courier Edric",
+   "x": 8.0,
+   "y": 1.1,
+   "gives_quests": [
+    "q010",
+    "q011",
+    "q_wold_road_to_highkeep"
+   ],
+   "talk_text": "The Regent needs a clear road and a reliable messenger. Prove both.",
+   "wander": {"mode": "waypoints", "waypoints": [[8.0, 1.1], [4.0, 1.2], [2.8, 4.6], [6.9, 5.6], [8.2, 3.2]], "speed": 1.3, "pause_min": 3.0, "pause_max": 8.0},
+   "idle": {"turn_min": 4.0, "turn_max": 9.0},
+   "appearance": {"role": "merchant", "seed": "npc_regents_courier"}
+  },
+  {
+   "id": "npc_drillmaster",
+   "name": "Drillmaster Hale",
+   "x": 12.5,
+   "y": 9.0,
+   "gives_quests": [
+    "q_tut_01",
+    "q_tut_02",
+    "q_tut_03"
+   ],
+   "talk_text": "New blood? Training ring, dummy, token. Move, strike, loot. Go.",
+   "wander": {
+    "mode": "waypoints",
+    "anchor": [12.5, 9.0],
+    "waypoints": [[12.5, 9.0], [15.5, 9.0], [15.5, 11.5], [12.5, 11.5]],
+    "speed": 1.2,
+    "pause_min": 1.5,
+    "pause_max": 4.0
+   },
+   "idle": {"acts": ["gesture"], "act_min": 8.0, "act_max": 14.0, "turn_min": 3.0, "turn_max": 7.0},
+   "appearance": {"role": "guard", "seed": "npc_drillmaster"}
+  },
+  {
+   "id": "npc_arcanist",
+   "name": "Arcanist Loreth",
+   "x": 14.0,
+   "y": 7.0,
+   "gives_quests": [],
+   "trainer": true,
+   "talk_text": "Magic rewards the disciplined mind. Show me your talents.",
+   "wander": {"mode": "radius", "radius": 1.2, "pause_min": 6.0, "pause_max": 12.0},
+   "idle": {"acts": ["gesture"], "act_min": 10.0, "act_max": 18.0, "turn_min": 5.0, "turn_max": 10.0},
+   "appearance": {"role": "mage", "seed": "npc_arcanist"}
+  },
+  {
+   "id": "npc_cleric",
+   "name": "Cleric Ansa",
+   "x": 16.0,
+   "y": 7.0,
+   "gives_quests": [],
+   "trainer": true,
+   "talk_text": "The Light shapes those who shape themselves. Let us review your path.",
+   "wander": {"mode": "radius", "radius": 1.2, "pause_min": 7.0, "pause_max": 14.0},
+   "idle": {"acts": ["pray"], "act_min": 10.0, "act_max": 20.0, "act_dur": 2.5, "turn_min": 6.0, "turn_max": 12.0},
+   "appearance": {"role": "priest", "sex": "f", "seed": "npc_cleric"}
+  },
+  {
+   "id": "npc_village_parson",
+   "name": "Father Osric",
+   "x": 10.8,
+   "y": -15.0,
+   "gives_quests": ["q_tut_04", "q_crypt_restless_dead", "q_hollowing_creep", "q_osric_registers", "q_ward_the_graves", "q_deep_vault_watch", "q_the_seal_sings", "q_rift_vault_counted"],
+   "idle": {"acts": ["pray"], "act_min": 8.0, "act_max": 16.0, "act_dur": 2.5, "turn_min": 7.0, "turn_max": 14.0},
+   "talk_text": "Rest a moment, traveler. The Light keeps this house, and its door is never barred. I've read the burial registers three times now, and the counts don't add up across the centuries \u2014 more went down into that vault than ever came back up in the record. Something is reaching forward through the graves, and I fear we only sealed it, never ended it.",
+   "appearance": {"role": "priest", "seed": "npc_village_parson"}
+  },
+  {
+   "id": "npc_hk_warrior_trainer",
+   "name": "Warmaster Thane Bralt",
+   "x": 45.0,
+   "y": -256.0,
+   "gives_quests": [
+    "q_wold_greymaw_hunt",
+    "q_wold_fenmire_cull",
+    "q_wold_barrow_hounds",
+    "q_wold_crag_reavers",
+    "q_wold_apex_predators",
+    "q_wold_blight_at_the_rift"
+   ],
+   "trainer": true,
+   "talk_text": "Highkeep's Barracks train the realm's finest blades. Show me your steel.",
+   "service": "trainer:warrior",
+   "appearance": {"role": "guard", "seed": "npc_hk_warrior_trainer"}
+  },
+  {
+   "id": "npc_hk_mage_trainer",
+   "name": "Archmage Sylvaine",
+   "x": 94.5,
+   "y": -262.0,
+   "gives_quests": [],
+   "trainer": true,
+   "talk_text": "The Arcanum welcomes a disciplined mind. Let us refine your talents.",
+   "service": "trainer:mage",
+   "appearance": {"role": "mage", "sex": "f", "seed": "npc_hk_mage_trainer"}
+  },
+  {
+   "id": "npc_hk_priest_trainer",
+   "name": "High Priestess Elwyn",
+   "x": 66.0,
+   "y": -284.0,
+   "gives_quests": [],
+   "trainer": true,
+   "talk_text": "Under the Cathedral of Dawn, the Light is taught to those who would wield it.",
+   "service": "trainer:priest",
+   "appearance": {"role": "priest", "sex": "f", "seed": "npc_hk_priest_trainer"}
+  },
+  {
+   "id": "npc_hk_smith",
+   "name": "Master Smith Gorran",
+   "x": -24.0,
+   "y": -110.0,
+   "gives_quests": [
+    "q_wold_deepwarden_break"
+   ],
+   "talk_text": "Smithing's a proper trade. When the guild opens, I'll take apprentices \u2014 soon.",
+   "appearance": {"role": "smith", "seed": "npc_hk_smith"}
+  },
+  {
+   "id": "npc_hk_tailor",
+   "name": "Tailor Mireille",
+   "x": 22.0,
+   "y": -136.0,
+   "gives_quests": [],
+   "talk_text": "Fine cloth and finer enchantments. Tailoring lessons are coming to the Arcanum.",
+   "appearance": {"role": "merchant", "sex": "f", "seed": "npc_hk_tailor"}
+  },
+  {
+   "id": "npc_hk_alchemist",
+   "name": "Alchemist Perrin",
+   "x": -24.0,
+   "y": -138.0,
+   "gives_quests": [],
+   "talk_text": "Reagents and reactions. The alchemy bench will open to students before long.",
+   "appearance": {"role": "mage", "seed": "npc_hk_alchemist"}
+  },
+  {
+   "id": "npc_hk_physician",
+   "name": "Physician Alda",
+   "x": -16.0,
+   "y": -132.0,
+   "gives_quests": [
+    "q_wold_physicians_plea"
+   ],
+   "talk_text": "A steady hand saves lives. First aid will be taught here at the Cathedral soon.",
+   "appearance": {"role": "priest", "sex": "f", "seed": "npc_hk_physician"}
+  },
+  {
+   "id": "npc_hk_cook",
+   "name": "Cook Berta",
+   "x": 22.0,
+   "y": -108.0,
+   "gives_quests": [],
+   "talk_text": "A warm meal mends more than potions. Cooking classes start once the hearth's lit.",
+   "idle": {"acts": ["gesture"], "act_min": 10.0, "act_max": 18.0, "turn_min": 5.0, "turn_max": 10.0},
+   "appearance": {"role": "peasant", "sex": "f", "seed": "npc_hk_cook"}
+  },
+  {
+   "id": "npc_hk_banker",
+   "name": "Banker Coyne",
+   "x": -33.0,
+   "y": -207.0,
+   "gives_quests": [],
+   "talk_text": "Welcome to the Bank of Highkeep. Your coin is safe behind three feet of ashlar and one very heavy door.",
+   "service": "bank",
+   "appearance": {"role": "merchant", "seed": "npc_hk_banker"}
+  },
+  {
+   "id": "npc_hk_vendor_general",
+   "name": "Merchant Tolley",
+   "x": 28.0,
+   "y": -108.0,
+   "gives_quests": [],
+   "talk_text": "Torches, rope, rations, trail bread \u2014 everything an adventurer forgets to pack.",
+   "service": "vendor",
+   "wares": ["itm_potion_minor_healing", "itm_potion_greater_healing", "itm_ration_travelers"],
+   "appearance": {"role": "merchant", "seed": "npc_hk_vendor_general"}
+  },
+  {
+   "id": "npc_hk_vendor_weapon",
+   "name": "Weaponsmith Brannick",
+   "x": 13.5,
+   "y": -104.5,
+   "gives_quests": [],
+   "talk_text": "Blades, hafts, and bowstaves, all keen-edged. Browse the rack once the coffers open.",
+   "service": "vendor",
+   "wares": ["itm_smith_broadsword", "itm_smith_buckler", "itm_field_repair_kit"],
+   "idle": {"acts": ["hammer"], "act_min": 4.0, "act_max": 9.0, "act_dur": 1.8, "turn_min": 6.0, "turn_max": 12.0},
+   "appearance": {"role": "smith", "seed": "npc_hk_vendor_weapon"}
+  },
+  {
+   "id": "npc_hk_innkeeper",
+   "name": "Innkeeper Doran",
+   "x": 16.0,
+   "y": -106.0,
+   "gives_quests": [],
+   "talk_text": "Rest your boots at the Gilded Gryphon. Set your hearth here when the beds are ready.",
+   "service": "inn",
+   "idle": {"acts": ["gesture"], "act_min": 9.0, "act_max": 16.0, "turn_min": 5.0, "turn_max": 11.0},
+   "appearance": {"role": "merchant", "seed": "npc_hk_innkeeper"}
+  },
+  {
+   "id": "npc_hk_flightmaster",
+   "name": "Gryphon Master Kest",
+   "x": 8.0,
+   "y": -118.0,
+   "gives_quests": [],
+   "talk_text": "My gryphons fly the realm's skyways. Routes open when the roosts are stocked.",
+   "service": "flight",
+   "appearance": {"role": "ranger", "seed": "npc_hk_flightmaster"}
+  },
+  {
+   "id": "npc_hk_regent",
+   "name": "Lord Regent Aldous",
+   "x": 0.0,
+   "y": -148.0,
+   "gives_quests": [
+    "q013"
+   ],
+   "talk_text": "Welcome to Highkeep, traveler. The realm holds \u2014 for now \u2014 and it needs able hands.",
+   "appearance": {"role": "noble", "seed": "npc_hk_regent"}
+  },
+  {
+   "id": "npc_hk_guard_west",
+   "name": "Highkeep Guard",
+   "x": -3.0,
+   "y": -102.0,
+   "gives_quests": [],
+   "talk_text": "Keep the peace inside these walls and we'll have no trouble.",
+   "wander": {
+    "mode": "waypoints",
+    "waypoints": [
+     [
+      -3.0,
+      -102.0
+     ],
+     [
+      -3.0,
+      -108.0
+     ],
+     [
+      -9.0,
+      -108.0
+     ],
+     [
+      -9.0,
+      -102.0
+     ]
+    ],
+    "speed": 1.1,
+    "pause_min": 2.0,
+    "pause_max": 5.0
+   },
+   "appearance": {"role": "guard", "seed": "npc_hk_guard_west"}
+  },
+  {
+   "id": "npc_hk_guard_east",
+   "name": "Highkeep Guard",
+   "x": 3.0,
+   "y": -102.0,
+   "gives_quests": [],
+   "talk_text": "The gate stands open to honest folk. Move along.",
+   "wander": {
+    "mode": "waypoints",
+    "waypoints": [
+     [
+      3.0,
+      -102.0
+     ],
+     [
+      9.0,
+      -102.0
+     ],
+     [
+      9.0,
+      -108.0
+     ],
+     [
+      3.0,
+      -108.0
+     ]
+    ],
+    "speed": 1.1,
+    "pause_min": 2.0,
+    "pause_max": 5.0
+   },
+   "appearance": {"role": "guard", "seed": "npc_hk_guard_east"}
+  },
+  {
+   "id": "npc_hk_castellan",
+   "name": "Lord Castellan Berenger",
+   "x": 0.0,
+   "y": -317.5,
+   "gives_quests": [],
+   "talk_text": "You stand in Highkeep's great hall, traveler. Mind the runner, bow at the dais, and speak plainly \u2014 the Regent's court hears all petitions before sundown.",
+   "appearance": {"role": "noble", "seed": "npc_hk_castellan"}
+  },
+  {
+   "id": "npc_hk_steward",
+   "name": "Steward Maud",
+   "x": 7.0,
+   "y": -313.0,
+   "gives_quests": [],
+   "talk_text": "Mind the hearths and the lord's table. If you seek coin or trade, the market square is out the gate and up the high street.",
+   "appearance": {"role": "noble", "sex": "f", "seed": "npc_hk_steward"}
+  },
+  {
+   "id": "npc_hk_bank_guard",
+   "name": "Bank Guard",
+   "x": -27.0,
+   "y": -209.5,
+   "gives_quests": [],
+   "talk_text": "Mind the grille and keep your hands where the tellers can see them.",
+   "appearance": {"role": "guard", "seed": "npc_hk_bank_guard"}
+  },
+  {
+   "id": "npc_hk_auctioneer",
+   "name": "Auctioneer Hollis",
+   "x": 33.6,
+   "y": -209.0,
+   "gives_quests": [],
+   "talk_text": "Lots close at dusk! Speak up or lose the lot.",
+   "service": "auction",
+   "appearance": {"role": "merchant", "seed": "npc_hk_auctioneer"}
+  },
+  {
+   "id": "npc_hk_auction_clerk",
+   "name": "Clerk Petra",
+   "x": 29.0,
+   "y": -212.0,
+   "gives_quests": [],
+   "talk_text": "Listings, ledgers, and lot numbers \u2014 all in order, all in ink.",
+   "appearance": {"role": "merchant", "sex": "f", "seed": "npc_hk_auction_clerk"}
+  },
+  {
+   "id": "npc_hk_ranger_trainer",
+   "name": "Warden Skell",
+   "x": 94.0,
+   "y": -300.0,
+   "gives_quests": [],
+   "talk_text": "Eyes open, steps light. The wild teaches those who listen.",
+   "trainer": true,
+   "service": "trainer:ranger",
+   "appearance": {"role": "ranger", "seed": "npc_hk_ranger_trainer"}
+  },
+  {
+   "id": "npc_hk_archprelate",
+   "name": "Archprelate Corvin",
+   "x": -76.0,
+   "y": -297.0,
+   "gives_quests": [],
+   "talk_text": "The Light keeps this city as the walls do \u2014 stone without, grace within.",
+   "appearance": {"role": "priest", "seed": "npc_hk_archprelate"}
+  },
+  {
+   "id": "npc_child_pip",
+   "name": "Pip",
+   "x": 6.0,
+   "y": 4.8,
+   "gives_quests": [],
+   "talk_text": "Bet you can't roll the hoop past the well without it tipping!",
+   "wander": {"mode": "radius", "radius": 4.0, "speed": 1.5, "pause_min": 1.0, "pause_max": 3.0},
+   "appearance": {"role": "child", "seed": "npc_child_pip"}
+  },
+  {
+   "id": "npc_child_nell",
+   "name": "Nell",
+   "x": 6.8,
+   "y": 5.6,
+   "gives_quests": [],
+   "talk_text": "Mama hung the washing, so we get the green till supper.",
+   "wander": {"mode": "radius", "radius": 4.0, "speed": 1.5, "pause_min": 1.0, "pause_max": 3.0},
+   "appearance": {"role": "child", "sex": "f", "seed": "npc_child_nell"}
+  },
+  {
+   "id": "npc_child_tam",
+   "name": "Tam",
+   "x": 5.8,
+   "y": 7.0,
+   "gives_quests": [],
+   "talk_text": "We're playing knights and wolves. You can be the wolf!",
+   "wander": {"mode": "radius", "radius": 4.0, "speed": 1.5, "pause_min": 1.0, "pause_max": 3.0},
+   "appearance": {"role": "child", "seed": "npc_child_tam"}
+  },
+  {
+   "id": "npc_hk_cit_crier",
+   "name": "Town Crier",
+   "x": 3.0,
+   "y": -212.0,
+   "gives_quests": [],
+   "talk_text": "Hear ye! Lots close at the auction house come dusk!",
+   "appearance": {"role": "merchant", "seed": "npc_hk_cit_crier"}
+  },
+  {
+   "id": "npc_hk_cit_market1",
+   "name": "Goodwife Ida",
+   "x": -8.0,
+   "y": -218.0,
+   "gives_quests": [],
+   "talk_text": "Fresh loaves 'til the cross casts no shadow.",
+   "wander": {"mode": "radius", "radius": 4.0, "pause_min": 3.0, "pause_max": 8.0},
+   "appearance": {"role": "peasant", "sex": "f", "seed": "npc_hk_cit_market1"}
+  },
+  {
+   "id": "npc_hk_cit_market2",
+   "name": "Peddler Rouse",
+   "x": 9.0,
+   "y": -221.0,
+   "gives_quests": [],
+   "talk_text": "Ribbons, needles, luck charms \u2014 a copper apiece.",
+   "wander": {"mode": "radius", "radius": 4.0, "pause_min": 3.0, "pause_max": 8.0},
+   "appearance": {"role": "merchant", "seed": "npc_hk_cit_market2"}
+  },
+  {
+   "id": "npc_hk_cit_ward1",
+   "name": "Widow Maren",
+   "x": -60.0,
+   "y": -206.0,
+   "gives_quests": [],
+   "talk_text": "My hearth's the warmest on the lane.",
+   "wander": {"mode": "radius", "radius": 5.0, "pause_min": 4.0, "pause_max": 10.0},
+   "appearance": {"role": "peasant", "sex": "f", "seed": "npc_hk_cit_ward1"}
+  },
+  {
+   "id": "npc_hk_cit_ward2",
+   "name": "Old Cobb",
+   "x": 70.0,
+   "y": -210.0,
+   "gives_quests": [],
+   "talk_text": "These stones were mud when I was a boy.",
+   "wander": {"mode": "radius", "radius": 5.0, "pause_min": 4.0, "pause_max": 10.0},
+   "appearance": {"role": "peasant", "seed": "npc_hk_cit_ward2"}
+  },
+  {
+   "id": "npc_hk_cit_spine",
+   "name": "Lamplighter Tosh",
+   "x": -1.0,
+   "y": -262.0,
+   "gives_quests": [],
+   "talk_text": "Wicks trimmed, lamps lit by dusk.",
+   "wander": {"mode": "radius", "radius": 4.0, "pause_min": 3.0, "pause_max": 8.0},
+   "appearance": {"role": "peasant", "seed": "npc_hk_cit_spine"}
+  },
+  {
+   "id": "npc_hk_watch_gate_west",
+   "name": "Gate Watch",
+   "x": -4.0,
+   "y": -143.0,
+   "gives_quests": [],
+   "talk_text": "Keep the gate lane clear.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_gate_west"}
+  },
+  {
+   "id": "npc_hk_watch_gate_east",
+   "name": "Gate Watch",
+   "x": 4.0,
+   "y": -143.0,
+   "gives_quests": [
+    "q012"
+   ],
+   "talk_text": "Peace-bind your blades inside the walls.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_gate_east"}
+  },
+  {
+   "id": "npc_hk_watch_wall_nw",
+   "name": "Wall Watch",
+   "x": -108.0,
+   "y": -154.0,
+   "gives_quests": [],
+   "talk_text": "West wall is quiet.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_wall_nw"}
+  },
+  {
+   "id": "npc_hk_watch_wall_ne",
+   "name": "Wall Watch",
+   "x": 108.0,
+   "y": -154.0,
+   "gives_quests": [],
+   "talk_text": "East wall is quiet.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_wall_ne"}
+  },
+  {
+   "id": "npc_hk_watch_wall_sw",
+   "name": "Wall Watch",
+   "x": -108.0,
+   "y": -326.0,
+   "gives_quests": [],
+   "talk_text": "No trouble along the south curtain.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_wall_sw"}
+  },
+  {
+   "id": "npc_hk_watch_wall_se",
+   "name": "Wall Watch",
+   "x": 108.0,
+   "y": -326.0,
+   "gives_quests": [],
+   "talk_text": "The southeast tower is secure.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_wall_se"}
+  },
+  {
+   "id": "npc_hk_watch_keep_west",
+   "name": "Keep Guard",
+   "x": -4.0,
+   "y": -298.0,
+   "gives_quests": [],
+   "talk_text": "The keep is under the Regent's peace.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_keep_west"}
+  },
+  {
+   "id": "npc_hk_watch_keep_east",
+   "name": "Keep Guard",
+   "x": 4.0,
+   "y": -298.0,
+   "gives_quests": [],
+   "talk_text": "State your business before approaching.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_keep_east"}
+  },
+  {
+   "id": "npc_hk_watch_market",
+   "name": "Market Watch",
+   "x": 15.0,
+   "y": -215.0,
+   "gives_quests": [],
+   "talk_text": "Mind your purse in the crowd.",
+   "wander": {
+    "mode": "waypoints",
+    "waypoints": [
+     [
+      15.0,
+      -215.0
+     ],
+     [
+      15.0,
+      -222.0
+     ],
+     [
+      8.0,
+      -222.0
+     ],
+     [
+      8.0,
+      -215.0
+     ]
+    ],
+    "speed": 1.1,
+    "pause_min": 2.0,
+    "pause_max": 6.0
+   },
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_market"}
+  },
+  {
+   "id": "npc_hk_watch_cathedral",
+   "name": "Close Watch",
+   "x": -61.0,
+   "y": -282.0,
+   "gives_quests": [],
+   "talk_text": "Keep your voice low in the cathedral close.",
+   "appearance": {"role": "guard", "seed": "npc_hk_watch_cathedral"}
+  },
+  {
+   "id": "npc_hk_throne_guard_west",
+   "name": "Throne Guard",
+   "x": -1.8,
+   "y": -317.0,
+   "gives_quests": [],
+   "talk_text": "Halt at the runner's edge. None approach the dais bearing arms.",
+   "appearance": {"role": "guard", "seed": "npc_hk_throne_guard_west"}
+  },
+  {
+   "id": "npc_hk_throne_guard_east",
+   "name": "Throne Guard",
+   "x": 1.8,
+   "y": -317.0,
+   "gives_quests": [],
+   "talk_text": "The Castellan receives petitioners. Keep the aisle clear.",
+   "appearance": {"role": "guard", "seed": "npc_hk_throne_guard_east"}
+  },
+  {
+   "id": "npc_hk_bounty_board",
+   "name": "Highkeep Bounty Board",
+   "x": 0.0,
+   "y": -206.0,
+   "gives_quests": ["q_wold_moorlord_grymm"],
+   "talk_text": "Wanted: named beasts too fierce for a lone blade. Muster a party and claim the bounty.",
+   "service": "bounty"
+  },
+  {
+   "id": "npc_village_bounty_board",
+   "name": "Village Bounty Board",
+   "x": 8.0,
+   "y": 2.0,
+   "gives_quests": ["q_wold_thin_the_pack", "q_wold_deepwood_matriarch"],
+   "talk_text": "The huntsmaster's postings \u2014 elite quarry roaming the outlands. Bring friends.",
+   "service": "bounty"
+  },
+  {
+   "id": "npc_ashmoor_urchin",
+   "name": "Pip the Lookout",
+   "x": -419.0,
+   "y": -3.0,
+   "gives_quests": ["q_ashmoor_first_blood"],
+   "talk_text": "Blimey \u2014 you came out of the OLD stone, not the door. You one of the seance crowd, then? No? Well you're stood in it now, guv. Ashmoor. Gas lamps, motorcars, and the Syndicate owns every cobble the coppers don't. That rift you walked \u2014 it never shut. A hundred years it's been leakin', and the folk what run this town learned to LISTEN to it. Keep your head down and your coat closed; that old cut screams you're not from now.",
+   "appearance": {
+    "role": "child",
+    "seed": "npc_ashmoor_urchin"
+   }
+  },
+  {
+   "id": "npc_ashmoor_sergeant",
+   "name": "Desk Sergeant Coyle",
+   "x": -415.0,
+   "y": 6.5,
+   "gives_quests": ["q_ashmoor_cull_the_racket"],
+   "talk_text": "State your business. \u2014 The Syndicate? You're either brave or fresh off the boat, and you don't look wet. Half this house draws two wages, friend, so I'll deny I said a word: thin their crew and the bounty's honest coin. When you've bled them proper, the trail runs to the Grey Gull \u2014 an unmarked door off the High Street where their boss holds court. That's where the street ends and the real rot begins.",
+   "appearance": {
+    "role": "guard",
+    "seed": "npc_ashmoor_sergeant"
+   }
+  },
+  {
+   "id": "npc_village_flightmaster",
+   "name": "Roostkeeper Nessa",
+   "x": -12.0,
+   "y": -8.0,
+   "gives_quests": [],
+   "talk_text": "You've found Elmsvale's roost. Once another roost knows your name, Nessa's gryphons can carry you there for coin.",
+   "service": "flight",
+   "appearance": {"role": "ranger", "seed": "npc_village_flightmaster"}
+  },
+  {
+   "id": "npc_ashmoor_flightmaster",
+   "name": "Sky-Dock Warden Vale",
+   "x": -408.0,
+   "y": -4.0,
+   "gives_quests": [],
+   "talk_text": "The old sky lanes still answer a brave rider. Register this dock and I can put you aboard for the return west.",
+   "service": "flight",
+   "appearance": {"role": "ranger", "seed": "npc_ashmoor_flightmaster"}
+  },
+  {
+   "id": "npc_kargrim_flightmaster",
+   "name": "Roostwarden Dral",
+   "x": -160.0,
+   "y": -140.0,
+   "gives_quests": [],
+   "talk_text": "The deep folk keep a gryphon roost above the gate — stone-steady birds, bred for the crags. Register here and the skyways of the Wold are yours.",
+   "service": "flight",
+   "appearance": {"role": "ranger", "seed": "npc_kargrim_flightmaster"}
+  },
+  {
+   "id": "npc_greyrise_flightmaster",
+   "name": "Transit Warden Okoye",
+   "x": 0.0,
+   "y": -1290.0,
+   "gives_quests": [],
+   "talk_text": "Skyport's still running, if you know the codes. Log your beacon and the lanes back through the rift-echo open up.",
+   "service": "flight",
+   "appearance": {"role": "ranger", "seed": "npc_greyrise_flightmaster"}
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+{
+    "id": "q_wold_smiths_copper",
+    "title": "Copper for the Forge",
+    "giver_npc": "npc_blacksmith",
+    "turnin_npc": "npc_blacksmith",
+    "min_level": 6,
+    "prerequisite_quest": null,
+    "description": "Smith Dorrun's charcoal is spent on tools the militia needs and he is short of copper. He will not send you into the kobold gallery for it — the rocky diggings west of the vale still hold honest surface veins for anyone willing to swing a pick. Bring the copper back and the forge stays lit.",
+    "objectives": [
+        { "type": "collect", "target": "itm_copper_ore", "count": 8, "desc": "Mine copper from the western veins" }
+    ],
+    "rewards": {
+        "xp": 330,
+        "coins": 45,
+        "items": [
+            { "item": "itm_salvaging_kit", "count": 1 }
+        ]
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "id": "q_osric_registers",
+    "title": "What the Registers Count",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 15,
+    "prerequisite_quest": "q_hollowing_creep",
+    "description": "Osric has kept the burial registers for forty years, and the numbers have stopped adding up: more names go into the ground than come out, and the oldest column — the walled-off Vault — is counting DOWN to something. He needs the crypt's own record shelves read against his, and the shades that guard them thinned. Descend to the archive, cross-check the tallies, and banish what won't let you read in peace.",
+    "location_hint": "The crypt archive galleries",
+    "objectives": [
+        { "type": "reach", "target": "loc_crypt_archive", "count": 1, "desc": "Reach the archive shelves in the crypt galleries", "x": 24.0, "y": -30.0, "radius": 3.0 },
+        { "type": "kill", "target": "mob_restless_shade", "count": 3, "desc": "Banish the shades haunting the register shelves" },
+        { "type": "talk", "target": "npc_village_parson", "count": 1, "desc": "Bring the crypt's tallies back to Father Osric" }
+    ],
+    "rewards": {
+        "xp": 1250,
+        "coins": 280,
+        "items": [
+            { "item": "itm_hollowing_ward_charm", "count": 1 }
+        ]
+    }
+}

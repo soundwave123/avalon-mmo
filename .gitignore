@@ -1,0 +1,110 @@
+# Godot
+.godot/
+*.import
+*.translation
+
+# Build artifacts
+build/
+dist/
+*.pck
+
+# Secrets
+*.env
+.env
+.env.local
+.envrc
+.env.production
+secrets.env
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Local ephemera
+scratch/
+tmp/
+.aider*
+
+# Godot extracts embedded glTF textures next to the .glb on import (regenerable)
+# T-185 realism pipeline: scan-texture extractions (<model>_<family>_col/_nrm[_sNNN_vNNN].jpg)
+client/assets/models/*_col.jpg
+client/assets/models/*_col_s[0-9]*_v[0-9]*.jpg
+client/assets/models/*_nrm.jpg
+client/assets/models/*_Image_*.png
+client/assets/models/*_[0-9].png
+client/assets/models/*_plaster.png
+client/assets/models/*_stone_wall.png
+client/assets/models/*_timber.png
+client/assets/models/*_plank_floor.png
+client/assets/models/*_wood_shingle.png
+client/assets/models/*_tree_bark.png
+client/assets/models/*_tree_leaves.png
+client/assets/models/*_texture.png
+client/assets/models/*_hexagons_medieval.png
+client/assets/models/*_leaf_clump.png
+client/assets/models/*_citybits*.png
+client/assets/models/*_Bark*.png
+client/assets/models/*_Leaves*.png
+client/assets/models/*_tree_bark*.png
+client/assets/models/*_leaf_card.png
+client/assets/models/*_leaf_cluster*.png
+client/assets/models/*_reed_card.png
+client/assets/models/*_wheat_card.png
+# T-302b: guard-tabard GLB re-extracts its own committed livery texture on import (double prefix)
+client/assets/models/prop_hk_guard_tabard_prop_hk_guard_tabard_col.png
+
+# T-gate7: force-commit these two vendored GLBs' import (embedded_image_handling=3 = embed, no
+# extracted-texture junk) so Godot does not default to extract=1 and emit invalid-UID warnings
+# that fail the client test suite (prop_market_stall / prop_handcart have generic Image_N names).
+!client/assets/models/prop_market_stall.glb.import
+!client/assets/models/prop_handcart.glb.import
+!client/assets/models/prop_oak_petiolate.glb.import
+!client/assets/models/mount_common_gryphon.glb.import
+!client/assets/models/prop_bramble_patch.glb.import
+!client/assets/models/prop_bone_pile.glb.import
+
+# T-415: the game shipped SILENT — bed WAV imports must carry edit/loop_mode=2 (Forward; the
+# importer enum is +1 off AudioStreamWAV.LoopMode and 1 means DISABLED). Force-commit the bed
+# imports so the loop fix persists; one-shot SFX imports stay regenerable.
+!client/assets/audio/amb_*.wav.import
+!client/assets/audio/ambient_meadow.wav.import
+# T-416: the per-zone MUSIC beds carry the same loop-import discipline — force-commit their imports.
+!client/assets/audio/music_*.wav.import
+# T-503: frost_charge is a LOOPING cast-bar bed — force-commit its import so edit/loop_mode=2 (the
+# non-empty loop region) persists across checkouts (the T-415 silent-death trap). The frost one-shot
+# imports (cast/flight/impact) stay regenerable/gitignored, like the rest of the one-shot SFX pool.
+!client/assets/audio/frost_charge.wav.import
+# T-674: voiced NPC dialogue is ONE-SHOT — its Ogg imports must carry loop=false. Godot 4.7's
+# oggvorbisstr importer already defaults loop=false, but force-commit the voice-line + test-fixture
+# imports so the T-415 discipline can never silently regress to a looping recording.
+!client/assets/audio/voice/*.ogg.import
+!client/tests/fixtures/voice_fixture.ogg.import
+
+# T-416: local music-gen candidates (Stable Audio Open output + placeholders) are QC scratch — keep
+# the losers out of the repo; only the picked+loop-processed client/assets/audio/music_*.wav ships.
+tools/musicgen/candidates/
+tools/rag/corpus/
+infra/playtest/server-host.txt
+infra/feedback/feedback.db
+infra/feedback/uploads/
+infra/feedback/testers.txt
+infra/feedback/notice.txt
+infra/gm/secrets.env
+infra/backups/
+
+# T-561: runtime QA watchdog findings (generated at runtime)
+docs/verification/qa/findings.jsonl
+docs/knowledge/PROJECT-STATE.md

@@ -1,0 +1,25 @@
+{
+    "id": "q_wold_moor_road_ashmoor",
+    "title": "The Long Road West",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_ashmoor_flightmaster",
+    "min_level": 19,
+    "prerequisite_quest": "q_wold_blight_at_the_rift",
+    "description": "You have walked the whole of the wold alone \u2014 vale, diggings, darkwood, and the high moor \u2014 and there is nothing left up here the sentry can set you to. The sky-lane at the rift-scar answers a brave rider. Ride it west to the Ashmoor Sky Dock; the far country pays for hands the wold has outgrown.",
+    "objectives": [
+        {
+            "type": "reach",
+            "target": "loc_ashmoor_skydock",
+            "count": 1,
+            "desc": "Ride the western sky-lane to the Ashmoor Sky Dock",
+            "x": -408.0,
+            "y": -4.0,
+            "radius": 12.0
+        }
+    ],
+    "rewards": {
+        "xp": 150,
+        "coins": 20,
+        "items": []
+    }
+}

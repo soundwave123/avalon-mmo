@@ -1,0 +1,65 @@
+{
+    "_comment": "T-411 RARE 'champion' spawn for the Ashmoor street tier (Era-2, L20-40). Rides the T-294 elite chassis + the existing spawn/respawn machinery: it is an ordinary spawns.json entry given a low spawn_chance + a long respawn_ticks, so after it is put down it stays gone for a variable-ratio (geometric) number of dwells — the unpredictable positive spike the fun-audit asked for on top of the flat kill-treadmill. It reuses the Legbreaker silhouette (render_kind) — no new mesh/rig. Its boosted xp is the burst; the shilling purse is the coin bonus. It grants XP through the SAME server-observed kill-credit path as any mob (mob_xp.gd), so the gray-mob cutoff (T-358) and rested interaction (T-360) apply automatically and no client verb can assert it. 'rare': true is read ONLY by tools/xp_ledger.py, which EXCLUDES rares from the flat-grind average so adding this mob does not perturb the band's closed budget (the burst XP is redistributed, not added).",
+    "rare": true,
+    "mob_type_id": 55,
+    "mob_id": "mob_rare_ashmoor_kingpin",
+    "name": "Silas Vane, the Ledger King",
+    "difficulty": 4,
+    "level": 24,
+    "xp": 750,
+    "elite": true,
+    "render_kind": "mob_syndicate_legbreaker",
+    "elite_hp_mult": 4.0,
+    "elite_damage_mult": 2.0,
+    "enrage_threshold": 0.3,
+    "enrage_mult": 1.5,
+    "str": 28,
+    "int": 8,
+    "dex": 16,
+    "stamina": 38,
+    "spirit": 6,
+    "weapon_speed": 1.6,
+    "aggro_radius": 16.0,
+    "leash_radius": 24.0,
+    "melee_range": 2.2,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 55,
+        "Tactics": 40
+    },
+    "base_damage": 24,
+    "variance_min": 0.85,
+    "variance_max": 1.05,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.25
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.04,
+    "parry_chance": 0.1,
+    "crit_chance": 0.06,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 40,
+            "count_max": 80
+        },
+        {
+            "item_id": "itm_bootleg_gin",
+            "chance": 0.8,
+            "count_min": 1,
+            "count_max": 2
+        },
+        {
+            "item_id": "itm_brass_knuckles",
+            "chance": 0.5,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 3.0
+}

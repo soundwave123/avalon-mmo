@@ -1,0 +1,30 @@
+{
+  "_doc": "T-586 LIGHT fall-damage tuning + world data (owner decision 2026-08-08: distance-based, conservative). Loaded by scripts/fall_damage.gd. DISTANCE model because the server has no vertical physics: z is DERIVED from the terrain field per move (player_sessions.gd), so a fall is detected as a DESCENT RUN of per-move z drops too steep to walk. All damage is %-of-max-HP (a level-2 and a level-60 take the same fraction from the same drop). If this file is missing or malformed the system DISABLES itself (fail-safe: no damage).",
+  "enabled": true,
+  "safe_fall_distance": 12.0,
+  "_safe_fall_distance": "metres of accumulated descent below which a fall NEVER damages. Generous on purpose (owner: imperfect terrain/collision; WoW's safe height is ~14 yd and its formula is not reliably documented, so this is tuned to Avalon's own relief) — normal Heartwold slopes and building drops sit far under this.",
+  "damage_pct_per_meter": 3.0,
+  "_damage_pct_per_meter": "percent of max HP per metre of descent BEYOND safe_fall_distance (linear). With 12 m safe + 3 %/m: a 20 m cliff costs 24% of max HP, a 30 m cliff 54%.",
+  "max_damage_pct": 60.0,
+  "_max_damage_pct": "cap as % of max HP (reached at 32 m with the values above). The code additionally hard-clamps any config to max_hp - 1 so the cap itself can NEVER kill from full health (owner: light version maims, never one-shots). A fall can still finish an already-wounded player; fall deaths route through the normal death path (durability wear etc.).",
+  "min_move_drop": 0.6,
+  "_min_move_drop": "metres a single move's z drop must exceed before it can count toward a descent run — absolute floor under the slope test so micro-terrain noise never accumulates (a run move covers ~0.3 m planar per 50 ms intent at 6 u/s).",
+  "slope_ratio": 2.0,
+  "_slope_ratio": "a move counts toward a run only if drop > slope_ratio * planar_distance (the tan of the walkable-slope limit; 2.0 = ~63 deg). Steep-but-walkable slopes can NEVER trigger — err generous per the owner; pairs with the #57 stuck-spot fixes.",
+  "idle_finalize_ticks": 8,
+  "_idle_finalize_ticks": "server ticks (20 Hz -> 0.4 s) without a further move intent before an open descent run is finalized — the intake is per-RPC, so a player who lands and stands still would otherwise take the landing only on their next step.",
+  "water_level": 0.06,
+  "_water_level": "the water plane height (mirrors client water_view.gd/river_view.gd WATER_Y := 0.06; no server-side water constant exists yet — keep in sync).",
+  "water_areas": [
+    {
+      "name": "crystal_lake",
+      "_comment": "mirrors terrain_field.gd LAKE_CENTER (18,22) / LAKE_RADIUS 12 — the shore bowl carved below the water plane.",
+      "type": "disc",
+      "center": [18.0, 22.0],
+      "radius": 12.0
+    }
+  ],
+  "_water_areas": "v1 water-entry reconciliation (ticket: water cancels fall damage): a landing is water-exempt only when it is INSIDE a listed area AND its derived ground z is at/below water_level. Area + level must BOTH hold because flat walked pockets read exactly z=0.0 (< 0.06) everywhere — a bare level test would exempt most of the world. Rivers have no server-side footprint data yet; add their areas (or replace this whole block) when real water volumes/swimming ship.",
+  "safe_drop_zones": [],
+  "_safe_drop_zones": "authored world-data exemption rects for INTENDED drops/slides: [{name, x_min, x_max, y_min, y_max}] in server planar (x, y); a landing inside any rect takes zero fall damage. Empty at v1 — no shipped intended-drop feature exists yet; zonegen/T-595 can emit entries per zone. NEVER hardcode exemption coords in scripts."
+}

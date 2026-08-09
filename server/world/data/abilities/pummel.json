@@ -1,0 +1,30 @@
+{
+  "id": 106,
+  "name": "Pummel",
+  "icon": "heroic_strike",
+  "char_class": "warrior",
+  "effect": "damage",
+  "school": "physical",
+  "cast_ticks": 0,
+  "triggers_gcd": false,
+  "off_gcd": true,
+  "resource_cost": 10,
+  "range_units": 3.0,
+  "base_damage": 2,
+  "attacker_stat_coeffs": {"str": 0.05},
+  "variance_min": 1.0,
+  "variance_max": 1.0,
+  "can_full_interrupt": true,
+  "school_lock_ticks": 80,
+  "cooldown_ticks": 200,
+  "ranks": [
+    {"min_level": 1, "resource_cost": 10, "cooldown_ticks": 200, "school_lock_ticks": 80},
+    {"min_level": 6, "resource_cost": 9, "cooldown_ticks": 180, "school_lock_ticks": 80},
+    {"min_level": 12, "resource_cost": 8, "cooldown_ticks": 160, "school_lock_ticks": 100},
+    {"min_level": 18, "resource_cost": 7, "cooldown_ticks": 140, "school_lock_ticks": 120},
+    {"min_level": 24, "resource_cost": 6, "cooldown_ticks": 120, "school_lock_ticks": 140},
+    {"min_level": 30, "resource_cost": 5, "cooldown_ticks": 100, "school_lock_ticks": 160},
+    {"min_level": 36, "resource_cost": 4, "cooldown_ticks": 80, "school_lock_ticks": 180},
+    {"min_level": 40, "resource_cost": 3, "cooldown_ticks": 60, "school_lock_ticks": 200}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+    "mob_type_id": 21,
+    "mob_id": "mob_grexrok",
+    "name": "Grexrok the Deepwarden",
+    "difficulty": 5,
+    "level": 9,
+    "xp": 50,
+    "elite": true,
+    "render_kind": "mob_kobold_miner",
+    "elite_hp_mult": 5.0,
+    "elite_damage_mult": 2.5,
+    "enrage_threshold": 0.3,
+    "enrage_mult": 1.5,
+    "str": 12,
+    "int": 8,
+    "dex": 15,
+    "stamina": 8,
+    "spirit": 5,
+    "weapon_speed": 2.0,
+    "aggro_radius": 7.0,
+    "leash_radius": 30.0,
+    "melee_range": 2.0,
+    "spawn_x": -45.0,
+    "spawn_y": 42.0,
+    "skills": {
+        "Swordsmanship": 8,
+        "Tactics": 8
+    },
+    "base_damage": 6,
+    "variance_min": 0.85,
+    "variance_max": 1.0,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.0,
+    "parry_chance": 0.05,
+    "crit_chance": 0.0,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_copper_ore",
+            "chance": 1.0,
+            "count_min": 3,
+            "count_max": 5
+        },
+        {
+            "item_id": "itm_salvaging_kit",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_vault_voucher",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 6.0
+}

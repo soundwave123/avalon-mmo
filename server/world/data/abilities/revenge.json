@@ -1,0 +1,18 @@
+{
+ "id": 104,
+ "name": "Revenge",
+ "icon": "revenge",
+ "char_class": "warrior",
+ "effect": "damage",
+ "cast_ticks": 0,
+ "resource_cost": 12,
+ "range_units": 2.5,
+ "base_damage": 14,
+ "attacker_stat_coeffs": {
+  "str": 0.4
+ },
+ "threat_multiplier": 2.5,
+ "variance_min": 0.9,
+ "variance_max": 1.0,
+ "trained": true
+}

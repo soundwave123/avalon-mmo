@@ -1,0 +1,16 @@
+{
+    "id": "q010",
+    "title": "Word from the Capital",
+    "giver_npc": "npc_regents_courier",
+    "turnin_npc": "npc_regents_courier",
+    "min_level": 1,
+    "prerequisite_quest": null,
+    "description": "Edric carries the Regent's seal, but wolves have closed the north road. Clear a path before he sends you on to Highkeep.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 3, "desc": "Clear gray wolves from the Highkeep road" }
+    ],
+    "rewards": {
+        "xp": 150,
+        "items": []
+    }
+}

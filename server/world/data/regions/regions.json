@@ -1,0 +1,33 @@
+{
+  "_comment": "T-590 ZONE-ORIGIN / TERRAIN-REGION TABLE — the plumbing source of truth the continent program (T-592..596) grows. Each region maps region_id -> {origin, extent, terrain sampler, era, respawn, clamp}. T-593 (continent-scale terrain, phase 1) AUTHORS the P1 regions on the T-590 seam: (1) 'wold' (Heartwold) KEEPS the byte-identical 'wold_legacy' sampler and RAISES its clamp to the P1 envelope (±620 m ≈ 1.54 km², continent-plan §1.1) — the dressed core is unchanged, the walkable box grows outward to the T-309 mountain rim (T-587 edge dressing, not grey void). (2) 'ashmoor' (Ashmoor City) is the FIRST SAMPLER SWAP — its terrain.sampler now names 'ashmoor_flat', an era-2 urban-flat field that is byte-identical to legacy INSIDE the dressed spike hull (±70 m of the anchor) AND in the far mountain-rim band (beyond its ±550 m clamp), diverging to low-amplitude gaslight ground only in the newly-walkable mid band (the migration invariant is airtight — see test_terrain_field GOLDEN_GRID + FIXTURES). (3) 'greyrise' is a NEW era-3 region at a FAR origin (0,-1400) with its own 'greyrise_flat' sampler (modern arrival flat + the Old Keep heritage rise) and a ±560 m clamp — no walkable border to the Wold in P1 (rift/flight only), its clamp box sits in the unreachable gap past the Wold's -620 m edge. ORIGINS + terrain.sampler are MIRRORED as a const in terrain_field.gd (that field is shared client/server + must stay pure/byte-identical, so it cannot load this server-only file); test_world_regions asserts the two agree AND that every origin is a broadcast_builder.REGION_ANCHORS bucket. The crypt/Vault instance pocket at (+420,0) is NOT a region here — it is an instanced interior (instance_service), not an overworld zone. P2 (deferred): walkable inter-zone borders (pass/river/ridge) once adjacent zones are both built; per-region spatial index only if the region count grows large (the O(regions) nearest-origin scan is fine at P1's 3 regions).",
+  "global_clamp": { "min": [-500.0, -500.0], "max": [500.0, 500.0] },
+  "regions": [
+    {
+      "region_id": "wold",
+      "era": 1,
+      "origin": [0.0, 0.0],
+      "extent": { "kind": "radius", "radius": 620.0 },
+      "terrain": { "sampler": "wold_legacy" },
+      "respawn": [0.0, 0.0],
+      "clamp": { "min": [-620.0, -620.0], "max": [620.0, 620.0] }
+    },
+    {
+      "region_id": "ashmoor",
+      "era": 2,
+      "origin": [-420.0, 0.0],
+      "extent": { "kind": "aabb", "min": [-970.0, -550.0], "max": [130.0, 550.0] },
+      "terrain": { "sampler": "ashmoor_flat" },
+      "respawn": [-432.0, -14.0],
+      "clamp": { "min": [-970.0, -550.0], "max": [130.0, 550.0] }
+    },
+    {
+      "region_id": "greyrise",
+      "era": 3,
+      "origin": [0.0, -1400.0],
+      "extent": { "kind": "aabb", "min": [-560.0, -1960.0], "max": [560.0, -840.0] },
+      "terrain": { "sampler": "greyrise_flat" },
+      "respawn": [0.0, -1280.0],
+      "clamp": { "min": [-560.0, -1960.0], "max": [560.0, -840.0] }
+    }
+  ]
+}

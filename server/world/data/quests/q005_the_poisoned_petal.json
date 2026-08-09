@@ -1,0 +1,19 @@
+{
+    "id": "q005",
+    "title": "The Poisoned Petal",
+    "giver_npc": "npc_alchemist",
+    "turnin_npc": "npc_alchemist",
+    "min_level": 1,
+    "prerequisite_quest": null,
+    "description": "Alchemist Vell needs Bloodthorn blossoms from the edge of the Venomous Bog to brew antidotes — and in Avalon, where rivals favour poisons, an antidote is worth its weight in blood. Harvest five intact blooms.",
+    "objectives": [
+        { "type": "collect", "target": "itm_herb_bloodthorn", "count": 5, "desc": "Harvest Bloodthorn blossoms" }
+    ],
+    "rewards": {
+        "xp": 150,
+        "items": [
+            { "item": "itm_recipe_healing_potion", "count": 1 },
+            { "item": "itm_antidote", "count": 5 }
+        ]
+    }
+}

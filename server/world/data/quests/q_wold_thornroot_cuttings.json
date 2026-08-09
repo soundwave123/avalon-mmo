@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_thornroot_cuttings",
+    "title": "Thornroot Cuttings",
+    "giver_npc": "npc_alchemist",
+    "turnin_npc": "npc_alchemist",
+    "min_level": 7,
+    "prerequisite_quest": null,
+    "description": "Alchemist Vell needs blossoms cut from the living lashers themselves — the fevered growth, not the tame meadow herb — to distil a stronger cure. It means fighting the bloodthorn where it grows thickest, but a careful hunter can take them one at a time. Bring back clean cuttings.",
+    "objectives": [
+        { "type": "kill", "target": "mob_bloodthorn_lasher", "count": 4, "desc": "Cut down lashing bloodthorn" },
+        { "type": "collect", "target": "itm_bloodthorn", "count": 5, "desc": "Take clean blossoms from the lashers" }
+    ],
+    "rewards": {
+        "xp": 360,
+        "coins": 60,
+        "items": [
+            { "item": "itm_trail_rations", "count": 2 }
+        ]
+    }
+}

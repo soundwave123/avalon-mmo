@@ -1,0 +1,17 @@
+{
+    "id": "q_wold_deep_gate_road",
+    "title": "The Deep Gate Road",
+    "giver_npc": "npc_scout_mira",
+    "turnin_npc": "npc_kargrim_flightmaster",
+    "min_level": 7,
+    "prerequisite_quest": null,
+    "description": "Scout Mira has heard the dwarves of Kargrim will pay for word of the fouled diggings, and their Deep Gate lies a hard march west along the low road. Carry the news yourself — a scout who knows both ends of a road is worth two who know one. The gate-warden will hear you out.",
+    "objectives": [
+        { "type": "reach", "target": "loc_kargrim_gate", "count": 1, "desc": "Take the west road to the Kargrim Deep Gate", "x": -160.0, "y": -140.0, "radius": 8.0 }
+    ],
+    "rewards": {
+        "xp": 85,
+        "coins": 5,
+        "items": []
+    }
+}

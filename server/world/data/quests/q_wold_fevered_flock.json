@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_fevered_flock",
+    "title": "The Fevered Flock",
+    "giver_npc": "npc_farmer_geld",
+    "turnin_npc": "npc_farmer_geld",
+    "min_level": 5,
+    "prerequisite_quest": null,
+    "description": "Geld's flock survived the wolves only to sicken with a wasting fever — and the wolves that bit them have taken it too, running savage in daylight. Cull the fevered pack from the wolds and burn the tainted pelts before the rot spreads to the last of his ewes.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 10, "desc": "Cull fevered wolves in the wolds" },
+        { "type": "collect", "target": "itm_wolf_pelt", "count": 6, "desc": "Gather tainted pelts to be burned" }
+    ],
+    "rewards": {
+        "xp": 300,
+        "coins": 40,
+        "items": [
+            { "item": "itm_trail_rations", "count": 5 }
+        ]
+    }
+}

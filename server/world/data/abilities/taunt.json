@@ -1,0 +1,11 @@
+{
+  "id": 102,
+  "name": "Taunt",
+  "icon": "taunt",
+  "char_class": "warrior",
+  "effect": "taunt",
+  "cast_ticks": 0,
+  "resource_cost": 0,
+  "range_units": 5.0,
+  "base_damage": 0
+}

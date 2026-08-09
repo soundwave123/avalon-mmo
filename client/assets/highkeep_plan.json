@@ -1,0 +1,516 @@
+{
+ "meta": {
+  "name": "Highkeep",
+  "ticket": "T-199",
+  "area_m2": 47200,
+  "village_footprint_m2": 1500,
+  "scale_vs_village": 31.5
+ },
+ "wall": {
+  "height": 9.0,
+  "tower_height": 12.5,
+  "polyline": [
+   [
+    -8.0,
+    -140.0
+   ],
+   [
+    -100.0,
+    -140.0
+   ],
+   [
+    -120.0,
+    -160.0
+   ],
+   [
+    -120.0,
+    -320.0
+   ],
+   [
+    -100.0,
+    -340.0
+   ],
+   [
+    100.0,
+    -340.0
+   ],
+   [
+    120.0,
+    -320.0
+   ],
+   [
+    120.0,
+    -160.0
+   ],
+   [
+    100.0,
+    -140.0
+   ],
+   [
+    8.0,
+    -140.0
+   ]
+  ],
+  "gate": {
+   "pos": [
+    0.0,
+    -140.0
+   ],
+   "width": 8.0,
+   "faces": "north"
+  }
+ },
+ "streets": [
+  {
+   "name": "high_street",
+   "width": 6.0,
+   "points": [
+    [
+     0.0,
+     -140.0
+    ],
+    [
+     -2.0,
+     -168.0
+    ],
+    [
+     2.0,
+     -197.0
+    ]
+   ]
+  },
+  {
+   "name": "market_square_ring",
+   "width": 5.0,
+   "points": [
+    [
+     -20.0,
+     -215.0
+    ],
+    [
+     0.0,
+     -197.0
+    ],
+    [
+     20.0,
+     -215.0
+    ],
+    [
+     0.0,
+     -233.0
+    ],
+    [
+     -20.0,
+     -215.0
+    ]
+   ]
+  },
+  {
+   "name": "south_spine",
+   "width": 6.0,
+   "points": [
+    [
+     0.0,
+     -233.0
+    ],
+    [
+     -2.0,
+     -262.0
+    ],
+    [
+     0.0,
+     -292.0
+    ]
+   ]
+  },
+  {
+   "name": "cathedral_lane",
+   "width": 5.0,
+   "points": [
+    [
+     -20.0,
+     -215.0
+    ],
+    [
+     -52.0,
+     -222.0
+    ],
+    [
+     -70.0,
+     -252.0
+    ]
+   ]
+  },
+  {
+   "name": "trainers_lane",
+   "width": 5.0,
+   "points": [
+    [
+     20.0,
+     -215.0
+    ],
+    [
+     52.0,
+     -228.0
+    ],
+    [
+     72.0,
+     -262.0
+    ],
+    [
+     76.0,
+     -296.0
+    ]
+   ]
+  },
+  {
+   "name": "ward_lane_west",
+   "width": 4.5,
+   "points": [
+    [
+     -1.0,
+     -162.0
+    ],
+    [
+     -56.0,
+     -168.0
+    ],
+    [
+     -92.0,
+     -190.0
+    ]
+   ]
+  },
+  {
+   "name": "ward_lane_east",
+   "width": 4.5,
+   "points": [
+    [
+     -1.0,
+     -162.0
+    ],
+    [
+     54.0,
+     -168.0
+    ],
+    [
+     92.0,
+     -190.0
+    ]
+   ]
+  },
+  {
+   "name": "south_walk",
+   "width": 4.5,
+   "points": [
+    [
+     0.0,
+     -292.0
+    ],
+    [
+     -44.0,
+     -300.0
+    ],
+    [
+     -60.0,
+     -294.0
+    ]
+   ]
+  },
+  {
+   "name": "mage_spur",
+   "width": 4.5,
+   "points": [
+    [
+     72.0,
+     -262.0
+    ],
+    [
+     83.0,
+     -262.0
+    ]
+   ]
+  },
+  {
+   "name": "ward_nw_row_lane",
+   "width": 4.5,
+   "points": [
+    [
+     -52.0,
+     -222.0
+    ],
+    [
+     -48.0,
+     -212.0
+    ],
+    [
+     -104.0,
+     -208.5
+    ]
+   ]
+  },
+  {
+   "name": "ward_e_row_lane",
+   "width": 4.5,
+   "points": [
+    [
+     52.0,
+     -228.0
+    ],
+    [
+     49.0,
+     -212.3
+    ],
+    [
+     106.0,
+     -212.3
+    ]
+   ]
+  },
+  {
+   "name": "ward_s_row_lane",
+   "width": 4.5,
+   "points": [
+    [
+     -44.0,
+     -300.0
+    ],
+    [
+     -38.0,
+     -322.3
+    ],
+    [
+     -76.0,
+     -322.3
+    ]
+   ]
+  }
+ ],
+ "plots": [
+  {
+   "name": "keep",
+   "district": "keep",
+   "pos": [
+    0.0,
+    -314.0
+   ],
+   "half": [
+    20.0,
+    14.0
+   ],
+   "rot": 0,
+   "faces": "north"
+  },
+  {
+   "name": "cathedral",
+   "district": "cathedral",
+   "pos": [
+    -76.0,
+    -282.0
+   ],
+   "half": [
+    13.0,
+    22.0
+   ],
+   "rot": 0,
+   "faces": "east"
+  },
+  {
+   "name": "bank",
+   "district": "market",
+   "pos": [
+    -31.0,
+    -207.0
+   ],
+   "half": [
+    8.0,
+    6.0
+   ],
+   "rot": 90,
+   "faces": "east"
+  },
+  {
+   "name": "auction_house",
+   "district": "market",
+   "pos": [
+    31.0,
+    -209.0
+   ],
+   "half": [
+    9.0,
+    7.0
+   ],
+   "rot": 270,
+   "faces": "west"
+  },
+  {
+   "name": "inn",
+   "district": "market",
+   "pos": [
+    -31.0,
+    -226.0
+   ],
+   "half": [
+    9.0,
+    7.0
+   ],
+   "rot": 90,
+   "faces": "east"
+  },
+  {
+   "name": "smithy",
+   "district": "market",
+   "pos": [
+    31.0,
+    -228.0
+   ],
+   "half": [
+    8.0,
+    7.0
+   ],
+   "rot": 270,
+   "faces": "west"
+  },
+  {
+   "name": "trainer_warrior",
+   "district": "trainers",
+   "pos": [
+    48.0,
+    -256.0
+   ],
+   "half": [
+    10.0,
+    9.0
+   ],
+   "rot": 90,
+   "faces": "east"
+  },
+  {
+   "name": "trainer_mage",
+   "district": "trainers",
+   "pos": [
+    92.0,
+    -262.0
+   ],
+   "half": [
+    7.0,
+    7.0
+   ],
+   "rot": 270,
+   "faces": "west"
+  },
+  {
+   "name": "trainer_priest",
+   "district": "trainers",
+   "pos": [
+    62.0,
+    -284.0
+   ],
+   "half": [
+    8.0,
+    8.0
+   ],
+   "rot": 270,
+   "faces": "west"
+  },
+  {
+   "name": "trainer_ranger",
+   "district": "trainers",
+   "pos": [
+    92.0,
+    -300.0
+   ],
+   "half": [
+    8.0,
+    7.0
+   ],
+   "rot": 270,
+   "faces": "west"
+  }
+ ],
+ "zones": [
+  {
+   "name": "market_square",
+   "kind": "keep_clear",
+   "pos": [
+    0.0,
+    -215.0
+   ],
+   "half": [
+    18.0,
+    16.0
+   ]
+  },
+  {
+   "name": "spine_green",
+   "kind": "green",
+   "pos": [
+    -14.0,
+    -262.0
+   ],
+   "half": [
+    8.0,
+    8.0
+   ]
+  },
+  {
+   "name": "keep_yard",
+   "kind": "yard",
+   "pos": [
+    0.0,
+    -294.0
+   ],
+   "half": [
+    24.0,
+    6.0
+   ]
+  },
+  {
+   "name": "keep_precinct",
+   "kind": "keep_clear",
+   "pos": [
+    0.0,
+    -314.0
+   ],
+   "half": [
+    29.5,
+    23.5
+   ]
+  }
+ ],
+ "wards": [
+  {
+   "name": "ward_nw",
+   "pos": [
+    -72.0,
+    -190.0
+   ],
+   "half": [
+    38.0,
+    32.0
+   ]
+  },
+  {
+   "name": "ward_e",
+   "pos": [
+    74.0,
+    -196.0
+   ],
+   "half": [
+    36.0,
+    30.0
+   ]
+  },
+  {
+   "name": "ward_s",
+   "pos": [
+    -34.0,
+    -322.0
+   ],
+   "half": [
+    46.0,
+    14.0
+   ]
+  }
+ ]
+}

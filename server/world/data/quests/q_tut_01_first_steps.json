@@ -1,0 +1,19 @@
+{
+    "id": "q_tut_01",
+    "title": "First Steps",
+    "giver_npc": "npc_drillmaster",
+    "turnin_npc": "npc_drillmaster",
+    "min_level": 1,
+    "prerequisite_quest": null,
+    "description": "Drillmaster Hale sizes you up. \"New blood. Good. Walk to the training ring, put down the practice dummy, and bring me a token off it. That's move, strike, and loot — the whole trade in one lesson. Go.\"",
+    "objectives": [
+        { "type": "reach",   "target": "loc_training_ring", "count": 1, "desc": "Walk to the training ring",
+          "x": 14.0, "y": 10.0, "radius": 3.0 },
+        { "type": "kill",    "target": "mob_dummy",          "count": 1, "desc": "Defeat the training dummy" },
+        { "type": "collect", "target": "itm_practice_token", "count": 1, "desc": "Recover a practice token" }
+    ],
+    "rewards": {
+        "xp": 40,
+        "items": [ { "item": "itm_padded_coif", "count": 1 } ]
+    }
+}

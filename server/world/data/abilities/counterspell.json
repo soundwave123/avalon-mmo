@@ -1,0 +1,29 @@
+{
+  "id": 206,
+  "name": "Counterspell",
+  "icon": "frostbolt",
+  "char_class": "mage",
+  "effect": "damage",
+  "school": "arcane",
+  "cast_ticks": 0,
+  "triggers_gcd": false,
+  "off_gcd": true,
+  "mana_cost": 8,
+  "range_units": 30.0,
+  "base_damage": 1,
+  "variance_min": 1.0,
+  "variance_max": 1.0,
+  "can_full_interrupt": true,
+  "school_lock_ticks": 120,
+  "cooldown_ticks": 300,
+  "ranks": [
+    {"min_level": 1, "mana_cost": 8, "cooldown_ticks": 300, "school_lock_ticks": 120},
+    {"min_level": 6, "mana_cost": 7, "cooldown_ticks": 280, "school_lock_ticks": 120},
+    {"min_level": 12, "mana_cost": 6, "cooldown_ticks": 260, "school_lock_ticks": 140},
+    {"min_level": 18, "mana_cost": 5, "cooldown_ticks": 240, "school_lock_ticks": 160},
+    {"min_level": 24, "mana_cost": 4, "cooldown_ticks": 220, "school_lock_ticks": 180},
+    {"min_level": 30, "mana_cost": 3, "cooldown_ticks": 200, "school_lock_ticks": 200},
+    {"min_level": 36, "mana_cost": 3, "cooldown_ticks": 180, "school_lock_ticks": 220},
+    {"min_level": 40, "mana_cost": 3, "cooldown_ticks": 160, "school_lock_ticks": 240}
+  ]
+}

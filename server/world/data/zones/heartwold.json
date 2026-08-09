@@ -1,0 +1,213 @@
+{
+  "_doc": "T-595 ZONE SHEET — the declarative 'one zone in, one zone out' contract the per-zone content pipeline consumes. This is the Heartwold (Wold / era-1, 1-20) instantiation and the phase-1 PROOF RUN. tools/zonegen/zonegen.py reads this sheet and EMITS placement data into the shared data files: dressing rows into client/assets/props.json (tag 'zone_heartwold', idempotent), spawn camps into server/world/data/mobs/spawns.json (idempotent by _zone), gather-node pool into server/world/data/gather/nodes.json (ids 'gn_hw_*'), discovery POIs into server/world/data/discovery_nodes.json (ids 'hw_*'). The per-zone integrity tests (server/world/tests/test_zone_pipeline.gd + client/tests/test_zone_dressing.gd) read THIS sheet plus the emitted data and re-run every existing safety/placement/loot/node/quest oracle scoped to the zone. Each future zone = author a sheet like this + run zonegen + tests. Geometry is server-ground (x, z); the region origin + clamp come from data/regions/regions.json (region_id below). All authored content must stay within +/-4 km of the region origin (test_region_local_bounds, single-precision-forever rule).",
+
+  "id": "heartwold",
+  "region_id": "wold",
+  "era": 1,
+  "level_band": [1, 20],
+  "origin": [0.0, 0.0],
+  "seed": 20260721,
+
+  "dressing_tag": "zone_heartwold",
+  "density_budget_per_km2": [2000, 4000],
+
+  "exclusions": {
+    "_doc": "Keep-out geometry for dressing AND spawn placement. Discs are [cx, cz, radius]; rects are [cx, cz, half_x, half_z]. Covers the built core, capital, water, tutorial yard, offset set-pieces, and the mountain/fog rim (owned by tag t587_boundary). Roads are NOT listed here: arterial roads + the T-585 road-margin keep-out are OWNED BY T-596 (travel lane) and deliberately out of scope for this dressing pass.",
+    "discs": [
+      [0.0, 0.0, 62.0],
+      [18.0, 22.0, 20.0],
+      [12.5, 9.0, 12.0]
+    ],
+    "rects": [
+      [0.0, -240.0, 140.0, 120.0],
+      [0.0, -116.0, 24.0, 27.0],
+      [420.0, 0.0, 44.0, 44.0],
+      [0.0, 420.0, 44.0, 44.0],
+      [-420.0, 3.0, 52.0, 34.0]
+    ],
+    "river_margin": 7.0,
+    "rim_radius": 560.0
+  },
+
+  "wings": [
+    {
+      "id": "eastern_farmland",
+      "hook": "the farmland belt east of Elmsvale (q_wold_mend_the_fold / fevered_flock / stray_wolves)",
+      "band": [4, 8],
+      "rect": [270.0, 20.0, 250.0, 230.0],
+      "target_props": 420,
+      "biome": "pasture",
+      "spawn_families": ["wolf", "kobold_miner"]
+    },
+    {
+      "id": "western_diggings",
+      "hook": "Grexrok's mining gulch west of the vale (q_wold_deep_diggings / deepwarden_break)",
+      "band": [6, 10],
+      "rect": [-300.0, 90.0, 220.0, 210.0],
+      "target_props": 520,
+      "biome": "rocky",
+      "spawn_families": ["kobold_miner"]
+    },
+    {
+      "id": "southern_darkwood",
+      "hook": "the darkwood treeline toward the lake (q_wold_savage_treeline / ancient_thorn)",
+      "band": [6, 12],
+      "rect": [30.0, 360.0, 260.0, 190.0],
+      "target_props": 640,
+      "biome": "forest",
+      "spawn_families": ["bloodthorn_lasher", "wolf"]
+    },
+    {
+      "id": "northern_high_moor",
+      "hook": "the high moor approaching the crypt hills (q_wold_wardens_patrol / omens_churchyard)",
+      "band": [14, 18],
+      "rect": [-330.0, -300.0, 190.0, 180.0],
+      "target_props": 300,
+      "biome": "moor",
+      "spawn_families": [],
+      "_families_note": "band 14-18 dressing-only wing (NW moor strip; most of its rect routes to Ashmoor across the x=-210 Voronoi seam, so it ships dressing + the Weeping Barrow POI only). T-627 authors the WALKABLE L14-19 solo mob wing in the new in-region 'crypt_moor' wing below, not here."
+    },
+    {
+      "id": "deep_darkwood",
+      "hook": "T-627: the deep darkwood south toward the lake — the L10-13 open-world SOLO band (dire/pack reskins of wolf + thornback bloodthorn + grovewarden kobolds, and Direfang the roaming named elite). Closes the first half of the L10-20 solo dead-zone the crypt chain used to gate.",
+      "band": [10, 13],
+      "rect": [90.0, 380.0, 140.0, 120.0],
+      "target_props": 260,
+      "biome": "forest",
+      "spawn_families": ["dire_wolf", "thornback_lasher", "darkwood_stalker", "grovewarden_kobold", "direfang_matriarch"]
+    },
+    {
+      "id": "crypt_moor",
+      "hook": "T-627: the high moor approaching the crypt hills (in-region, east of the ashmoor seam) — the L14-19 open-world SOLO band (moor/barrow/crag reskins of wolf/bloodthorn/kobold, and Grymm the roaming named elite). Bridges toward Ashmoor via the rift-scar sky-lane (T-596). The crypt group chain stays intact as the parallel group path through this band.",
+      "band": [14, 19],
+      "rect": [210.0, -315.0, 120.0, 115.0],
+      "target_props": 240,
+      "biome": "moor",
+      "spawn_families": ["moor_stalker", "fen_lurker", "barrow_hound", "crag_reaver", "moor_direwolf", "blightthorn", "grymm_moorlord"]
+    }
+  ],
+
+  "biome_kits": {
+    "_doc": "Per-biome dressing palette. Each entry: [scene_stem, weight, scale_min, scale_max]. Scenes resolve to res://assets/models/<stem>.glb (all confirmed present + realism-pivot-safe: none contain a test_temperate_flora _BANNED_SPECIES token). tier is FLORA for all of these, so prop_streamer streams them by distance ring inside the wold region (T-594).",
+    "pasture": [
+      ["prop_oak_real", 6, 0.9, 1.3], ["prop_oak_real_b", 5, 0.9, 1.3], ["prop_oak2", 4, 0.9, 1.2],
+      ["prop_bush_real_a", 8, 0.8, 1.2], ["prop_bush_real_c", 8, 0.8, 1.2],
+      ["prop_flora_poppy", 10, 0.9, 1.2], ["prop_flora_daisy", 10, 0.9, 1.2],
+      ["prop_flora_cornflower", 9, 0.9, 1.2], ["prop_rock_a", 3, 0.7, 1.1], ["prop_rock_c", 3, 0.7, 1.1]
+    ],
+    "rocky": [
+      ["prop_outcrop_face_a", 6, 0.9, 1.6], ["prop_outcrop_face_b", 6, 0.9, 1.6],
+      ["prop_boulder_real", 7, 0.8, 1.5], ["prop_boulder_real_b", 6, 0.8, 1.5], ["prop_boulder_real_c", 6, 0.8, 1.5],
+      ["prop_rock_a", 8, 0.6, 1.2], ["prop_rock_c", 8, 0.6, 1.2], ["prop_rock_e", 7, 0.6, 1.2], ["prop_rock_g", 7, 0.6, 1.2],
+      ["prop_bramble_patch", 5, 0.8, 1.2], ["prop_deadtree_a", 3, 0.9, 1.3]
+    ],
+    "forest": [
+      ["prop_tree_fir_a", 9, 0.9, 1.4], ["prop_tree_fir_b", 9, 0.9, 1.4], ["prop_tree_fir_c", 9, 0.9, 1.4],
+      ["prop_tree_pine_a", 8, 0.9, 1.4], ["prop_pine", 6, 0.9, 1.4],
+      ["prop_oak_real", 5, 1.0, 1.4], ["prop_oak2", 4, 1.0, 1.3],
+      ["prop_bush_real_a", 6, 0.8, 1.2], ["prop_bush_real_c", 6, 0.8, 1.2],
+      ["prop_bramble_patch", 6, 0.8, 1.3], ["prop_deadfall_log", 4, 0.9, 1.3],
+      ["prop_forest_litter_a", 8, 0.9, 1.3], ["prop_deadtree_a", 3, 0.9, 1.3]
+    ],
+    "moor": [
+      ["prop_outcrop_face_a", 5, 0.9, 1.5], ["prop_boulder_real", 6, 0.8, 1.4], ["prop_boulder_real_c", 6, 0.8, 1.4],
+      ["prop_rock_a", 7, 0.6, 1.1], ["prop_rock_e", 7, 0.6, 1.1], ["prop_rock_g", 6, 0.6, 1.1],
+      ["prop_bramble_patch", 7, 0.8, 1.2], ["prop_reeds", 5, 0.9, 1.3],
+      ["prop_bush_real_c", 4, 0.7, 1.0], ["prop_deadtree_a", 4, 0.9, 1.3], ["prop_deadtree_b", 4, 0.9, 1.3]
+    ]
+  },
+
+  "spawns": {
+    "_doc": "Per-band mob CAMPS placed under the T-402 pull vocabulary (cluster <=8 m, else separate pull >=1.5*AGGRO_MAX=30 m), the T-515 hub clearance (>=30 m from every spawn hub for any mob level >3), the T-585 trainer/service clearance (>= the mob's own leash_radius from every trainer/service NPC), and the T-617 elite-isolation buffer (>= minf(AGGRO_MAX, leash) from every elite/rare spawn). entity_id_base values live in the reserved 3xxx zone-content band so they never collide with the hand-authored 1xxx/2xxx spawns. shape 'duo' = a linked pack (2 mobs <=6 m apart); shape 'solo' = a lone winnable pull. Loot rides each mob file's existing T-616-banded table + T-232 weighted roll; this pass places camps, it does not re-band loot.",
+    "id_base": 3001,
+    "camps": [
+      {"wing": "eastern_farmland", "family": "wolf", "shape": "duo", "count": 3},
+      {"wing": "eastern_farmland", "family": "wolf", "shape": "solo", "count": 2},
+      {"wing": "eastern_farmland", "family": "kobold_miner", "shape": "solo", "count": 2},
+      {"wing": "western_diggings", "family": "kobold_miner", "shape": "duo", "count": 3},
+      {"wing": "western_diggings", "family": "kobold_miner", "shape": "solo", "count": 2},
+      {"wing": "southern_darkwood", "family": "bloodthorn_lasher", "shape": "duo", "count": 3},
+      {"wing": "southern_darkwood", "family": "wolf", "shape": "solo", "count": 2},
+      {"wing": "southern_darkwood", "family": "bloodthorn_lasher", "shape": "solo", "count": 2},
+
+      {"wing": "deep_darkwood", "family": "dire_wolf", "shape": "duo", "count": 1},
+      {"wing": "deep_darkwood", "family": "dire_wolf", "shape": "solo", "count": 1},
+      {"wing": "deep_darkwood", "family": "thornback_lasher", "shape": "duo", "count": 1},
+      {"wing": "deep_darkwood", "family": "thornback_lasher", "shape": "solo", "count": 1},
+      {"wing": "deep_darkwood", "family": "darkwood_stalker", "shape": "solo", "count": 2},
+      {"wing": "deep_darkwood", "family": "grovewarden_kobold", "shape": "solo", "count": 1},
+      {"wing": "deep_darkwood", "family": "direfang_matriarch", "shape": "solo", "count": 1},
+
+      {"wing": "crypt_moor", "family": "moor_stalker", "shape": "duo", "count": 1},
+      {"wing": "crypt_moor", "family": "moor_stalker", "shape": "solo", "count": 1},
+      {"wing": "crypt_moor", "family": "fen_lurker", "shape": "solo", "count": 2},
+      {"wing": "crypt_moor", "family": "barrow_hound", "shape": "duo", "count": 1},
+      {"wing": "crypt_moor", "family": "barrow_hound", "shape": "solo", "count": 1},
+      {"wing": "crypt_moor", "family": "crag_reaver", "shape": "solo", "count": 1},
+      {"wing": "crypt_moor", "family": "moor_direwolf", "shape": "solo", "count": 1},
+      {"wing": "crypt_moor", "family": "blightthorn", "shape": "solo", "count": 1},
+      {"wing": "crypt_moor", "family": "grymm_moorlord", "shape": "solo", "count": 1}
+    ]
+  },
+
+  "gather_pool": {
+    "_doc": "T-595 per-zone gather POOL (spawn-loot-reference §2). Modeled on the WoW zone spawn-pool: a MIN set (always-up, spawn_chance 1.0, tiered respawn) + a BONUS set (spawn_chance <1.0 so post-harvest returns are variable-ratio / not every node is up at once) forming a spawn-point set several times the live-min count, plus exactly ONE 1-per-zone RARE node (long dwell + low chance = the economy chase, the Black Lotus analog). All yields are EXISTING registry items and kinds (herb/ore/timber); ids are 'gn_hw_*'. Tiered respawn_ticks by kind: herb 360-720, ore 720-1080, timber 600-900, rare 3600.",
+    "id_prefix": "gn_hw_",
+    "min_nodes": [
+      {"kind": "herb", "item_id": "itm_herb_bloodthorn", "display_name": "Bloodthorn", "wing": "eastern_farmland", "respawn_ticks": 480},
+      {"kind": "herb", "item_id": "itm_herb_marshmint", "display_name": "Marshmint", "wing": "southern_darkwood", "respawn_ticks": 540},
+      {"kind": "ore", "item_id": "itm_ore_iron", "display_name": "Iron Vein", "wing": "western_diggings", "respawn_ticks": 900},
+      {"kind": "ore", "item_id": "itm_copper_ore", "display_name": "Copper Vein", "wing": "western_diggings", "respawn_ticks": 720},
+      {"kind": "timber", "item_id": "itm_timber_rough", "display_name": "Timber", "wing": "southern_darkwood", "respawn_ticks": 600}
+    ],
+    "bonus_nodes": [
+      {"kind": "herb", "item_id": "itm_herb_bloodthorn", "display_name": "Bloodthorn", "wing": "eastern_farmland", "respawn_ticks": 600, "spawn_chance": 0.6},
+      {"kind": "herb", "item_id": "itm_herb_marshmint", "display_name": "Marshmint", "wing": "southern_darkwood", "respawn_ticks": 660, "spawn_chance": 0.6},
+      {"kind": "ore", "item_id": "itm_ore_iron", "display_name": "Iron Vein", "wing": "western_diggings", "respawn_ticks": 1000, "spawn_chance": 0.5},
+      {"kind": "ore", "item_id": "itm_copper_ore", "display_name": "Copper Vein", "wing": "western_diggings", "respawn_ticks": 840, "spawn_chance": 0.6},
+      {"kind": "timber", "item_id": "itm_timber_rough", "display_name": "Timber", "wing": "southern_darkwood", "respawn_ticks": 720, "spawn_chance": 0.6},
+      {"kind": "ore", "item_id": "itm_copper_ore", "display_name": "Copper Vein", "wing": "northern_high_moor", "respawn_ticks": 900, "spawn_chance": 0.5}
+    ],
+    "rare_node": {"kind": "herb", "item_id": "itm_herb_emberroot", "display_name": "Emberroot Bloom", "wing": "northern_high_moor", "respawn_ticks": 3600, "spawn_chance": 0.15}
+  },
+
+  "discovery_pois": [
+    {"id": "hw_farmland_shrine", "name": "The Vale Wayshrine", "wing": "eastern_farmland", "radius": 4.0, "level": 5, "xp": 45, "lore": "A field-edge shrine the reapers still leave bread on."},
+    {"id": "hw_diggings_mouth", "name": "The Sealed Gallery", "wing": "western_diggings", "radius": 4.0, "level": 7, "xp": 55, "coins": 15, "lore": "The kobolds broke into something older than the mine."},
+    {"id": "hw_darkwood_stones", "name": "The Thornwood Stones", "wing": "southern_darkwood", "radius": 4.0, "level": 9, "xp": 65, "lore": "Nine stones, and the wood grows wrong between them."},
+    {"id": "hw_moor_barrow", "name": "The Weeping Barrow", "wing": "northern_high_moor", "radius": 4.5, "level": 15, "xp": 110, "coins": 30, "lore": "Wind off the moor carries a name no register holds."}
+  ],
+
+  "quest_chain": {
+    "_doc": "T-622 ZONE QUEST-DENSITY LEDGER. This enumerates EVERY Heartwold (1-20) quest so the per-zone density oracle (test_zone_pipeline) can assert the WoW Loremaster budget (40-60/zone, ~10% group/elite, 2-3 breadcrumbs; quest-xp-reference §4). The pipeline's quest pass VALIDATES this set (reachability, XP > 0, band coverage, prereq wiring) rather than re-authoring it. Categories: day_one = the L1-2 Elmsvale onramp (tutorial + village + the Highkeep-road introduction chain); bounties = the repeatable elite bounty board (rp3); hub_quests = the L3-10 q_wold_* leveling spine (T-615's L4 + T-622's L6-10 solo fill folded in); breadcrumbs = T-622 pure-navigation hand-offs to neighbouring hubs along the T-596 King's Road/flight web; bridge_quests = the L12-19 crypt->rift capstone that BRIDGES into era-2 Ashmoor. GROUP/ELITE quests are NOT a separate list — any quest whose recommended_players > 1 is the elite set (bounties + the named-mob hunts), tagged live by content_query (offer panel + tracker 'Elite' badge). The L1-10 bands hit budget here; the L10-20 open-world SOLO band (its mob wing + solo quests together) is T-627's job — DELIVERED in this sheet as the 'highland_solo' spine + 'highland_elite' hunts below (the deep_darkwood/crypt_moor wings + dire_wolf..blightthorn/grymm mob families). The solo spine (highland_solo) is walkable end-to-end WITHOUT the Hollowed Crypt: every objective targets an open-world (spawns.json, non-instance) mob/node or a reach point, chained L10->L19 and handed off to Ashmoor via the T-596 rift-scar sky-lane. The bridge_quests crypt chain stays intact as the PARALLEL group path through the same 10-20 band. Zone total lands at the WoW Loremaster ceiling (60) with density complete across 1-20.",
+    "day_one": [
+      "q_tut_01", "q_tut_02", "q_tut_03",
+      "q001", "q002", "q003", "q004", "q005", "q006", "q007",
+      "q010", "q011", "q012", "q013"
+    ],
+    "bounties": ["qb01", "qb02", "qb03"],
+    "hub_quests": [
+      "q_wold_stray_wolves", "q_wold_mend_the_fold", "q_wold_fevered_flock", "q_wold_foul_wellspring",
+      "q_wold_savage_treeline", "q_wold_deep_diggings", "q_wold_physicians_plea", "q_wold_greymaw_hunt",
+      "q_wold_wardens_patrol", "q_wold_deepwarden_break", "q_wold_ancient_thorn", "q_wold_omens_churchyard",
+      "q_wold_thin_the_pack",
+      "q_wold_smiths_copper", "q_wold_timber_run", "q_wold_cull_the_diggings", "q_wold_thornroot_cuttings",
+      "q_wold_wardens_toll", "q_wold_iron_levy", "q_wold_deepwood_survey", "q_wold_last_patrol"
+    ],
+    "breadcrumbs": [
+      "q_wold_road_to_highkeep", "q_wold_deep_gate_road", "q_wold_kingsroad_ashmoor"
+    ],
+    "bridge_quests": [
+      "q_crypt_restless_dead", "q_hollowing_creep", "q_osric_registers", "q_ward_the_graves",
+      "q_deep_vault_watch", "q_the_seal_sings", "q_rift_vault_counted"
+    ],
+    "highland_solo": [
+      "q_wold_dire_treeline", "q_wold_darkwood_stalkers", "q_wold_grove_rot",
+      "q_wold_moor_watch", "q_wold_fenmire_cull", "q_wold_barrow_hounds", "q_wold_crag_reavers",
+      "q_wold_apex_predators", "q_wold_blight_at_the_rift", "q_wold_moor_road_ashmoor"
+    ],
+    "highland_elite": [
+      "q_wold_deepwood_matriarch", "q_wold_moorlord_grymm"
+    ]
+  }
+}

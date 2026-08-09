@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_stray_wolves",
+    "title": "Stray Wolves of the Vale",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 3,
+    "prerequisite_quest": "q004",
+    "description": "The rogue you put down ran with a pack, and without it the strays have scattered hungry across the Whispering Vale. Ranger Sylas wants them thinned before they drift toward the farms. Cull the strays and bring back their pelts — proof enough to still the village's nerves.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 4, "desc": "Cull the stray wolves along the Vale" },
+        { "type": "collect", "target": "itm_wolf_pelt", "count": 3, "desc": "Take their pelts as proof" }
+    ],
+    "rewards": {
+        "xp": 200,
+        "coins": 15,
+        "items": [
+            { "item": "itm_trail_rations", "count": 3 }
+        ]
+    }
+}

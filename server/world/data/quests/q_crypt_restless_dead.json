@@ -1,0 +1,22 @@
+{
+    "id": "q_crypt_restless_dead",
+    "title": "The Restless Dead",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 12,
+    "prerequisite_quest": null,
+    "description": "Father Osric has tended these graves for decades, but lately the dead won't stay buried. Something old in the deepest vault beneath the churchyard is waking them. Go down, see what's stirring, and put as many of the risen back to rest as you can.",
+    "objectives": [
+        { "type": "reach", "target": "loc_crypt_porch", "count": 1, "desc": "Investigate the crypt door in the churchyard", "x": 14.0, "y": -12.5, "radius": 3.0 },
+        { "type": "kill", "target": "mob_skeletal_warrior", "count": 3, "desc": "Put down risen skeletal warriors" },
+        { "type": "kill", "target": "mob_crypt_ghoul", "count": 3, "desc": "Slay the crypt ghouls prowling the galleries" },
+        { "type": "kill", "target": "mob_restless_shade", "count": 3, "desc": "Banish the restless shades" }
+    ],
+    "rewards": {
+        "xp": 700,
+        "coins": 200,
+        "items": [
+            { "item": "itm_cryptkeeper_chain", "count": 1 }
+        ]
+    }
+}

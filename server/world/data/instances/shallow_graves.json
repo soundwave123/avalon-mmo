@@ -1,0 +1,8 @@
+{
+  "_comment": "T-719 The Shallow Graves — the tutorial capstone's spawn set, seeded by instance_service._seed on a sub-CRYPT_MIN_LEVEL descent (KIND_TRIAL). It occupies the SAME prop_hollowed_crypt box at world (420,0) as the L12 Hollowed Crypt, in a DIFFERENT instance: the two never share an instance_id, so the geometry is reused with zero new art and a graduate never stands among the L15 packs. Only the UPPER galleries are populated (vestibule -> gallery A -> side crypt -> chamber 1, blender rooms VEST/GALA/SIDE/BOSS1 in gen_hollowed_crypt_real.py); everything past y=-16 is left dark, which is the fiction Osric's turn-in sells as the reason to come back at L12. SPACING (the T-628 inversion): TRIAL_ENTRANCE (420,0.2) is 7.17m from the nearest husk, the pack is 7.96m from each boss and the two bosses are 10.82m apart — every gap clears ServerConfig.AGGRO_FLOOR (5.0) by >=2m, so nothing chain-pulls and the respawn point is never inside a pack. Both bosses are additionally retaliate_only. Positions convert from the crypt GLB's Blender-local coords by world=(420+bx, -by).",
+  "spawns": [
+    { "mob_file": "grave_husk.json", "positions": [[419.0, -7.3], [421.2, -7.3]] },
+    { "mob_file": "pallbearer_ost.json", "positions": [[427.5, -12.0]] },
+    { "mob_file": "sexton_marrow.json", "positions": [[417.0, -14.6]] }
+  ]
+}

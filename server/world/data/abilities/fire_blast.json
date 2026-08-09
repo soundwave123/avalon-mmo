@@ -1,0 +1,16 @@
+{
+  "id": 202,
+  "name": "Fire Blast",
+  "icon": "fire_blast",
+  "char_class": "mage",
+  "effect": "damage",
+  "cast_ticks": 0,
+  "resource_cost": 8,
+  "range_units": 25.0,
+  "base_damage": 18,
+  "attacker_stat_coeffs": {
+    "int": 0.4
+  },
+  "variance_min": 0.9,
+  "variance_max": 1.0
+}

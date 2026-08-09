@@ -1,0 +1,22 @@
+{
+    "id": "q_wold_ancient_thorn",
+    "title": "The Ancient Thorn",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 9,
+    "prerequisite_quest": null,
+    "description": "Sylas has found the source of the rot in the southern thicket: Elderthorn the Ancient, woken and vast, the sickness given a will and a reach. No single blade fells it. Gather a party, cut it down, and take clean blossoms from its heart — the physicians say the oldest growth holds the truest cure.",
+    "recommended_players": 3,
+    "location_hint": "Southern thicket, south-west of the village (-50, -45).",
+    "objectives": [
+        { "type": "kill", "target": "mob_elderthorn", "count": 1, "desc": "Fell Elderthorn the Ancient with a party" },
+        { "type": "collect", "target": "itm_bloodthorn", "count": 5, "desc": "Cut clean blossoms from its heart" }
+    ],
+    "rewards": {
+        "xp": 460,
+        "coins": 100,
+        "items": [
+            { "item": "itm_recipe_healing_potion", "count": 1 }
+        ]
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_physicians_plea",
+    "title": "The Physician's Plea",
+    "giver_npc": "npc_hk_physician",
+    "turnin_npc": "npc_hk_physician",
+    "min_level": 7,
+    "prerequisite_quest": null,
+    "description": "The wasting fever has climbed the King's Road and reached Highkeep's poor ward. Physician Alda can hold it back with bloodthorn draughts if she has reagents in bulk — and she needs eyes on the village churchyard, where the first of the fevered were laid to rest. Bring her the blossoms, and go stand at the crypt door so she knows how far the graves have filled.",
+    "objectives": [
+        { "type": "collect", "target": "itm_bloodthorn", "count": 8, "desc": "Gather bloodthorn for the ward's draughts" },
+        { "type": "reach", "target": "loc_crypt_porch", "count": 1, "desc": "Report the state of the churchyard crypt door", "x": 14.0, "y": -12.5, "radius": 3.0 }
+    ],
+    "rewards": {
+        "xp": 360,
+        "coins": 60,
+        "items": [
+            { "item": "itm_recipe_healing_potion", "count": 1 }
+        ]
+    }
+}

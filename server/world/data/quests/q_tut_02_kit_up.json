@@ -1,0 +1,18 @@
+{
+    "id": "q_tut_02",
+    "title": "Kit Up",
+    "giver_npc": "npc_drillmaster",
+    "turnin_npc": "npc_drillmaster",
+    "min_level": 1,
+    "prerequisite_quest": "q_tut_01",
+    "description": "Hale nods at the leather cap you earned. \"Gear does nothing in your bag. Put it on, then show me one real ability — not a lazy swing, an ability. Then you're ready for the world. Open Guild or Help when you're ready to find your people.\"",
+    "objectives": [
+        { "type": "equip",       "target": "itm_padded_coif", "count": 1, "desc": "Equip the padded coif" },
+        { "type": "use_ability", "target": "*",               "count": 1, "desc": "Use one of your abilities" }
+    ],
+    "rewards": {
+        "xp": 60,
+        "coins": 25,
+        "items": []
+    }
+}

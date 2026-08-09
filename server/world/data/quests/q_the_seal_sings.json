@@ -1,0 +1,22 @@
+{
+    "id": "q_the_seal_sings",
+    "title": "The Seal Sings",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 18,
+    "prerequisite_quest": "q_deep_vault_watch",
+    "description": "It is too late for wards. The seal on the deepest Vault has begun to SING — a thin, wrong note that carries up through forty feet of stone — and the dead throw themselves against it in a frenzy, as if something on the far side is calling them home. This is the last thing Osric will ask of the living age: go down, hold the antechamber while the note climbs, and see with your own eyes what a hundred years too old is reaching toward. Then come back and tell him whether it can still be stopped.",
+    "location_hint": "The singing seal, deepest Vault",
+    "objectives": [
+        { "type": "reach", "target": "loc_seal_antechamber", "count": 1, "desc": "Reach the antechamber before the singing seal", "x": 416.0, "y": -44.0, "radius": 3.0 },
+        { "type": "kill", "target": "mob_restless_shade", "count": 4, "desc": "Hold the antechamber against the frenzied shades" },
+        { "type": "talk", "target": "npc_village_parson", "count": 1, "desc": "Carry what you saw at the seal back to Father Osric" }
+    ],
+    "rewards": {
+        "xp": 1500,
+        "coins": 360,
+        "items": [
+            { "item": "itm_riftward_blade", "count": 1 }
+        ]
+    }
+}

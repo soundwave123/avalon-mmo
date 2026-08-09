@@ -1,0 +1,20 @@
+{
+    "id": "q_wold_last_patrol",
+    "title": "The Last Patrol",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_outpost_guard",
+    "min_level": 10,
+    "prerequisite_quest": null,
+    "description": "One last sweep before the warden reports the wold quiet enough to hand north: break the kobolds still working the gallery and carry out what iron they hoarded, so no smith is ever again fed fouled ore off this ground. Do this and the road to Highkeep is yours.",
+    "objectives": [
+        { "type": "kill", "target": "mob_kobold_miner", "count": 10, "desc": "Break the last of the gallery kobolds" },
+        { "type": "collect", "target": "itm_ore_iron", "count": 6, "desc": "Carry out the hoarded iron" }
+    ],
+    "rewards": {
+        "xp": 500,
+        "coins": 110,
+        "items": [
+            { "item": "itm_iron_sword", "count": 1 }
+        ]
+    }
+}

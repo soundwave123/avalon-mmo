@@ -1,0 +1,15 @@
+{
+  "id": 306,
+  "name": "Resurrection",
+  "icon": "resurrect",
+  "char_class": "priest",
+  "effect": "resurrect",
+  "school": "holy",
+  "cast_ticks": 40,
+  "resource_cost": 40,
+  "range_units": 30.0,
+  "targets_friendly": true,
+  "revive_hp_pct": 0.35,
+  "revive_mana_pct": 0.35,
+  "revive_sickness_ticks": 200
+}

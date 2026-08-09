@@ -1,0 +1,39 @@
+{
+  "_comment": "T-538: the bespoke Rift Trials reward schedule (replaces the six borrowed Hollowed-Crypt blues). base_chance is the PUBLISHED per-member tier-1 odds of a named drop on a timed clear; the live CHANCE is base_chance x rift_scaling.reward_weight(tier) plus the master's bad-luck floor (honest fairness, never purchasable). The QUALITY scales via rarity BANDS: a clear rolls from every band its tier has unlocked (rift_loot.eligible_pool), so a deep climber draws from a richer/rarer pool instead of the same six items. Bands are content-authored + tier-gated; the evergreen chase past the top band is the rift_season milestone titles.",
+  "base_chance": 0.12,
+  "bands": [
+    {
+      "band": "riftmarked",
+      "rarity": "uncommon",
+      "min_tier": 1,
+      "pool": [
+        "itm_rift_shardblade",
+        "itm_rift_cracked_aegis",
+        "itm_rift_hollow_helm",
+        "itm_rift_dust_wraps"
+      ]
+    },
+    {
+      "band": "riftbound",
+      "rarity": "rare",
+      "min_tier": 5,
+      "pool": [
+        "itm_rift_veinsong_edge",
+        "itm_rift_echo_bulwark",
+        "itm_rift_seers_crown",
+        "itm_rift_gloaming_mantle"
+      ]
+    },
+    {
+      "band": "riftforged",
+      "rarity": "epic",
+      "min_tier": 10,
+      "pool": [
+        "itm_rift_reaver",
+        "itm_rift_paradox_ward",
+        "itm_rift_ascendant_diadem",
+        "itm_rift_singularity_plate"
+      ]
+    }
+  ]
+}

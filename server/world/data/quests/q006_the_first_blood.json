@@ -1,0 +1,41 @@
+{
+    "id": "q006",
+    "title": "The First Blood",
+    "giver_npc": "npc_courier",
+    "turnin_npc": "npc_courier",
+    "min_level": 2,
+    "prerequisite_quest": "q003",
+    "description": "Courier Bram has a sealed bag bound for the Borderlands outpost \u2014 contested ground the rival faction holds. Flag yourself, brave the crossing, deliver it to the outpost guard, then report back. This is how Avalon's wars begin.",
+    "objectives": [
+        {
+            "type": "reach",
+            "target": "loc_borderlands_outpost",
+            "count": 1,
+            "desc": "Cross into the Borderlands",
+            "x": 60.0,
+            "y": -30.0,
+            "radius": 4.0
+        },
+        {
+            "type": "talk",
+            "target": "npc_outpost_guard",
+            "count": 1,
+            "desc": "Deliver the bag to the outpost guard"
+        }
+    ],
+    "rewards": {
+        "xp": 250,
+        "items": [
+            {
+                "item": "itm_novice_cloak",
+                "count": 1
+            }
+        ]
+    },
+    "provided_items": [
+        {
+            "item": "itm_outpost_parcel",
+            "count": 1
+        }
+    ]
+}

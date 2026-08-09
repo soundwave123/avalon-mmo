@@ -1,0 +1,33 @@
+{
+    "id": "q_wold_grove_rot",
+    "title": "Root of the Rot",
+    "giver_npc": "npc_alchemist",
+    "turnin_npc": "npc_alchemist",
+    "min_level": 12,
+    "prerequisite_quest": "q_wold_darkwood_stalkers",
+    "description": "Alchemist Vell has traced the darkwood sickness to a green source: the grovewarden kobolds tend a corrupted bloom as if it were a crop. Bring Vell cuttings of the tainted bloodthorn so she can name the blight, and put down the kobolds that nurse it.",
+    "objectives": [
+        {
+            "type": "collect",
+            "target": "itm_bloodthorn",
+            "count": 8,
+            "desc": "Gather tainted bloodthorn cuttings"
+        },
+        {
+            "type": "kill",
+            "target": "mob_grovewarden_kobold",
+            "count": 5,
+            "desc": "Put down the grovewarden kobolds"
+        }
+    ],
+    "rewards": {
+        "xp": 440,
+        "coins": 65,
+        "items": [
+            {
+                "item": "itm_field_repair_kit",
+                "count": 1
+            }
+        ]
+    }
+}

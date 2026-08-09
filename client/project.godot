@@ -1,0 +1,73 @@
+; Avalon client (Godot 4.6)
+; Windowed game client. This is what players run.
+
+config_version=5
+
+[application]
+
+config/name="Avalon Client"
+config/description="Avalon MMORPG game client"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+run/max_fps=0
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/resizable=true
+window/vsync/vsync_mode=0
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=false
+
+[network]
+
+limits/debugger/max_chars_per_second=32768
+limits/debugger/max_queued_messages=2048
+
+[rendering]
+
+; T-078 baseline (owner: "utilize all the options available") — anti-aliasing + filtering +
+; shadow quality maxed for the Forward+ renderer. The settings MENU will expose presets;
+; this is the Ultra baseline. MSAA 4x + TAA together: MSAA kills geometry edges (roof
+; lines), TAA kills specular/shader shimmer.
+; --- Anti-aliasing: MSAA 8x kills geometry edges, TAA kills shader/specular shimmer
+; (grass + water), debanding kills sky/gradient banding. ---
+anti_aliasing/quality/msaa_3d=3
+anti_aliasing/quality/use_taa=true
+anti_aliasing/quality/screen_space_aa=0
+anti_aliasing/quality/use_debanding=true
+; --- Resolution: supersample the 3D at 1.5x (SSAA) then downsample — the 5090 sits at ~2%
+; load, so we spend it on crispness. FPS uncapped (see [application] run/max_fps=0). ---
+scaling_3d/mode=0
+scaling_3d/scale=1.5
+textures/default_filters/anisotropic_filtering_level=4
+textures/default_filters/use_nearest_mipmap_filter=false
+; --- Shadows: 8k directional atlas + highest soft-shadow filter. ---
+lights_and_shadows/directional_shadow/size=8192
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
+; --- AAA-spec pass (owner, 2026-07-06): high-res volumetric fog froxel grid (light shafts
+; through oak canopies + doorways; density lives in WorldEnvironment). ---
+environment/volumetric_fog/volume_size=128
+environment/volumetric_fog/volume_depth=128
+lights_and_shadows/positional_shadow/soft_shadow_filter_quality=4
+lights_and_shadows/directional_shadow/16_bits=false
+; --- Global illumination (Godot's "ray-traced-equivalent" stack): full-res GI, more SDFGI
+; probe rays, high SSR/SSAO/SSIL quality. Godot 4.6 has no HW ray tracing; this is the
+; software-traced maximum. ---
+global_illumination/gi/use_half_resolution=false
+global_illumination/sdfgi/probe_ray_count=3
+global_illumination/sdfgi/frames_to_converge=4
+global_illumination/sdfgi/frames_to_update_lights=2
+environment/screen_space_reflection/roughness_quality=3
+environment/ssao/quality=3
+environment/ssil/quality=3
+environment/subsurface_scattering/subsurface_scattering_quality=2
+; --- Volumetric fog resolution (god-rays detail). ---
+environment/volumetric_fog/volume_size=128
+environment/volumetric_fog/volume_depth=256
+
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="mobile"

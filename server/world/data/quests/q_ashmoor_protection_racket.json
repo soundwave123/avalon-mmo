@@ -1,0 +1,21 @@
+{
+    "id": "q_ashmoor_protection_racket",
+    "title": "Protection",
+    "giver_npc": "npc_ashmoor_sergeant",
+    "turnin_npc": "npc_ashmoor_sergeant",
+    "min_level": 25,
+    "prerequisite_quest": "q_ashmoor_numbers_racket",
+    "description": "Word travels: a stranger is unmaking the Syndicate one racket at a time, and the crews have stopped strolling and started patrolling — Legbreakers with Gunsels at their backs, working the whole High Street in pairs. Good. A frightened Syndicate makes mistakes. The sergeant wants the patrols broken before they learn to hunt in numbers.",
+    "location_hint": "High Street patrol routes, Ashmoor",
+    "objectives": [
+        { "type": "kill", "target": "mob_syndicate_legbreaker", "count": 5, "desc": "Break the paired Legbreaker patrols" },
+        { "type": "kill", "target": "mob_syndicate_gunsel", "count": 4, "desc": "Drop the Gunsels riding shotgun on them" }
+    ],
+    "rewards": {
+        "xp": 2400,
+        "coins": 800,
+        "items": [
+            { "item": "itm_rift_worn_coat", "count": 1 }
+        ]
+    }
+}

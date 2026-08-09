@@ -1,0 +1,21 @@
+{
+    "id": "qb02",
+    "title": "Bounty: Grexrok the Deepwarden",
+    "giver_npc": "npc_hk_bounty_board",
+    "turnin_npc": "npc_hk_bounty_board",
+    "min_level": 3,
+    "prerequisite_quest": null,
+    "description": "Grexrok the Deepwarden rallies the kobolds of the western diggings and hits harder than any warband should. Bring a party to break him.",
+    "bounty": true,
+    "repeatable": true,
+    "recommended_players": 3,
+    "location_hint": "Western diggings, west of the village (-45, 42).",
+    "objectives": [
+        { "type": "kill", "target": "mob_grexrok", "count": 1, "desc": "Slay Grexrok the Deepwarden" }
+    ],
+    "rewards": {
+        "xp": 600,
+        "coins": 150,
+        "items": []
+    }
+}

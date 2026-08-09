@@ -1,0 +1,1447 @@
+{
+    "items": [
+        {
+            "id": "itm_practice_token",
+            "name": "Practice Token",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 1,
+            "description": "A wooden chit knocked loose from the training dummy. Proof you connected.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_leather_cap",
+            "name": "Leather Cap",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 3
+            },
+            "vendor_value": 12,
+            "description": "Simple boiled-leather headgear.",
+            "armor_type": "leather",
+            "rarity": "uncommon",
+            "item_level": 2,
+            "required_level": 1
+        },
+        {
+            "id": "itm_padded_coif",
+            "name": "Padded Coif",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 2
+            },
+            "vendor_value": 10,
+            "description": "Quilted cloth headgear from the training-yard stores.",
+            "armor_type": "cloth",
+            "rarity": "uncommon",
+            "item_level": 2,
+            "required_level": 1
+        },
+        {
+            "id": "itm_wolf_pelt",
+            "name": "Wolf Pelt",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "A coarse gray pelt.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_wolf_fang",
+            "name": "Wolf Fang",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 1,
+            "description": "A yellowed fang. A trapper will give you a copper or two for it.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_worn_kobold_coin",
+            "name": "Worn Kobold Coin",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "A clipped, worn coin the kobolds hoard in their diggings. It still spends.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_iron_sword",
+            "name": "Iron Sword",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 8
+            },
+            "vendor_value": 35,
+            "description": "A reliable iron blade.",
+            "rarity": "uncommon",
+            "item_level": 8,
+            "required_level": 5
+        },
+        {
+            "id": "itm_copper_ore",
+            "name": "Rough Copper Ore",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 3,
+            "description": "Unrefined copper ore, barely worth the haul.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_rugged_fiber",
+            "name": "Rugged Fiber",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "Coarse plant fiber, good for binding and repairs.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_salvaging_kit",
+            "name": "Beginner's Salvaging Kit",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 25,
+            "description": "Simple tools for mending worn gear in the field.",
+            "rarity": "uncommon"
+        },
+        {
+            "id": "itm_copper",
+            "name": "Copper",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 100,
+            "stats": {},
+            "vendor_value": 1,
+            "description": "A small ingot of raw copper.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_starter_weapon",
+            "name": "Training Blade",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 5
+            },
+            "vendor_value": 20,
+            "description": "A plain, well-balanced blade \u2014 kinder than the dummies.",
+            "rarity": "common",
+            "item_level": 1,
+            "required_level": 1
+        },
+        {
+            "id": "itm_starter_sword",
+            "name": "Recruit's Sword",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 5
+            },
+            "vendor_value": 10,
+            "description": "A warrior's first blade \u2014 plain steel, honest weight.",
+            "rarity": "common",
+            "item_level": 1,
+            "required_level": 1
+        },
+        {
+            "id": "itm_starter_staff",
+            "name": "Apprentice's Staff",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 4
+            },
+            "vendor_value": 10,
+            "description": "A worn wooden staff crowned with a dull focus stone.",
+            "rarity": "common",
+            "item_level": 1,
+            "required_level": 1
+        },
+        {
+            "id": "itm_starter_mace",
+            "name": "Acolyte's Mace",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 4
+            },
+            "vendor_value": 10,
+            "description": "A simple flanged mace, blessed for a novice's hand.",
+            "rarity": "common",
+            "item_level": 1,
+            "required_level": 1
+        },
+        {
+            "id": "itm_skill_book",
+            "name": "Class Primer",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 0,
+            "description": "A primer on your calling; its techniques unlock with training.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_trail_rations",
+            "name": "Trail Rations",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "A pouch of hearty trail rations.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_bloodthorn",
+            "name": "Bloodthorn Blossom",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 4,
+            "description": "A crimson bog blossom, petals slick with sap.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_recipe_healing_potion",
+            "name": "Recipe: Minor Healing Potion",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 0,
+            "description": "Instructions for brewing a Minor Healing Potion.",
+            "rarity": "uncommon"
+        },
+        {
+            "id": "itm_antidote",
+            "name": "Antidote",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 10,
+            "stats": {},
+            "vendor_value": 5,
+            "description": "A vial of antidote that cures common poisons.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_novice_cloak",
+            "name": "Novice Cloak",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 15,
+            "description": "A faction-aligned cloak; its protective wards activate in time.",
+            "rarity": "uncommon"
+        },
+        {
+            "id": "itm_outpost_parcel",
+            "name": "Sealed Outpost Parcel",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 0,
+            "description": "A courier parcel bound for the Borderlands outpost. Bram's seal is unbroken.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_letter_of_introduction",
+            "name": "Regent's Letter of Introduction",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 0,
+            "description": "A sealed introduction addressed to Lord Castellan Berenger of Highkeep.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_vault_voucher",
+            "name": "Highkeep Vault Voucher",
+            "slot": "none",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {},
+            "vendor_value": 0,
+            "description": "A formal voucher recognizing its bearer as a client of the Bank of Highkeep.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_cryptkeeper_chain",
+            "name": "Cryptkeeper Chain",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 11
+            },
+            "vendor_value": 48,
+            "description": "Level 12 chain links scrubbed clean of grave soil.",
+            "armor_type": "mail",
+            "rarity": "uncommon",
+            "item_level": 13,
+            "required_level": 10
+        },
+        {
+            "id": "itm_aldric_oathblade",
+            "name": "Aldric's Oathblade",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 17
+            },
+            "vendor_value": 92,
+            "description": "Level 13. The fallen knight's vow still gleams along its fuller.",
+            "rarity": "rare",
+            "item_level": 19,
+            "required_level": 15
+        },
+        {
+            "id": "itm_aldric_broken_vow",
+            "name": "Aldric's Broken Vow",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 9
+            },
+            "vendor_value": 88,
+            "description": "Level 13. A battered shield bearing a deliberately scored-out crest.",
+            "rarity": "rare",
+            "item_level": 19,
+            "required_level": 15
+        },
+        {
+            "id": "itm_bonepriest_wraps",
+            "name": "Bonepriest Wraps",
+            "slot": "legs",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 9
+            },
+            "vendor_value": 46,
+            "description": "Level 13 linen reinforced with thin, unsettling splints.",
+            "armor_type": "cloth",
+            "rarity": "uncommon",
+            "item_level": 19,
+            "required_level": 16
+        },
+        {
+            "id": "itm_vharis_censer",
+            "name": "Vharis's Drowned Censer",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 16
+            },
+            "vendor_value": 96,
+            "description": "Level 14. Cold crypt water beads forever on its silver cage.",
+            "rarity": "rare",
+            "item_level": 20,
+            "required_level": 16
+        },
+        {
+            "id": "itm_vharis_flooded_signet",
+            "name": "Vharis's Flooded Signet",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 8
+            },
+            "vendor_value": 94,
+            "description": "Level 14. Its blue stone holds a wavering reflection of the sunken crypt.",
+            "rarity": "rare",
+            "item_level": 20,
+            "required_level": 16
+        },
+        {
+            "id": "itm_unhallowed_guard",
+            "name": "Unhallowed Guard",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 10
+            },
+            "vendor_value": 52,
+            "description": "Level 14 iron made serviceable after centuries underground.",
+            "armor_type": "mail",
+            "rarity": "uncommon",
+            "item_level": 20,
+            "required_level": 17
+        },
+        {
+            "id": "itm_maldrath_gravetide",
+            "name": "Gravetide, Maldrath's Edge",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 19
+            },
+            "vendor_value": 115,
+            "description": "Level 15. Old runes crawl beneath the darkened steel.",
+            "rarity": "rare",
+            "item_level": 21,
+            "required_level": 17
+        },
+        {
+            "id": "itm_bone_fragment",
+            "name": "Bone Fragment",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 1,
+            "description": "A splinter of yellowed bone from a shattered skeleton. A necromancer would pay for these.",
+            "armor_type": "cloth",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_grave_dust",
+            "name": "Grave Dust",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "Powdery grey ash that clings to everything the restless dead have touched.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_tarnished_coin",
+            "name": "Tarnished Grave Coin",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 100,
+            "stats": {},
+            "vendor_value": 4,
+            "description": "An old burial coin, blackened with age. Still spends, if you can stomach where it came from.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_ghoul_claw",
+            "name": "Ghoul Claw",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 30,
+            "stats": {},
+            "vendor_value": 5,
+            "description": "A hooked, filth-crusted claw wrenched from a crypt ghoul. A reagent for poisons and glue.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_rusted_blade",
+            "name": "Rusted Grave Blade",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 6
+            },
+            "vendor_value": 18,
+            "description": "A notched, corroded sword pried from a skeletal warrior's grip. Barely serviceable.",
+            "rarity": "uncommon",
+            "item_level": 16,
+            "required_level": 13
+        },
+        {
+            "id": "itm_spectral_essence",
+            "name": "Spectral Essence",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 22,
+            "description": "A cold, shifting wisp of bound soulstuff left behind when a shade is banished. Prized by enchanters.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_maldrath_last_shroud",
+            "name": "Maldrath's Last Shroud",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 13
+            },
+            "vendor_value": 112,
+            "description": "Level 15. Heavy burial cloth that turns aside more than dust.",
+            "armor_type": "cloth",
+            "rarity": "rare",
+            "item_level": 21,
+            "required_level": 17
+        },
+        {
+            "id": "itm_maldrath_hollow_crown",
+            "name": "Maldrath's Hollow Crown",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 20
+            },
+            "vendor_value": 260,
+            "description": "Level 15 epic. The circlet the first Hollowing crowned itself with, wrenched from patient zero. The Era-1 RAID relic (era-direction.md S4.1) — homed by T-473 on the Vault of the First Hollowing's final boss, weekly-locked. Armor 20 = 1.43x the rare head ceiling (Ironward Helm 14), inside the T-353 epic index cap (150 vs rare 100). Carried across the rift, it re-scales one hop and beats everything a fresh Ashmoor arrival can farm.",
+            "armor_type": "plate",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_sentinel_warplate",
+            "name": "Warplate of the Vault Sentinel",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 31
+            },
+            "vendor_value": 300,
+            "description": "Level 15 epic. Grave-iron harness hammered around whatever still stands watch below the barrow. T-473 raid tier: armor 31 = 1.41x the rare chest ceiling (Ironward Cuirass 22), under the T-353 epic cap.",
+            "armor_type": "plate",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_sentinel_gravewall",
+            "name": "Gravewall Aegis",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 13
+            },
+            "vendor_value": 240,
+            "description": "Level 15 epic. A tomb door cut down to a shield; the mason's tally marks still count the interred. T-473 raid tier: armor 13 = 1.44x the rare offhand ceiling (Aldric's Broken Vow 9), under the T-353 epic cap.",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_dirgemother_knell",
+            "name": "Knell, the Dirgemother's Tongue",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 27
+            },
+            "vendor_value": 320,
+            "description": "Level 15 epic. The clapper of a funeral bell, still ringing a note only the dead answer. T-473 raid tier: attack 27 = 1.42x the rare weapon ceiling (Gravetide 19), under the T-353 epic cap.",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_dirgemother_palls",
+            "name": "Palls of the Drowned Choir",
+            "slot": "shoulders",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 17
+            },
+            "vendor_value": 250,
+            "description": "Level 15 epic. Sodden mourning-cloth draped shoulder to shoulder, heavier than any mail. T-473 raid tier: armor 17 = 1.42x the rare shoulders ceiling (Ironward Pauldrons 12), under the T-353 epic cap.",
+            "armor_type": "cloth",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_hollow_king_greaves",
+            "name": "Greaves of the Hollow Procession",
+            "slot": "legs",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 26
+            },
+            "vendor_value": 280,
+            "description": "Level 15 epic. Leg harness from the honor guard that walked the first Hollowing to its vault — and never walked out. T-473 raid tier: armor 26 = 1.44x the rare legs ceiling (Ironward Greaves 18), under the T-353 epic cap.",
+            "armor_type": "plate",
+            "rarity": "epic",
+            "item_level": 22,
+            "required_level": 17
+        },
+        {
+            "id": "itm_ironward_helm",
+            "name": "Ironward Helm",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 14
+            },
+            "vendor_value": 130,
+            "description": "Level 15 plate. A full sallet forged for a knight of the old Ironward guard — no id-substring gives its family away; the armor_type field does.",
+            "armor_type": "plate",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_ironward_cuirass",
+            "name": "Ironward Cuirass",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 22
+            },
+            "vendor_value": 190,
+            "description": "Level 15 plate. A heavy breastplate bearing the Ironward crest, proof against a graveblade's edge.",
+            "armor_type": "plate",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_ironward_greaves",
+            "name": "Ironward Greaves",
+            "slot": "legs",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 18
+            },
+            "vendor_value": 160,
+            "description": "Level 15 plate. Articulated leg harness that takes a footman's charge without slowing it.",
+            "armor_type": "plate",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_ironward_pauldrons",
+            "name": "Ironward Pauldrons",
+            "slot": "shoulders",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 12
+            },
+            "vendor_value": 120,
+            "description": "Level 15 plate. Broad spaulders that turn a blow aimed at the collar — the T-420 shoulders slot made them wearable.",
+            "armor_type": "plate",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_arcanist_cowl",
+            "name": "Arcanist Cowl",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 7
+            },
+            "vendor_value": 110,
+            "description": "Level 15 robe. A deep midnight-blue cowl stitched with silver arcane thread — the mage set routes on armor_type \"robe\", not an id substring.",
+            "armor_type": "robe",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_arcanist_robe",
+            "name": "Arcanist Robe",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 11
+            },
+            "vendor_value": 175,
+            "description": "Level 15 robe. Long midnight-blue mage vestments with silver rune trim, cut to keep a caster's arms free.",
+            "armor_type": "robe",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_arcanist_leggings",
+            "name": "Arcanist Leggings",
+            "slot": "legs",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 9
+            },
+            "vendor_value": 145,
+            "description": "Level 15 robe. The draping lower skirts of an arcanist's robe, weighted so they hang true when the wearer moves.",
+            "armor_type": "robe",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_sanctified_hood",
+            "name": "Sanctified Hood",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 7
+            },
+            "vendor_value": 110,
+            "description": "Level 15 vestment. An ivory ceremonial hood edged in gold orphrey — the priest set routes on armor_type \"vestment\".",
+            "armor_type": "vestment",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_sanctified_vestment",
+            "name": "Sanctified Vestment",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 11
+            },
+            "vendor_value": 175,
+            "description": "Level 15 vestment. Ivory and gold priest chasuble, blessed cloth that turns more than the eye of the faithless.",
+            "armor_type": "vestment",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_sanctified_skirts",
+            "name": "Sanctified Skirts",
+            "slot": "legs",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 9
+            },
+            "vendor_value": 145,
+            "description": "Level 15 vestment. The draping lower skirts of an ivory-and-gold priest's vestments.",
+            "armor_type": "vestment",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_clipped_shilling",
+            "name": "Clipped Shilling",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 99,
+            "stats": {},
+            "vendor_value": 3,
+            "description": "A milled coin with its silver edge shaved thin — Syndicate scrip that spends anywhere on the street.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_bootleg_gin",
+            "name": "Bootleg Gin",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 10,
+            "stats": {},
+            "vendor_value": 6,
+            "description": "An unlabelled bottle of bathtub gin cut with turpentine. Sells fast in the back rooms of Ashmoor.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_brass_knuckles",
+            "name": "Brass Knuckles",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 11
+            },
+            "vendor_value": 34,
+            "description": "Level 20. Four cast-brass rings on a bar — a legbreaker's honest day's work.",
+            "rarity": "uncommon",
+            "item_level": 21,
+            "required_level": 18
+        },
+        {
+            "id": "itm_bent_truncheon",
+            "name": "Bent Truncheon",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 10
+            },
+            "vendor_value": 30,
+            "description": "Level 20. A constable's hardwood baton, worn smooth where it has met too many jaws.",
+            "rarity": "uncommon",
+            "item_level": 22,
+            "required_level": 19
+        },
+        {
+            "id": "itm_seance_sigil_chalk",
+            "name": "Séance Sigil Chalk",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 40,
+            "description": "A nub of green-glowing chalk the wardens use to score binding circles. The rift never fully closed; this is how the age's masters keep talking to it.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_occult_sigil_cane",
+            "name": "The Threnody Cane",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 16
+            },
+            "vendor_value": 92,
+            "description": "Level 20. A blackwood occultist's cane crowned with a gaslight-azure sigil disc. The mage's focus in the modern age — magic went hidden, and this is what a scholar of forbidden signs channels it through.",
+            "rarity": "rare",
+            "item_level": 19,
+            "required_level": 15
+        },
+        {
+            "id": "itm_medium_reliquary",
+            "name": "The Ashgrove Reliquary",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 15
+            },
+            "vendor_value": 88,
+            "description": "Level 20. A brass hand-reliquary housing a warm relic behind glass. The medium's focus — a battlefield chaplain channels the good dead through it against the rift's echo.",
+            "rarity": "rare",
+            "item_level": 19,
+            "required_level": 15
+        },
+        {
+            "id": "itm_rift_worn_coat",
+            "name": "Rift-Worn Traveler's Coat",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 13
+            },
+            "vendor_value": 60,
+            "description": "Level 18. A heavy wool coat that came through the rift on your back — the first thing in Ashmoor that is honestly yours. The cut is a hundred years out of fashion here, and everyone can tell.",
+            "armor_type": "leather",
+            "rarity": "uncommon",
+            "item_level": 20,
+            "required_level": 17
+        },
+        {
+            "id": "itm_leadpipe",
+            "name": "Dockside Lead Pipe",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 12
+            },
+            "vendor_value": 55,
+            "description": "Level 20. A length of lead pipe, wrapped at one end — the Syndicate's favorite argument, now yours. Inelegant, deniable, and it swings true.",
+            "rarity": "uncommon",
+            "item_level": 16,
+            "required_level": 13
+        },
+        {
+            "id": "itm_osric_ward_censer",
+            "name": "Osric's Warding Censer",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 15
+            },
+            "vendor_value": 90,
+            "description": "Level 15. The parson's own censer, re-blessed for a hand that fights. Its smoke unsettles the risen dead.",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_gravewarden_hauberk",
+            "name": "Gravewarden's Hauberk",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 12
+            },
+            "vendor_value": 104,
+            "description": "Level 16. Mail worn by the old wardens who once walled the Hollowing into the deepest Vault.",
+            "armor_type": "mail",
+            "rarity": "rare",
+            "item_level": 18,
+            "required_level": 14
+        },
+        {
+            "id": "itm_hollowing_ward_charm",
+            "name": "Ward Against the Hollowing",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 9
+            },
+            "vendor_value": 96,
+            "description": "Level 16. A wax-sealed charm scored with Osric's binding sigils. It keeps the wrong hunger at arm's length.",
+            "rarity": "rare",
+            "item_level": 17,
+            "required_level": 13
+        },
+        {
+            "id": "itm_deepvault_hood",
+            "name": "Deepvault Warden's Hood",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "armor": 8
+            },
+            "vendor_value": 92,
+            "description": "Level 17. A hooded leather coif smelling of cold stone and grave-lime, cut for the descent into the Vault.",
+            "armor_type": "leather",
+            "rarity": "rare",
+            "item_level": 19,
+            "required_level": 15
+        },
+        {
+            "id": "itm_riftward_blade",
+            "name": "Riftward Edge",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {
+                "attack": 18
+            },
+            "vendor_value": 112,
+            "description": "Level 18. A last Era-1 blade quenched in warded water, honed for the thing waking behind the seal. The best steel the old age can hand you before the crossing.",
+            "rarity": "rare",
+            "item_level": 20,
+            "required_level": 16
+        },
+        {
+            "id": "itm_herb_bloodthorn",
+            "name": "Bloodthorn Sprig",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "A thorned red sprig from the bog's edge. An alchemist's staple.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_herb_marshmint",
+            "name": "Marshmint Leaf",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "Cool green leaves that grow where the forest meets standing water.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_herb_emberroot",
+            "name": "Emberroot",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 3,
+            "description": "A warm, resinous root pulled from Ashmoor's scorched soil.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_reagent_venom_gland",
+            "name": "Venom Gland",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 4,
+            "description": "A distended sac cut from a beast. Reagents like this bind a brew together.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_potion_minor_healing",
+            "name": "Minor Healing Potion",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "use_effect": {"kind": "heal", "amount": 120},
+            "vendor_value": 8,
+            "description": "A red draught that knits small wounds. Drink to restore health.",
+            "rarity": "common",
+            "item_level": 10,
+            "required_level": 1
+        },
+        {
+            "id": "itm_potion_greater_healing",
+            "name": "Greater Healing Potion",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "use_effect": {"kind": "heal", "amount": 300},
+            "vendor_value": 20,
+            "description": "A potent brew that mends deep wounds. Drink to restore health.",
+            "rarity": "uncommon",
+            "item_level": 11,
+            "required_level": 1
+        },
+        {
+            "id": "itm_ration_travelers",
+            "name": "Traveler's Ration",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "use_effect": {"kind": "rested", "amount": 400},
+            "vendor_value": 10,
+            "description": "A hearty packed meal. Eat while safe to bank a little rested comfort.",
+            "rarity": "common",
+            "item_level": 10,
+            "required_level": 1
+        },
+        {
+            "id": "itm_field_repair_kit",
+            "name": "Field Repair Kit",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 10,
+            "stats": {},
+            "use_effect": {"kind": "repair", "pct": 0.35},
+            "vendor_value": 18,
+            "description": "Whetstone, thread, and pitch. Mends worn gear in the field — rougher than a smith's bench.",
+            "rarity": "uncommon",
+            "item_level": 11,
+            "required_level": 1
+        },
+        {
+            "id": "itm_potion_potent_healing",
+            "name": "Potent Healing Elixir",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "use_effect": {"kind": "heal", "amount": 500},
+            "vendor_value": 40,
+            "description": "A searing crimson elixir distilled with a rare emberbloom. Drink to restore a great wound of health.",
+            "rarity": "rare",
+            "item_level": 12,
+            "required_level": 1
+        },
+        {
+            "id": "itm_smith_gemset_charm",
+            "name": "Gemset Charm",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 8},
+            "vendor_value": 60,
+            "description": "A rough gemstone cut and set into a banded charm — a smith's dream setting made real. Wards its bearer.",
+            "rarity": "rare",
+            "item_level": 12,
+            "required_level": 1
+        },
+        {
+            "id": "itm_smith_heartwood_longbow",
+            "name": "Heartwood Longbow",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 13},
+            "vendor_value": 55,
+            "description": "A longbow drawn from a dense heartwood bough — the resin-dark core prized for hafts and bows. Snaps true and hard.",
+            "rarity": "rare",
+            "item_level": 12,
+            "required_level": 1
+        },
+        {
+            "id": "itm_ore_iron",
+            "name": "Iron Ore",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 4,
+            "description": "A heavy chunk of ore chipped from an exposed vein. The smithy's appetite.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_timber_rough",
+            "name": "Rough Timber",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 3,
+            "description": "A split length of forest wood, good for hafts, grips, and backing boards.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_herb_emberbloom",
+            "name": "Emberbloom",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 16,
+            "description": "A rare crimson flower that sometimes opens among common sprigs. A potent alchemical reagent worth far more than the herbs it hides in.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_gem_raw",
+            "name": "Rough Gemstone",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 28,
+            "description": "An uncut stone that occasionally tumbles free of a struck vein. Glittering, valuable, and a smith's dream setting.",
+            "rarity": "rare"
+        },
+        {
+            "id": "itm_timber_heartwood",
+            "name": "Heartwood Bough",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 12,
+            "description": "A dense, resin-dark length cut from the core of an old trunk. Rarely found, prized for hafts and bows.",
+            "rarity": "uncommon"
+        },
+        {
+            "id": "itm_smith_broadsword",
+            "name": "Forgehand Broadsword",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 9},
+            "vendor_value": 40,
+            "description": "An honest crafted blade — a shade past the rack-bought iron sword, nothing a crypt won't out-drop.",
+            "rarity": "uncommon",
+            "item_level": 11,
+            "required_level": 1
+        },
+        {
+            "id": "itm_smith_buckler",
+            "name": "Riveted Oak Buckler",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 6},
+            "vendor_value": 36,
+            "description": "Oak boards under a riveted copper boss. A crafter's first shield.",
+            "rarity": "uncommon",
+            "item_level": 11,
+            "required_level": 1
+        },
+        {
+            "id": "itm_smiths_repair_kit",
+            "name": "Smith's Repair Kit",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 10,
+            "stats": {},
+            "use_effect": {"kind": "repair", "pct": 0.5},
+            "vendor_value": 30,
+            "description": "Spare rivets, files, and tempered wire. A proper field mend — still short of the bench's full restore.",
+            "rarity": "uncommon",
+            "item_level": 11,
+            "required_level": 1
+        },
+        {
+            "id": "itm_rift_shardblade",
+            "name": "Rift Shardblade",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 15},
+            "vendor_value": 90,
+            "description": "T-538 rift band riftmarked (uncommon, tier 1+). A blade of fused rift-glass, edge humming faintly out of true.",
+            "rarity": "uncommon",
+            "item_level": 21,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_cracked_aegis",
+            "name": "Rift-Cracked Aegis",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 7},
+            "vendor_value": 86,
+            "description": "T-538 rift band riftmarked (uncommon, tier 1+). A buckler seamed with hairline fractures that never quite spread.",
+            "rarity": "uncommon",
+            "item_level": 21,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_hollow_helm",
+            "name": "Hollowmark Helm",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 8},
+            "vendor_value": 54,
+            "description": "T-538 rift band riftmarked (uncommon, tier 1+). Rift-pitted iron that still turns a blow.",
+            "armor_type": "mail",
+            "rarity": "uncommon",
+            "item_level": 21,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_dust_wraps",
+            "name": "Riftdust Wraps",
+            "slot": "shoulders",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 6},
+            "vendor_value": 44,
+            "description": "T-538 rift band riftmarked (uncommon, tier 1+). Shoulder wraps grey with the ash the rift leaves behind.",
+            "armor_type": "cloth",
+            "rarity": "uncommon",
+            "item_level": 21,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_veinsong_edge",
+            "name": "Veinsong Edge",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 18},
+            "vendor_value": 118,
+            "description": "T-538 rift band riftbound (rare, tier 5+). The metal sings on the backswing, a note only the rift can hear.",
+            "rarity": "rare",
+            "item_level": 22,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_echo_bulwark",
+            "name": "Echo Bulwark",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 9},
+            "vendor_value": 112,
+            "description": "T-538 rift band riftbound (rare, tier 5+). Each blow it stops echoes back a half-beat late.",
+            "rarity": "rare",
+            "item_level": 22,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_seers_crown",
+            "name": "Seer's Riftcrown",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 10},
+            "vendor_value": 116,
+            "description": "T-538 rift band riftbound (rare, tier 5+). Cold to the brow; the wearer sees the next tier before they reach it.",
+            "armor_type": "mail",
+            "rarity": "rare",
+            "item_level": 22,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_gloaming_mantle",
+            "name": "Gloaming Mantle",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 11},
+            "vendor_value": 114,
+            "description": "T-538 rift band riftbound (rare, tier 5+). Woven from the dim light at the rift's edge, heavier than it looks.",
+            "armor_type": "cloth",
+            "rarity": "rare",
+            "item_level": 22,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_reaver",
+            "name": "Riftforged Reaver",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 22},
+            "vendor_value": 210,
+            "description": "T-538 rift band riftforged (epic, tier 10+). Attack 22 — the rift-set ceiling (1.16x the rare edge), inside the T-353 epic index cap. Forged in the collapse between two tiers, its edge never dulls.",
+            "rarity": "epic",
+            "item_level": 23,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_paradox_ward",
+            "name": "Paradox Ward",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 12},
+            "vendor_value": 205,
+            "description": "T-538 rift band riftforged (epic, tier 10+). A shield that was broken and whole in the same instant, and chose whole.",
+            "rarity": "epic",
+            "item_level": 23,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_ascendant_diadem",
+            "name": "Ascendant Diadem",
+            "slot": "head",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 13},
+            "vendor_value": 208,
+            "description": "T-538 rift band riftforged (epic, tier 10+). Worn by those the ladder could not stop.",
+            "armor_type": "mail",
+            "rarity": "epic",
+            "item_level": 23,
+            "required_level": 18
+        },
+        {
+            "id": "itm_rift_singularity_plate",
+            "name": "Singularity Plate",
+            "slot": "chest",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 14},
+            "vendor_value": 214,
+            "description": "T-538 rift band riftforged (epic, tier 10+). Rift-dense steel; a blow that lands seems to fall inward and vanish.",
+            "armor_type": "plate",
+            "rarity": "epic",
+            "item_level": 23,
+            "required_level": 18
+        },
+        {
+            "id": "itm_fish_lake_perch",
+            "name": "Crystal Lake Perch",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 4,
+            "description": "A firm, bright-scaled perch caught along Crystal Lake's reed beds.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_fish_reed_minnow",
+            "name": "Reed Minnow",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 50,
+            "stats": {},
+            "vendor_value": 2,
+            "description": "A small lake fish that schools in the quiet shallows.",
+            "rarity": "common"
+        },
+        {
+            "id": "itm_fish_crystalfin",
+            "name": "Crystalfin",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "vendor_value": 12,
+            "description": "An uncommon silver-blue fish whose fins catch the light like glass.",
+            "rarity": "uncommon"
+        },
+        {
+            "id": "itm_food_pan_fried_fish",
+            "name": "Pan-Fried Crystal Lake Fish",
+            "slot": "none",
+            "stackable": true,
+            "max_stack": 20,
+            "stats": {},
+            "use_effect": {"kind": "rested", "amount": 300},
+            "vendor_value": 9,
+            "description": "Fresh lake fish crisped over a hot pan. Eat while safe to bank rested comfort.",
+            "rarity": "common",
+            "item_level": 10,
+            "required_level": 1
+        },
+        {
+            "id": "itm_gravewatch_shoulders",
+            "name": "Gravewatch Shoulders",
+            "slot": "shoulders",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"armor": 5},
+            "vendor_value": 18,
+            "description": "Level 3. Boiled leather a sexton's apprentice wore for the night watch.",
+            "armor_type": "leather",
+            "rarity": "uncommon",
+            "item_level": 4,
+            "required_level": 1
+        },
+        {
+            "id": "itm_sexton_lantern",
+            "name": "Sexton's Lantern",
+            "slot": "offhand",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"stamina": 3},
+            "vendor_value": 22,
+            "description": "Level 4. It burned all the way down the stair and never once went out.",
+            "rarity": "uncommon",
+            "item_level": 5,
+            "required_level": 2
+        },
+        {
+            "id": "itm_marrow_bellhammer",
+            "name": "Marrow's Bellhammer",
+            "slot": "weapon",
+            "stackable": false,
+            "max_stack": 1,
+            "stats": {"attack": 8},
+            "vendor_value": 40,
+            "description": "Level 4. The striker that rang the shallow graves awake, gone quiet.",
+            "rarity": "rare",
+            "item_level": 6,
+            "required_level": 2
+        }
+    ]
+}

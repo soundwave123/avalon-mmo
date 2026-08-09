@@ -1,0 +1,21 @@
+{
+    "id": "q_ashmoor_first_blood",
+    "title": "A Hundred Years Wrong",
+    "giver_npc": "npc_ashmoor_urchin",
+    "turnin_npc": "npc_ashmoor_sergeant",
+    "min_level": 15,
+    "prerequisite_quest": "q_rift_vault_counted",
+    "description": "The urchin walks you one block up the High Street — gas lamps, a parked motorcar, the Syndicate shaking down a shopkeep in broad daylight. The rift never closed; the echo soaked into this age's masters. The lad points you at the constabulary steps: the desk sergeant is half on the take like the rest, but he'll hear you out once you've thinned the crew that owns his street. Put some Legbreakers and a bent Constable or two on the cobbles first.",
+    "location_hint": "Ashmoor High Street",
+    "objectives": [
+        { "type": "kill", "target": "mob_syndicate_legbreaker", "count": 3, "desc": "Break up the Syndicate Legbreakers working the High Street" },
+        { "type": "kill", "target": "mob_constable_take", "count": 2, "desc": "Put down the Constables on the take" }
+    ],
+    "rewards": {
+        "xp": 1200,
+        "coins": 400,
+        "items": [
+            { "item": "itm_leadpipe", "count": 1 }
+        ]
+    }
+}

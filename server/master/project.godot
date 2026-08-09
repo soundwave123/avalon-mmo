@@ -1,0 +1,21 @@
+; Avalon master server (Godot 4.6 headless)
+; Owns the database. Persists characters, inventory, mail, AH, etc.
+; Single writer to PostgreSQL.
+
+config_version=5
+
+[application]
+
+config/name="Avalon Master"
+config/description="Avalon MMORPG master/persistence server"
+run/main_scene="res://scenes/main.tscn"
+boot_splash/show_image=false
+config/features=PackedStringArray("4.6", "Headless")
+
+[autoload]
+
+ServerConfig="*res://scripts/server_config.gd"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

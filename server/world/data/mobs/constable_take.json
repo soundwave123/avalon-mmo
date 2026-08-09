@@ -1,0 +1,58 @@
+{
+    "_comment": "T-349 Syndicate street tier, WAVE 1. The law that's half on the take — a HUMAN on the T-118 hero rig (entity_visuals maps mob_constable_take -> char_hero_warrior.glb with a navy-uniform tint). Disciplined melee: mid HP, faster/steadier swing than the legbreaker, a little dodge. Truncheon prop cosmetic-deferred. The 'whistle add-call' (ashmoor-direction.md S4, the T-294 summon shape) is DEFERRED: boss_mechanics/summons are resolved only for INSTANCE-scoped mobs by instance_service.tick_bosses; an OPEN-WORLD (instance_id 0) summon tick does not exist and wiring one is new server logic outside this ticket's no-new-netcode scope. Ships as solid melee; whistle logged for a follow-on. L20-24 band.",
+    "mob_type_id": 51,
+    "mob_id": "mob_constable_take",
+    "name": "Constable on the Take",
+    "difficulty": 3,
+    "level": 21,
+    "xp": 32,
+    "str": 22,
+    "int": 8,
+    "dex": 18,
+    "stamina": 30,
+    "spirit": 6,
+    "weapon_speed": 1.3,
+    "aggro_radius": 16.0,
+    "leash_radius": 20.0,
+    "melee_range": 2.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 40,
+        "Tactics": 35
+    },
+    "base_damage": 18,
+    "variance_min": 0.85,
+    "variance_max": 1.05,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.22
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.06,
+    "parry_chance": 0.06,
+    "crit_chance": 0.05,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 2,
+            "count_max": 5
+        },
+        {
+            "item_id": "itm_bootleg_gin",
+            "chance": 0.3,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_bent_truncheon",
+            "chance": 0.15,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 3.0
+}

@@ -1,0 +1,16 @@
+{
+  "id": 305,
+  "name": "Greater Heal",
+  "icon": "greater_heal",
+  "char_class": "priest",
+  "effect": "heal",
+  "school": "holy",
+  "cast_ticks": 30,
+  "mana_cost": 18,
+  "range_units": 30.0,
+  "heal_base": 40,
+  "targets_friendly": true,
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "trained": true
+}

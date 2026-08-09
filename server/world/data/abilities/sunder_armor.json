@@ -1,0 +1,12 @@
+{
+  "id": 103,
+  "name": "Sunder Armor",
+  "icon": "sunder_armor",
+  "char_class": "warrior",
+  "effect": "threat",
+  "cast_ticks": 0,
+  "resource_cost": 10,
+  "range_units": 2.5,
+  "base_damage": 0,
+  "threat_amount": 60
+}

@@ -1,0 +1,27 @@
+{
+  "id": 303,
+  "name": "Smite",
+  "icon": "smite",
+  "char_class": "priest",
+  "effect": "damage",
+  "school": "holy",
+  "cast_ticks": 30,
+  "mana_cost": 8,
+  "range_units": 30.0,
+  "base_damage": 20,
+  "attacker_stat_coeffs": {
+    "int": 0.5
+  },
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "ranks": [
+    { "min_level": 1, "base_damage": 20, "mana_cost": 8 },
+    { "min_level": 6, "base_damage": 28, "mana_cost": 11 },
+    { "min_level": 12, "base_damage": 38, "mana_cost": 15 },
+    { "min_level": 18, "base_damage": 50, "mana_cost": 20 },
+    { "min_level": 24, "base_damage": 64, "mana_cost": 26 },
+    { "min_level": 30, "base_damage": 80, "mana_cost": 33 },
+    { "min_level": 36, "base_damage": 98, "mana_cost": 41 },
+    { "min_level": 40, "base_damage": 118, "mana_cost": 50 }
+  ]
+}

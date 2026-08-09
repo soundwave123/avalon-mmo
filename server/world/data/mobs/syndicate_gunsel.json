@@ -1,0 +1,58 @@
+{
+    "_comment": "T-349 stub -> LIVE in T-350. The revolver kiter: the FIRST ranged HUMAN mob. mob_loader reads the '_ranged' block -> MobData.ranged; mob_ai._tick_ranged holds the 8-15m firing band (closes past 15m, kites back inside 8m) and fires a hitscan. Visual: char_hero_warrior.glb + revolver GLB in hand_r, procedural recoil (no gun clip exists — UAL pack is melee/caster only, Mixamo is login-gated). L20-24 band.",
+    "_ranged": {
+        "min_range": 8.0,
+        "max_range": 15.0,
+        "attack": "revolver",
+        "burst": 1
+    },
+    "mob_type_id": 53,
+    "mob_id": "mob_syndicate_gunsel",
+    "name": "Syndicate Gunsel",
+    "difficulty": 3,
+    "level": 23,
+    "xp": 42,
+    "str": 16,
+    "int": 8,
+    "dex": 26,
+    "stamina": 22,
+    "spirit": 5,
+    "weapon_speed": 1.2,
+    "aggro_radius": 18.0,
+    "leash_radius": 24.0,
+    "melee_range": 15.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Marksmanship": 42,
+        "Tactics": 25
+    },
+    "base_damage": 19,
+    "variance_min": 0.85,
+    "variance_max": 1.1,
+    "attacker_skill_coeffs": {
+        "Marksmanship": 0.25
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.05,
+    "dodge_chance": 0.1,
+    "parry_chance": 0.0,
+    "crit_chance": 0.1,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 2,
+            "count_max": 5
+        },
+        {
+            "item_id": "itm_bootleg_gin",
+            "chance": 0.3,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 2.0
+}

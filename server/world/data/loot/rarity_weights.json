@@ -1,0 +1,10 @@
+{
+    "_comment": "T-232: variable-ratio loot schedule. Each difficulty (1-5, from mob JSON `difficulty`) maps to integer weights (read as percent-of-100) across rarity tiers. Loot roll: pick ONE tier per kill via these weights, then apply the mob's normal per-item chance/count roll to just the loot entries whose item is that tier. Higher difficulty pushes weight toward better tiers; low difficulty is overwhelmingly common with a small junk tail. Weights per row sum to 100 for readability but are treated as relative weights, not a hard requirement.",
+    "difficulty_weights": {
+        "1": { "junk": 5, "common": 90, "uncommon": 5, "rare": 0, "epic": 0, "legendary": 0 },
+        "2": { "junk": 2, "common": 78, "uncommon": 17, "rare": 3, "epic": 0, "legendary": 0 },
+        "3": { "junk": 1, "common": 60, "uncommon": 28, "rare": 9, "epic": 2, "legendary": 0 },
+        "4": { "junk": 0, "common": 40, "uncommon": 35, "rare": 18, "epic": 6, "legendary": 1 },
+        "5": { "junk": 0, "common": 20, "uncommon": 30, "rare": 30, "epic": 15, "legendary": 5 }
+    }
+}

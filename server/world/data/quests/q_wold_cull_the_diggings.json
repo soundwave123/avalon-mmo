@@ -1,0 +1,19 @@
+{
+    "id": "q_wold_cull_the_diggings",
+    "title": "Cull the Diggings",
+    "giver_npc": "npc_ranger",
+    "turnin_npc": "npc_ranger",
+    "min_level": 7,
+    "prerequisite_quest": null,
+    "description": "Ranger Sylas wants the kobold numbers in the western gulch brought down before the fouled ore they haul spreads further. This is work a steady hand can do alone — pick off the diggers at the gulch mouth and don't let them swarm you.",
+    "objectives": [
+        { "type": "kill", "target": "mob_kobold_miner", "count": 8, "desc": "Thin the kobold diggers in the gulch" }
+    ],
+    "rewards": {
+        "xp": 360,
+        "coins": 55,
+        "items": [
+            { "item": "itm_leather_cap", "count": 1 }
+        ]
+    }
+}

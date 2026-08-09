@@ -1,0 +1,69 @@
+{
+    "_doc": "T-679 guild COLLECTIVE achievements — a shared trophy wall, credited to the GUILD (not double-counted per member) and aggregated from server-validated events. Data-only: a new guild achievement is a new row here (no code change) as long as criteria.event is a guild-scoped event in AchievementProgress.SUPPORTED_EVENTS (guild_kill/guild_gather/guild_quest/guild_member_cap/guild_dungeon_clear/guild_raid_clear/guild_online). Rewards are IDENTITY-ONLY per the T-482 charter and this ticket's explicit anti-guild-hopping / no-power-creep guardrail: the ONLY reward key is `cosmetic` (a guild-earned tabard/crest/regalia at the earned MARQUEE tier the store can never sell) or nothing (a pure trophy-wall entry). There is NO title/coin/power/level reward and NO guild-level gate — the guild-scoped ledger grants NO stat buff, faster XP, cheaper anything, or content-entry key.",
+    "achievements": [
+        {
+            "id": "guild_warband",
+            "name": "Warband",
+            "desc": "Guild members defeat 500 enemies together.",
+            "category": "guild_combat",
+            "criteria": {"event": "guild_kill", "key": "*", "count": 500},
+            "reward": {"cosmetic": "guild_tabard_vanguard"}
+        },
+        {
+            "id": "guild_host",
+            "name": "The Standing Host",
+            "desc": "Guild members defeat 2500 enemies together.",
+            "category": "guild_combat",
+            "criteria": {"event": "guild_kill", "key": "*", "count": 2500},
+            "reward": {}
+        },
+        {
+            "id": "guild_provisioners",
+            "name": "Provisioners",
+            "desc": "Guild members gather 500 resources together.",
+            "category": "guild_industry",
+            "criteria": {"event": "guild_gather", "key": "*", "count": 500},
+            "reward": {}
+        },
+        {
+            "id": "guild_first_muster",
+            "name": "First Muster",
+            "desc": "Guild members complete 50 quests together.",
+            "category": "guild_industry",
+            "criteria": {"event": "guild_quest", "key": "*", "count": 50},
+            "reward": {}
+        },
+        {
+            "id": "guild_at_arms",
+            "name": "Company at Arms",
+            "desc": "Five guild members reach the level cap.",
+            "category": "guild_progression",
+            "criteria": {"event": "guild_member_cap", "key": "*", "count": 5},
+            "reward": {"cosmetic": "guild_crest_shoulders"}
+        },
+        {
+            "id": "guild_crypt_first",
+            "name": "Into the Dark, Together",
+            "desc": "The guild fells its first Hollowed Crypt boss.",
+            "category": "guild_dungeon",
+            "criteria": {"event": "guild_dungeon_clear", "key": "*", "count": 1},
+            "reward": {}
+        },
+        {
+            "id": "guild_vault_first",
+            "name": "The First Hollowing, as One",
+            "desc": "The guild clears the Vault of the First Hollowing together.",
+            "category": "guild_raid",
+            "criteria": {"event": "guild_raid_clear", "key": "*", "count": 1},
+            "reward": {"cosmetic": "guild_regalia_head"}
+        },
+        {
+            "id": "guild_fellowship",
+            "name": "Fellowship",
+            "desc": "Five guild members are online together.",
+            "category": "guild_social",
+            "criteria": {"event": "guild_online", "key": "*", "count": 5},
+            "reward": {}
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_apex_predators",
+    "title": "Apex of the Moor",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 18,
+    "prerequisite_quest": "q_wold_crag_reavers",
+    "description": "At the roof of the moor the direwolves run \u2014 the biggest the wold has ever bred, and the last thing between the border road and the old rift-scar to the west. Prove you can stand the high moor alone: put the moor direwolves down.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_moor_direwolf",
+            "count": 6,
+            "desc": "Slay the moor direwolves at the moor's roof"
+        }
+    ],
+    "rewards": {
+        "xp": 680,
+        "coins": 120,
+        "items": [
+            {
+                "item": "itm_potion_greater_healing",
+                "count": 3
+            }
+        ]
+    }
+}

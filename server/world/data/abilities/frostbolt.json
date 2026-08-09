@@ -1,0 +1,17 @@
+{
+  "id": 204,
+  "name": "Frostbolt",
+  "icon": "frostbolt",
+  "char_class": "mage",
+  "effect": "damage",
+  "school": "frost",
+  "cast_ticks": 30,
+  "mana_cost": 10,
+  "range_units": 30.0,
+  "base_damage": 24,
+  "attacker_stat_coeffs": {
+    "int": 0.5
+  },
+  "variance_min": 0.9,
+  "variance_max": 1.0
+}

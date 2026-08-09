@@ -1,0 +1,27 @@
+{
+  "id": 101,
+  "name": "Heroic Strike",
+  "icon": "heroic_strike",
+  "char_class": "warrior",
+  "effect": "damage",
+  "cast_ticks": 0,
+  "resource_cost": 15,
+  "range_units": 2.5,
+  "base_damage": 18,
+  "attacker_stat_coeffs": {
+    "str": 0.5
+  },
+  "threat_multiplier": 2.0,
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "ranks": [
+    { "min_level": 1, "base_damage": 18, "resource_cost": 15 },
+    { "min_level": 6, "base_damage": 26, "resource_cost": 15 },
+    { "min_level": 12, "base_damage": 36, "resource_cost": 15 },
+    { "min_level": 18, "base_damage": 48, "resource_cost": 15 },
+    { "min_level": 24, "base_damage": 62, "resource_cost": 15 },
+    { "min_level": 30, "base_damage": 78, "resource_cost": 15 },
+    { "min_level": 36, "base_damage": 96, "resource_cost": 15 },
+    { "min_level": 40, "base_damage": 116, "resource_cost": 15 }
+  ]
+}

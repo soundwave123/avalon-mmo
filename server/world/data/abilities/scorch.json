@@ -1,0 +1,18 @@
+{
+  "id": 205,
+  "name": "Scorch",
+  "icon": "scorch",
+  "char_class": "mage",
+  "effect": "damage",
+  "school": "fire",
+  "cast_ticks": 20,
+  "mana_cost": 9,
+  "range_units": 30.0,
+  "base_damage": 22,
+  "attacker_stat_coeffs": {
+    "int": 0.5
+  },
+  "variance_min": 0.9,
+  "variance_max": 1.0,
+  "trained": true
+}

@@ -1,0 +1,798 @@
+{
+    "trees": [
+        {
+            "id": "holy",
+            "role": "healer"
+        },
+        {
+            "id": "discipline",
+            "role": "healer"
+        },
+        {
+            "id": "shadow",
+            "role": "dps"
+        }
+    ],
+    "talents": [
+        {
+            "id": "tal_pri_imp_heal",
+            "name": "Improved Flash Heal",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 301,
+                "pct_per_rank": 5
+            },
+            "desc": "Flash Heal +5% healing per rank"
+        },
+        {
+            "id": "tal_pri_devotion",
+            "name": "Devotion",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_pri_mending",
+            "name": "Improved Renew",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 302,
+                "pct_per_rank": 6
+            },
+            "desc": "Renew +6% healing per rank"
+        },
+        {
+            "id": "tal_pri_serenity",
+            "name": "Serenity",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_pri_imp_heal",
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 301,
+                "pct_per_rank": 10
+            },
+            "desc": "Flash Heal cost -10% per rank"
+        },
+        {
+            "id": "tal_pri_guardian",
+            "name": "Guardian Spirit",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 5
+            },
+            "desc": "All effects +5%"
+        },
+        {
+            "id": "tal_pri_inner_fire",
+            "name": "Inner Fire",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_pri_mental_agility",
+            "name": "Mental Agility",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All costs -3% per rank"
+        },
+        {
+            "id": "tal_pri_focused_will",
+            "name": "Focused Will",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_power_infusion",
+            "name": "Power Infusion",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_pri_mental_agility",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All damage +3% per rank"
+        },
+        {
+            "id": "tal_pri_pain_suppression",
+            "name": "Pain Suppression",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 8
+            },
+            "desc": "+8 Stamina"
+        },
+        {
+            "id": "tal_pri_imp_smite",
+            "name": "Searing Smite",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 303,
+                "pct_per_rank": 5
+            },
+            "desc": "Smite +5% damage per rank"
+        },
+        {
+            "id": "tal_pri_darkness",
+            "name": "Darkness",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 1,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 304,
+                "pct_per_rank": 5
+            },
+            "desc": "Holy Fire +5% damage per rank"
+        },
+        {
+            "id": "tal_pri_shadow_focus",
+            "name": "Shadow Focus",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 2,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 303,
+                "pct_per_rank": 8
+            },
+            "desc": "Smite cost -8% per rank"
+        },
+        {
+            "id": "tal_pri_mind_flay",
+            "name": "Mind Flay",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": "tal_pri_imp_smite",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 303,
+                "pct_per_rank": 8
+            },
+            "desc": "Smite +8% damage per rank"
+        },
+        {
+            "id": "tal_pri_shadowform",
+            "name": "Shadowform",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 3,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 5
+            },
+            "desc": "All damage +5%"
+        },
+        {
+            "id": "tal_pri_imp_horror",
+            "name": "Focused Horror",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 2,
+            "max_ranks": 2,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 307,
+                "pct_per_rank": 12
+            },
+            "desc": "Psychic Horror mana cost -12% per rank"
+        },
+        {
+            "id": "tal_pri_healing_light",
+            "name": "Healing Light",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 305,
+                "pct_per_rank": 6
+            },
+            "desc": "Greater Heal +6% healing per rank"
+        },
+        {
+            "id": "tal_pri_blessed_spirit",
+            "name": "Blessed Spirit",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_pri_spiritual_guidance",
+            "name": "Spiritual Guidance",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All healing and damage +1% per rank"
+        },
+        {
+            "id": "tal_pri_imp_greater_heal",
+            "name": "Improved Greater Heal",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 305,
+                "pct_per_rank": 8
+            },
+            "desc": "Greater Heal cost -8% per rank"
+        },
+        {
+            "id": "tal_pri_swift_mending",
+            "name": "Swift Mending",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 302,
+                "pct_per_rank": 5
+            },
+            "desc": "Renew +5% healing per rank"
+        },
+        {
+            "id": "tal_pri_divine_fury",
+            "name": "Divine Fury",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_pri_spiritual_guidance",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 301,
+                "pct_per_rank": 4
+            },
+            "desc": "Flash Heal +4% healing per rank"
+        },
+        {
+            "id": "tal_pri_inner_light",
+            "name": "Inner Light",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_lifebloom",
+            "name": "Lifebloom",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 302,
+                "pct_per_rank": 6
+            },
+            "desc": "Renew +6% healing per rank"
+        },
+        {
+            "id": "tal_pri_holy_reach",
+            "name": "Holy Reach",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 3
+            },
+            "desc": "+3 Spirit per rank"
+        },
+        {
+            "id": "tal_pri_sanctified_renewal",
+            "name": "Sanctified Renewal",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_pri_healing_light",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 305,
+                "pct_per_rank": 6
+            },
+            "desc": "Greater Heal +6% healing per rank"
+        },
+        {
+            "id": "tal_pri_divine_radiance",
+            "name": "Divine Radiance",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all healing and damage +10% \u2014 the Holy beacon"
+        },
+        {
+            "id": "tal_pri_devout_thrift",
+            "name": "Devout Thrift",
+            "class": "priest",
+            "tree": "holy",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All mana costs -3% per rank"
+        },
+        {
+            "id": "tal_pri_soul_warding",
+            "name": "Soul Warding",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 301,
+                "pct_per_rank": 8
+            },
+            "desc": "Flash Heal cost -8% per rank"
+        },
+        {
+            "id": "tal_pri_fortitude",
+            "name": "Fortitude",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_pri_divine_aegis",
+            "name": "Divine Aegis",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All healing and damage +1% per rank"
+        },
+        {
+            "id": "tal_pri_inner_focus",
+            "name": "Inner Focus",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All mana costs -2% per rank"
+        },
+        {
+            "id": "tal_pri_mental_fortress",
+            "name": "Mental Fortress",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_renewed_hope",
+            "name": "Renewed Hope",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_pri_divine_aegis",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 301,
+                "pct_per_rank": 4
+            },
+            "desc": "Flash Heal +4% healing per rank"
+        },
+        {
+            "id": "tal_pri_enduring_faith",
+            "name": "Enduring Faith",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_pri_swift_revival",
+            "name": "Swift Revival",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 306,
+                "pct_per_rank": 10
+            },
+            "desc": "Resurrection cost -10% per rank"
+        },
+        {
+            "id": "tal_pri_power_word_mastery",
+            "name": "Power Word Mastery",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_grace",
+            "name": "Grace",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_pri_soul_warding",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 305,
+                "pct_per_rank": 6
+            },
+            "desc": "Greater Heal +6% healing per rank"
+        },
+        {
+            "id": "tal_pri_inner_sanctum",
+            "name": "Inner Sanctum",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all mana costs -10% \u2014 the Discipline engine"
+        },
+        {
+            "id": "tal_pri_borrowed_time",
+            "name": "Borrowed Time",
+            "class": "priest",
+            "tree": "discipline",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 2
+            },
+            "desc": "All healing and damage +2% per rank"
+        },
+        {
+            "id": "tal_pri_shadow_weaving",
+            "name": "Shadow Weaving",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 304,
+                "pct_per_rank": 6
+            },
+            "desc": "Holy Fire +6% damage per rank"
+        },
+        {
+            "id": "tal_pri_twisted_faith",
+            "name": "Twisted Faith",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 3,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 2
+            },
+            "desc": "+2 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_shadow_power",
+            "name": "Shadow Power",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 4,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 1
+            },
+            "desc": "All damage +1% per rank"
+        },
+        {
+            "id": "tal_pri_silencing_dark",
+            "name": "Silencing Dark",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 307,
+                "pct_per_rank": 8
+            },
+            "desc": "Psychic Horror cost -8% per rank"
+        },
+        {
+            "id": "tal_pri_vampiric_spirit",
+            "name": "Vampiric Spirit",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 4,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "spirit",
+                "per_rank": 2
+            },
+            "desc": "+2 Spirit per rank"
+        },
+        {
+            "id": "tal_pri_darkened_mind",
+            "name": "Darkened Mind",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": "tal_pri_shadow_power",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 303,
+                "pct_per_rank": 4
+            },
+            "desc": "Smite +4% damage per rank"
+        },
+        {
+            "id": "tal_pri_touch_of_madness",
+            "name": "Touch of Madness",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 307,
+                "pct_per_rank": 8
+            },
+            "desc": "Psychic Horror +8% damage per rank"
+        },
+        {
+            "id": "tal_pri_umbral_ward",
+            "name": "Umbral Ward",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 5,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "stamina",
+                "per_rank": 2
+            },
+            "desc": "+2 Stamina per rank"
+        },
+        {
+            "id": "tal_pri_void_embrace",
+            "name": "Void Embrace",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 6,
+            "max_ranks": 5,
+            "prereq": null,
+            "effect": {
+                "kind": "stat_add",
+                "stat": "int",
+                "per_rank": 3
+            },
+            "desc": "+3 Intellect per rank"
+        },
+        {
+            "id": "tal_pri_pain_and_suffering",
+            "name": "Pain and Suffering",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 6,
+            "max_ranks": 3,
+            "prereq": "tal_pri_shadow_weaving",
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 304,
+                "pct_per_rank": 6
+            },
+            "desc": "Holy Fire +6% damage per rank"
+        },
+        {
+            "id": "tal_pri_voidform",
+            "name": "Voidform",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 7,
+            "max_ranks": 1,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_damage_pct",
+                "ability_id": 0,
+                "pct_per_rank": 10
+            },
+            "desc": "Capstone: all damage +10% \u2014 the Shadow ascendant"
+        },
+        {
+            "id": "tal_pri_dark_thrift",
+            "name": "Dark Thrift",
+            "class": "priest",
+            "tree": "shadow",
+            "tier": 7,
+            "max_ranks": 3,
+            "prereq": null,
+            "effect": {
+                "kind": "ability_cost_pct",
+                "ability_id": 0,
+                "pct_per_rank": 3
+            },
+            "desc": "All mana costs -3% per rank"
+        }
+    ]
+}

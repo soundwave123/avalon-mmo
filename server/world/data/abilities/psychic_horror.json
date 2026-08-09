@@ -1,0 +1,26 @@
+{
+  "id": 307,
+  "name": "Psychic Horror",
+  "icon": "smite",
+  "char_class": "priest",
+  "effect": "control",
+  "school": "shadow",
+  "cast_ticks": 0,
+  "resource_cost": 18,
+  "range_units": 20.0,
+  "base_damage": 0,
+  "control_kind": "stun",
+  "control_ticks": 40,
+  "control_dr_category": "stun",
+  "cooldown_ticks": 700,
+  "ranks": [
+    {"min_level": 1, "resource_cost": 18, "control_ticks": 40, "cooldown_ticks": 700},
+    {"min_level": 6, "resource_cost": 17, "control_ticks": 50, "cooldown_ticks": 660},
+    {"min_level": 12, "resource_cost": 16, "control_ticks": 60, "cooldown_ticks": 620},
+    {"min_level": 18, "resource_cost": 15, "control_ticks": 70, "cooldown_ticks": 580},
+    {"min_level": 24, "resource_cost": 14, "control_ticks": 80, "cooldown_ticks": 540},
+    {"min_level": 30, "resource_cost": 13, "control_ticks": 90, "cooldown_ticks": 500},
+    {"min_level": 36, "resource_cost": 12, "control_ticks": 100, "cooldown_ticks": 460},
+    {"min_level": 40, "resource_cost": 11, "control_ticks": 110, "cooldown_ticks": 420}
+  ]
+}

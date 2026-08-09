@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "voice_profile": {
+    "npc_farmer_geld": {
+      "engine": "kokoro",
+      "voice": "am_michael",
+      "speed": 0.95,
+      "seed": 0
+    }
+  },
+  "pronunciation": {
+    "Geld": "/ɡɛld/",
+    "Elmsvale": "/ˈɛlmzveɪl/",
+    "Heartwold": "/ˈhɑːrtwoʊld/",
+    "Ashmoor": "/ˈæʃmʊr/",
+    "Kargrim": "/ˈkɑːrɡrɪm/",
+    "Grexrok": "/ˈɡrɛksrɒk/",
+    "Highkeep": "/ˈhaɪkiːp/"
+  },
+  "lines": {
+    "npc_farmer_geld:4d673ebd35": {
+      "npc_id": "npc_farmer_geld",
+      "kind": "greeting",
+      "text": "Those wolves will be the end of me, friend.",
+      "sha1": "4d673ebd35a87fd1b0d91e3304d6c77de56f2f38",
+      "file": "voice/npc_farmer_geld_4d673ebd35.ogg",
+      "generated": false
+    }
+  }
+}

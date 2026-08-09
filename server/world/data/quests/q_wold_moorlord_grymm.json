@@ -1,0 +1,29 @@
+{
+    "id": "q_wold_moorlord_grymm",
+    "title": "Grymm the Moorlord",
+    "giver_npc": "npc_hk_bounty_board",
+    "turnin_npc": "npc_hk_bounty_board",
+    "min_level": 18,
+    "prerequisite_quest": null,
+    "description": "POSTED: Grymm, the ancient blight-thing that rules the high moor's barrows, is too strong for any lone hunter \u2014 it has killed three who tried. The Highkeep bounty stands for a party that can bring it down and clear the moor's crown.",
+    "recommended_players": 3,
+    "location_hint": "The barrow-crown of the high moor, north-east of Highkeep.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_grymm_moorlord",
+            "count": 1,
+            "desc": "Slay Grymm the Moorlord with a party"
+        }
+    ],
+    "rewards": {
+        "xp": 900,
+        "coins": 180,
+        "items": [
+            {
+                "item": "itm_riftward_blade",
+                "count": 1
+            }
+        ]
+    }
+}

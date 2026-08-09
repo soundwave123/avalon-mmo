@@ -1,0 +1,51 @@
+{
+  "_comment": "T-330 Hollowed Crypt layout anchors — the single source of truth for where the catacomb's encounters stand. Coords are server WORLD ground (x, y); the crypt geometry (prop_hollowed_crypt.glb) is placed in props.json at (420, 0) in a DISTANT FLAT OFFSET REGION (see gen_hollowed_crypt_real.py's underground-pattern note: T-327 forbids a true y-layer, so the crypt is a roofed box on the flat plain past r~330 where TerrainField.height()==0). world=(420+blender_x, -blender_y). The 3 BOSS anchors are consumed by T-332 (encounters on the T-294 elite chassis); the trash anchors mirror data/instances/hollowed_crypt.json (seeded live by T-331). This file is data-only: no server logic.",
+  "region_origin": [420.0, 0.0],
+  "entrance_vestibule": [420.0, 0.2],
+  "exit_surface": [12.0, -10.5],
+  "churchyard_porch": [14.0, -12.5],
+  "route": ["vestibule", "gallery_a", "chamber_1", "side_crypt", "gallery_b", "flooded_crypt", "gallery_c", "the_vault"],
+  "bosses": [
+    {
+      "id": "warden",
+      "name": "The First Warden",
+      "chamber": "chamber_1",
+      "anchor": [420.0, -12.0],
+      "teaching": "focus-fire an add (a skeletal warrior it raises)",
+      "add_anchors": [[417.5, -13.0], [422.5, -13.0]]
+    },
+    {
+      "id": "drowned",
+      "name": "The Drowned Choir",
+      "chamber": "flooded_crypt",
+      "anchor": [420.0, -27.5],
+      "teaching": "positioning — a ground hazard in the flooded floor",
+      "add_anchors": [[416.5, -28.5], [423.5, -28.5]]
+    },
+    {
+      "id": "hollow_king",
+      "name": "The Hollow King",
+      "chamber": "the_vault",
+      "anchor": [420.0, -41.5],
+      "teaching": "graduation — soft enrage (T-294) + restless-shade adds",
+      "add_anchors": [[416.5, -42.5], [423.5, -42.5], [420.0, -43.5]],
+      "lore": "T-344: he is patient zero, not just another wight — the first body the Hollowing ever took."
+    }
+  ],
+  "era_rift": {
+    "_comment": "T-344 (era-direction.md S7.2): pure foreshadowing seed for the future Era-1 capstone/time-jump quest. NOT interactive and NOT a teleport in Era 1 — flavor text only. Decorative prop (optional) at world (424.3,-45.3), see client/assets/props.json prop_era_rift_monolith (tag hollowed_crypt_vault_rift).",
+    "chamber": "the_vault",
+    "anchor": [424.3, -45.3],
+    "description": "A sealed, wrong-feeling seam runs up the deepest wall of the Vault, behind where the Hollow King fell. The stone around it is cold in a way frost doesn't explain, and the air near it is a hundred years too old.",
+    "inspect_flavor": "Up close, the seam pulses once — slow, patient, not yet awake. Whatever sealed it here didn't finish the job."
+  },
+  "trash_packs": [
+    { "id": "pack1", "chamber": "gallery_a", "anchor": [420.0, -7.6], "mobs": ["skeletal_warrior", "skeletal_warrior"] },
+    { "id": "pack2", "chamber": "chamber_1", "anchor": [420.0, -9.5], "mobs": ["skeletal_warrior", "skeletal_warrior", "crypt_ghoul"] },
+    { "id": "pack3", "chamber": "side_crypt", "anchor": [427.0, -12.0], "mobs": ["crypt_ghoul", "crypt_ghoul"] },
+    { "id": "pack4", "chamber": "gallery_b", "anchor": [420.0, -19.5], "mobs": ["skeletal_warrior", "skeletal_warrior", "restless_shade"] },
+    { "id": "pack5", "chamber": "flooded_crypt", "anchor": [417.0, -25.0], "mobs": ["crypt_ghoul", "crypt_ghoul", "restless_shade"] },
+    { "id": "pack6", "chamber": "gallery_c", "anchor": [420.0, -34.5], "mobs": ["restless_shade", "restless_shade"] },
+    { "id": "pack7", "chamber": "the_vault", "anchor": [420.0, -38.5], "mobs": ["skeletal_warrior", "skeletal_warrior", "crypt_ghoul"] }
+  ]
+}

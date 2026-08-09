@@ -1,0 +1,21 @@
+; Avalon world server (Godot 4.6 headless)
+; Hosts a single zone-instance. One process per zone-instance.
+; Authoritative for combat, movement, NPCs in that zone.
+
+config_version=5
+
+[application]
+
+config/name="Avalon World"
+config/description="Avalon MMORPG world (zone) server"
+run/main_scene="res://scenes/main.tscn"
+boot_splash/show_image=false
+config/features=PackedStringArray("4.6", "Headless")
+
+[autoload]
+
+ServerConfig="*res://scripts/server_config.gd"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

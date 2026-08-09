@@ -1,0 +1,41 @@
+{
+  "_comment": "T-347 ASHMOOR region — the single source of truth for the era-2 first-slice anchors. Coords are server WORLD ground (x, y). Ashmoor is a DISTANT FLAT OFFSET REGION at world (-420, 0): the far WEST corner, r>330 so TerrainField.height()==0 (dead flat, LOD-culled), maximally clear of the crypt's (+420,0) — the two offset regions can never sight each other and their entity sets stay trivially disjoint. SCOPE = open/shared (instance_id 0, the open world): an era is a world, not a dungeon — two players in Ashmoor SEE each other (ashmoor-direction.md S1; the crypt-style instance scope is reserved for the future occult cellar under the speakeasy). This file is data-only: no server logic. The rift teleport itself is instance_service.gd's enter_era/leave_era (a pure session move, NOT an instance alloc); the client trigger is rift_gate.gd.",
+  "region_id": "ashmoor",
+  "era": 2,
+  "shared": true,
+  "region_origin": [-420.0, 0.0],
+  "footprint": {
+    "_comment": "spike footprint ~140x140 centred on the anchor (ashmoor-direction.md S1); the ±500 world clamp + single-flat-plane model make this SPIKE-ONLY — a shipped Ashmoor wants its own terrain + an era_id/terrain-region layer (the deferred systems milestone, deliberately NOT this ticket).",
+    "x_min": -490.0, "x_max": -350.0, "y_min": -70.0, "y_max": 70.0
+  },
+  "arrival": {
+    "_comment": "where the rift drops the traveller — the arrival plaza, just NORTH of the arrival monolith (prop_era_rift_monolith @ (-420,-10) in props.json), facing the High Street terrace to the north. instance_service.ASHMOOR_ARRIVAL mirrors this Vector3 (z=0).",
+    "point": [-420.0, -5.0],
+    "monolith": [-420.0, -10.0]
+  },
+  "return": {
+    "_comment": "the dev-only return waypoint (the fiction is one-way; a real return convenience is deferred to the systems milestone). leave_era drops the traveller back at the crypt Vault surface near the source monolith. instance_service.RIFT_RETURN mirrors this Vector3.",
+    "point": [420.0, -41.5]
+  },
+  "respawn": {
+    "_comment": "T-369 case 3 — the ERA-2 graveyard / respawn point (the pauper's field, open cobble SW of the arrival plaza, clear of the High Street terrace at y=8 and the gas lamps). A death anywhere in the Ashmoor offset region respawns HERE, never at the era-1 world origin or the crypt vestibule — server-authoritative in instance_service.respawn_point, which reads the corpse's live region via the T-371 nearest-anchor model. instance_service.ASHMOOR_RESPAWN mirrors this Vector3 (z=0, dead-flat plain).",
+    "point": [-432.0, -14.0]
+  },
+  "high_street": {
+    "_comment": "~70m cobble-into-pavement strip along y~0 (splat: terrain_splat.gdshader ashmoor_cobble/soot masks, mirrored in world_view.gd). Terrace fronts the pavement from the NORTH (fronts face -Y, all at y=4); the arrival plaza is the open cobble to the south.",
+    "cobble_center": [-420.0, 0.0],
+    "buildings": [
+      {"model": "prop_ashmoor_rowhouse", "anchor": [-429.0, 8.0], "kind": "residential", "walk_in": true},
+      {"model": "prop_ashmoor_terrace_narrow", "anchor": [-423.75, 8.0], "kind": "residential", "walk_in": true},
+      {"model": "prop_ashmoor_shopfront", "anchor": [-418.25, 8.0], "kind": "shop", "walk_in": true},
+      {"model": "prop_ashmoor_rowhouse", "anchor": [-412.0, 8.0], "kind": "residential", "walk_in": true}
+    ],
+    "gas_lamps": [[-429.0, 2.5], [-418.0, 2.5], [-428.0, -8.0], [-412.0, -8.0]]
+  },
+  "npc_anchors": {
+    "_comment": "STUB anchors for the arrival chain (T-352) + the street service hub — no NPCs are seeded by this ticket (they need the T-349 Syndicate roster + T-352 quest wiring). Named here so the follow-on tickets have a placed layout to hang on.",
+    "urchin_lookout": [-419.0, -3.0],
+    "desk_sergeant": [-415.0, 6.5],
+    "shakedown_beat": [-421.0, 1.0]
+  }
+}

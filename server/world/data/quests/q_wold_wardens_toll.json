@@ -1,0 +1,19 @@
+{
+    "id": "q_wold_wardens_toll",
+    "title": "The Warden's Toll",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_outpost_guard",
+    "min_level": 8,
+    "prerequisite_quest": null,
+    "description": "The outpost warden has more road than watchmen. The fevered packs test the eastern farmland every night, and every wolf you put down is one that never reaches the byres. Walk the line, cull the strays, and let the reapers sleep. Steady solo work, paid by the head.",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 10, "desc": "Cull fevered wolves along the warden's line" }
+    ],
+    "rewards": {
+        "xp": 380,
+        "coins": 70,
+        "items": [
+            { "item": "itm_trail_rations", "count": 3 }
+        ]
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "_doc": "T-379 server-side movement collision barriers. Coarse blocker-volume set (the ticket's 'buildings/walls before full navmesh' tier) fed to movement_collision.gd and tested against every request_move segment on the intake path. Each barrier is a set of impassable WALL SEGMENTS in server planar coords (x, z) == PlayerSessions pos (x, y); a move whose from->to segment crosses any wall segment is rejected server-side (noclip defense). Door/gate openings are the GAPS between segments, so legitimate traversal through them crosses no segment and passes. SYSTEMS-LANE MIRROR (like terrain_field.gd mirrors WorldView): the Highkeep ring is copied from client/assets/highkeep_plan.json 'wall' (the visual lane owns that source); keep this in sync when the ring changes. Extend with more polylines/rects as the visual lane supplies footprints; seed deliberately small so legitimate play never false-positives.",
+  "barriers": [
+    {
+      "name": "highkeep_curtain_wall",
+      "type": "polyline",
+      "closed": false,
+      "_source": "client/assets/highkeep_plan.json wall.polyline — OPEN ring: the gap between the last and first vertex (x=8..-8 at z=-140) is the north gate (gate.pos [0,-140], width 8), so a move through the gate crosses no wall segment.",
+      "points": [
+        [-8.0, -140.0],
+        [-100.0, -140.0],
+        [-120.0, -160.0],
+        [-120.0, -320.0],
+        [-100.0, -340.0],
+        [100.0, -340.0],
+        [120.0, -320.0],
+        [120.0, -160.0],
+        [100.0, -140.0],
+        [8.0, -140.0]
+      ]
+    }
+  ]
+}

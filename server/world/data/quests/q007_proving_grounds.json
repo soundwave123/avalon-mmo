@@ -1,0 +1,17 @@
+{
+    "id": "q007",
+    "retired": true,
+    "title": "Proving Grounds",
+    "giver_npc": "npc_drillmaster",
+    "turnin_npc": "npc_drillmaster",
+    "min_level": 1,
+    "prerequisite_quest": null,
+    "description": "Drillmaster Hale stands beside the training dummy. \"One clean kill,\" he says, \"then we'll talk.\" Strike down the dummy and report straight back to him.",
+    "objectives": [
+        { "type": "kill", "target": "mob_dummy", "count": 1, "desc": "Defeat the training dummy" }
+    ],
+    "rewards": {
+        "xp": 50,
+        "items": [ { "item": "itm_copper", "count": 5 } ]
+    }
+}

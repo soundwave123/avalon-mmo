@@ -1,0 +1,14 @@
+{
+  "id": 302,
+  "name": "Renew",
+  "icon": "renew",
+  "char_class": "priest",
+  "effect": "heal",
+  "cast_ticks": 0,
+  "resource_cost": 6,
+  "range_units": 30.0,
+  "heal_base": 10,
+  "targets_friendly": true,
+  "variance_min": 0.9,
+  "variance_max": 1.0
+}

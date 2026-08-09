@@ -1,0 +1,33 @@
+; Avalon gateway server (Godot 4.6 headless)
+; Handles login/auth/lobby. Routes clients to world servers.
+
+config_version=5
+
+[application]
+
+config/name="Avalon Gateway"
+config/description="Avalon MMORPG gateway/auth/lobby server"
+run/main_scene="res://scenes/main.tscn"
+run/disable_stdout=false
+run/disable_stderr=false
+boot_splash/show_image=false
+config/features=PackedStringArray("4.6", "Headless")
+
+[autoload]
+
+ServerConfig="*res://scripts/server_config.gd"
+
+[display]
+
+; Headless — no window
+window/size/viewport_width=320
+window/size/viewport_height=240
+
+[network]
+
+limits/debugger/max_chars_per_second=32768
+
+[rendering]
+
+; Disable rendering subsystem entirely
+renderer/rendering_method="gl_compatibility"

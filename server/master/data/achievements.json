@@ -1,0 +1,469 @@
+{
+    "_doc": "T-367 engine, T-676 content pass. Data-only: a new achievement is a new row here (no code change) as long as criteria.event is in AchievementProgress.SUPPORTED_EVENTS (the catalog-integrity test guards this). Rewards are power-free per the T-482 charter: title (earned marquee status the store can never sell), coin (a T-366 faucet), or cosmetic (an earned-only look id, never a purchasable store row). meta:true rows watch OTHER achievements via the engine-derived group:/achievement:* counters and are excluded from the account 'complete N' count. groups:[] tags a row into a per-zone/per-theme set a meta can complete.",
+    "achievements": [
+        {
+            "id": "first_blood",
+            "name": "First Blood",
+            "desc": "Defeat your first enemy.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "*", "count": 1},
+            "reward": {"title": "the Blooded"}
+        },
+        {
+            "id": "slayer",
+            "name": "Slayer",
+            "desc": "Defeat 10 enemies.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "*", "count": 10},
+            "reward": {"coin": 100}
+        },
+        {
+            "id": "reaper",
+            "name": "Reaper",
+            "desc": "Defeat 50 enemies.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "*", "count": 50},
+            "reward": {"title": "the Reaper"}
+        },
+        {
+            "id": "executioner",
+            "name": "Executioner",
+            "desc": "Defeat 250 enemies.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "*", "count": 250},
+            "reward": {"coin": 500}
+        },
+        {
+            "id": "deathbringer",
+            "name": "Deathbringer",
+            "desc": "Defeat 1000 enemies.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "*", "count": 1000},
+            "reward": {"title": "the Deathbringer"}
+        },
+        {
+            "id": "bane_greymaw",
+            "name": "Wolfsbane",
+            "desc": "Slay Greymaw the Alpha.",
+            "category": "combat",
+            "groups": ["heartwold"],
+            "criteria": {"event": "kill", "key": "mob_greymaw", "count": 1},
+            "reward": {"title": "Wolfsbane"}
+        },
+        {
+            "id": "bane_elderthorn",
+            "name": "Thornbreaker",
+            "desc": "Slay Elderthorn the Ancient.",
+            "category": "combat",
+            "groups": ["heartwold"],
+            "criteria": {"event": "kill", "key": "mob_elderthorn", "count": 1},
+            "reward": {"title": "Thornbreaker"}
+        },
+        {
+            "id": "bane_grexrok",
+            "name": "Warden's End",
+            "desc": "Slay Grexrok the Deepwarden.",
+            "category": "combat",
+            "groups": ["heartwold"],
+            "criteria": {"event": "kill", "key": "mob_grexrok", "count": 1},
+            "reward": {"coin": 150}
+        },
+        {
+            "id": "bane_kingpin",
+            "name": "Ledgerbreaker",
+            "desc": "Slay Silas Vane, the Ledger King, in Ashmoor.",
+            "category": "combat",
+            "criteria": {"event": "kill", "key": "mob_rare_ashmoor_kingpin", "count": 1},
+            "reward": {"title": "Ledgerbreaker"}
+        },
+        {
+            "id": "apprentice",
+            "name": "Apprentice",
+            "desc": "Reach level 5.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 5},
+            "reward": {"title": "Apprentice"}
+        },
+        {
+            "id": "veteran",
+            "name": "Veteran",
+            "desc": "Reach level 10.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 10},
+            "reward": {"coin": 250}
+        },
+        {
+            "id": "seasoned",
+            "name": "Seasoned",
+            "desc": "Reach level 20.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 20},
+            "reward": {"title": "the Seasoned"}
+        },
+        {
+            "id": "warlord_lvl",
+            "name": "Battle-Hardened",
+            "desc": "Reach level 30.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 30},
+            "reward": {"coin": 500}
+        },
+        {
+            "id": "myrmidon",
+            "name": "Myrmidon",
+            "desc": "Reach level 40.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 40},
+            "reward": {"title": "Myrmidon"}
+        },
+        {
+            "id": "ascendant",
+            "name": "Ascendant",
+            "desc": "Reach level 50.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 50},
+            "reward": {"coin": 1000}
+        },
+        {
+            "id": "avalon_apex",
+            "name": "Apex of Avalon",
+            "desc": "Reach the level cap.",
+            "category": "progression",
+            "criteria": {"event": "level", "key": "*", "count": 60},
+            "reward": {"title": "of Avalon"}
+        },
+        {
+            "id": "first_footfall",
+            "name": "First Footfall",
+            "desc": "Discover your first landmark.",
+            "category": "exploration",
+            "criteria": {"event": "discovery", "key": "*", "count": 1},
+            "reward": {"title": "Wayfarer"}
+        },
+        {
+            "id": "wanderer",
+            "name": "Wanderer",
+            "desc": "Discover 5 landmarks.",
+            "category": "exploration",
+            "criteria": {"event": "discovery", "key": "*", "count": 5},
+            "reward": {"coin": 100}
+        },
+        {
+            "id": "pathfinder",
+            "name": "Pathfinder",
+            "desc": "Discover 9 landmarks across the realm.",
+            "category": "exploration",
+            "criteria": {"event": "discovery", "key": "*", "count": 9},
+            "reward": {"title": "the Pathfinder"}
+        },
+        {
+            "id": "crypt_delver",
+            "name": "Crypt Delver",
+            "desc": "Discover the Hollowed Crypt.",
+            "category": "exploration",
+            "criteria": {"event": "reach", "key": "hollowed_crypt", "count": 1},
+            "reward": {"title": "Delver"}
+        },
+        {
+            "id": "ashmoor_arrival",
+            "name": "Through the Ash",
+            "desc": "Discover Ashmoor's arrival plaza.",
+            "category": "exploration",
+            "criteria": {"event": "discovery", "key": "ashmoor_arrival_plaza", "count": 1},
+            "reward": {"coin": 75}
+        },
+        {
+            "id": "hamlet_local",
+            "name": "Home Ground",
+            "desc": "Discover every landmark in the starting hamlet.",
+            "category": "exploration",
+            "criteria": {"event": "discovery_zone", "key": "era_1_hamlet", "count": 2},
+            "reward": {"coin": 50}
+        },
+        {
+            "id": "hw_wayfarer",
+            "name": "Warden of the Heartwold",
+            "desc": "Discover every landmark in the Heartwold.",
+            "category": "exploration",
+            "groups": ["heartwold"],
+            "criteria": {"event": "discovery_zone", "key": "heartwold", "count": 4},
+            "reward": {"title": "of the Heartwold"}
+        },
+        {
+            "id": "ashmoor_cartographer",
+            "name": "Cartographer of Ashmoor",
+            "desc": "Discover every landmark in Ashmoor.",
+            "category": "exploration",
+            "criteria": {"event": "discovery_zone", "key": "ashmoor", "count": 3},
+            "reward": {"title": "of Ashmoor"}
+        },
+        {
+            "id": "errand_runner",
+            "name": "Errand Runner",
+            "desc": "Complete your first quest.",
+            "category": "quests",
+            "criteria": {"event": "quest", "key": "*", "count": 1},
+            "reward": {"cosmetic": "tabard_novice"}
+        },
+        {
+            "id": "journeyman_quester",
+            "name": "Journeyman",
+            "desc": "Complete 10 quests.",
+            "category": "quests",
+            "criteria": {"event": "quest", "key": "*", "count": 10},
+            "reward": {"coin": 150}
+        },
+        {
+            "id": "taskmaster",
+            "name": "Taskmaster",
+            "desc": "Complete 25 quests.",
+            "category": "quests",
+            "criteria": {"event": "quest", "key": "*", "count": 25},
+            "reward": {"title": "the Diligent"}
+        },
+        {
+            "id": "lorekeeper",
+            "name": "Lorekeeper",
+            "desc": "Complete 50 quests.",
+            "category": "quests",
+            "criteria": {"event": "quest", "key": "*", "count": 50},
+            "reward": {"title": "Lorekeeper"}
+        },
+        {
+            "id": "crypt_first",
+            "name": "Into the Dark",
+            "desc": "Fell a boss of the Hollowed Crypt.",
+            "category": "dungeon",
+            "criteria": {"event": "dungeon_boss", "key": "*", "count": 1},
+            "reward": {"title": "Crypt-Cleared"}
+        },
+        {
+            "id": "fell_aldric",
+            "name": "The Warden Fallen",
+            "desc": "Defeat Warden Aldric the Fallen.",
+            "category": "dungeon",
+            "criteria": {"event": "dungeon_boss", "key": "mob_crypt_aldric", "count": 1},
+            "reward": {"coin": 200}
+        },
+        {
+            "id": "fell_maldrath",
+            "name": "The Unhallowed Undone",
+            "desc": "Defeat Maldrath the Unhallowed.",
+            "category": "dungeon",
+            "criteria": {"event": "dungeon_boss", "key": "mob_crypt_maldrath", "count": 1},
+            "reward": {"title": "the Unhallowed's Bane"}
+        },
+        {
+            "id": "hall_vanquisher",
+            "name": "Hall Vanquisher",
+            "desc": "Fell three distinct dungeon or raid bosses.",
+            "category": "dungeon",
+            "criteria": {"event": "dungeon_boss", "key": "*", "count": 3},
+            "reward": {"title": "Hall Vanquisher"}
+        },
+        {
+            "id": "vault_first",
+            "name": "The First Hollowing",
+            "desc": "Clear the Vault of the First Hollowing.",
+            "category": "raid",
+            "criteria": {"event": "raid_clear", "key": "*", "count": 1},
+            "reward": {"title": "Vaultbreaker"}
+        },
+        {
+            "id": "vault_regular",
+            "name": "Vault Regular",
+            "desc": "Clear the Vault on four separate weekly locks.",
+            "category": "raid",
+            "criteria": {"event": "raid_clear", "key": "*", "count": 4},
+            "reward": {"coin": 500}
+        },
+        {
+            "id": "vault_devoted",
+            "name": "Keeper of the Vault",
+            "desc": "Clear the Vault on twelve separate weekly locks.",
+            "category": "raid",
+            "criteria": {"event": "raid_clear", "key": "*", "count": 12},
+            "reward": {"title": "of the First Hollowing"}
+        },
+        {
+            "id": "first_duel",
+            "name": "First Duel",
+            "desc": "Win your first duel.",
+            "category": "pvp",
+            "criteria": {"event": "pvp_win", "key": "duel", "count": 1},
+            "reward": {"title": "Duelist"}
+        },
+        {
+            "id": "first_crownfield",
+            "name": "The Crownfield",
+            "desc": "Win your first Crownfield battleground.",
+            "category": "pvp",
+            "criteria": {"event": "pvp_win", "key": "bg", "count": 1},
+            "reward": {"title": "of the Crownfield"}
+        },
+        {
+            "id": "pvp_veteran",
+            "name": "War Veteran",
+            "desc": "Win 10 rated matches.",
+            "category": "pvp",
+            "criteria": {"event": "pvp_win", "key": "*", "count": 10},
+            "reward": {"coin": 200}
+        },
+        {
+            "id": "pvp_conqueror",
+            "name": "Conqueror",
+            "desc": "Win 50 rated matches.",
+            "category": "pvp",
+            "criteria": {"event": "pvp_win", "key": "*", "count": 50},
+            "reward": {"title": "the Conqueror"}
+        },
+        {
+            "id": "rank_silver",
+            "name": "Silver Ascent",
+            "desc": "Reach Silver rank (1400 rating).",
+            "category": "pvp",
+            "criteria": {"event": "pvp_rating", "key": "*", "count": 1400},
+            "reward": {"coin": 150}
+        },
+        {
+            "id": "rank_gold",
+            "name": "Gold Standard",
+            "desc": "Reach Gold rank (1600 rating).",
+            "category": "pvp",
+            "criteria": {"event": "pvp_rating", "key": "*", "count": 1600},
+            "reward": {"title": "the Golden"}
+        },
+        {
+            "id": "rank_platinum",
+            "name": "Platinum Ascent",
+            "desc": "Reach Platinum rank (1800 rating).",
+            "category": "pvp",
+            "criteria": {"event": "pvp_rating", "key": "*", "count": 1800},
+            "reward": {"coin": 400}
+        },
+        {
+            "id": "rank_diamond",
+            "name": "Diamond Gladiator",
+            "desc": "Reach Diamond rank (2000 rating).",
+            "category": "pvp",
+            "criteria": {"event": "pvp_rating", "key": "*", "count": 2000},
+            "reward": {"title": "the Diamond Gladiator"}
+        },
+        {
+            "id": "first_gather",
+            "name": "First Harvest",
+            "desc": "Gather your first resource.",
+            "category": "crafting",
+            "criteria": {"event": "gather", "key": "*", "count": 1},
+            "reward": {"coin": 25}
+        },
+        {
+            "id": "gatherer",
+            "name": "Gatherer",
+            "desc": "Gather resources 25 times.",
+            "category": "crafting",
+            "criteria": {"event": "gather", "key": "*", "count": 25},
+            "reward": {"coin": 100}
+        },
+        {
+            "id": "harvester",
+            "name": "Harvester",
+            "desc": "Gather resources 100 times.",
+            "category": "crafting",
+            "criteria": {"event": "gather", "key": "*", "count": 100},
+            "reward": {"title": "the Harvester"}
+        },
+        {
+            "id": "prospector",
+            "name": "Master Harvester",
+            "desc": "Gather resources 500 times.",
+            "category": "crafting",
+            "criteria": {"event": "gather", "key": "*", "count": 500},
+            "reward": {"title": "Master Harvester"}
+        },
+        {
+            "id": "first_craft",
+            "name": "First Craft",
+            "desc": "Craft your first item.",
+            "category": "crafting",
+            "criteria": {"event": "craft", "key": "*", "count": 1},
+            "reward": {"coin": 25}
+        },
+        {
+            "id": "artisan",
+            "name": "Artisan",
+            "desc": "Craft 25 items.",
+            "category": "crafting",
+            "criteria": {"event": "craft", "key": "*", "count": 25},
+            "reward": {"title": "Artisan"}
+        },
+        {
+            "id": "master_crafter",
+            "name": "Master Artisan",
+            "desc": "Craft 100 items.",
+            "category": "crafting",
+            "criteria": {"event": "craft", "key": "*", "count": 100},
+            "reward": {"title": "Master Artisan"}
+        },
+        {
+            "id": "first_recipe",
+            "name": "The First Lesson",
+            "desc": "Learn your first recipe.",
+            "category": "crafting",
+            "criteria": {"event": "recipe", "key": "*", "count": 1},
+            "reward": {"coin": 25}
+        },
+        {
+            "id": "recipe_master",
+            "name": "Keeper of Recipes",
+            "desc": "Learn every recipe in the crafting book.",
+            "category": "crafting",
+            "criteria": {"event": "recipe", "key": "*", "count": 11},
+            "reward": {"title": "Keeper of Recipes"}
+        },
+        {
+            "id": "guiding_hand",
+            "name": "A Guiding Hand",
+            "desc": "Complete five challenges while level-synced with an adventurer you are mentoring.",
+            "category": "social",
+            "criteria": {"event": "mentor_credit", "key": "*", "count": 5},
+            "reward": {"title": "the Mentor"}
+        },
+        {
+            "id": "heartwold_champion",
+            "name": "Champion of the Heartwold",
+            "desc": "Complete every Heartwold achievement.",
+            "category": "meta",
+            "meta": true,
+            "criteria": {"event": "group", "key": "heartwold", "count": 4},
+            "reward": {"title": "Heartwold's Champion"}
+        },
+        {
+            "id": "collector_bronze",
+            "name": "Accomplished",
+            "desc": "Complete 10 achievements.",
+            "category": "meta",
+            "meta": true,
+            "criteria": {"event": "achievement", "key": "*", "count": 10},
+            "reward": {"coin": 250}
+        },
+        {
+            "id": "collector_silver",
+            "name": "Illustrious",
+            "desc": "Complete 25 achievements.",
+            "category": "meta",
+            "meta": true,
+            "criteria": {"event": "achievement", "key": "*", "count": 25},
+            "reward": {"title": "the Illustrious"}
+        },
+        {
+            "id": "collector_gold",
+            "name": "Legend of Avalon",
+            "desc": "Complete 40 achievements.",
+            "category": "meta",
+            "meta": true,
+            "criteria": {"event": "achievement", "key": "*", "count": 40},
+            "reward": {"title": "the Legendary"}
+        }
+    ]
+}

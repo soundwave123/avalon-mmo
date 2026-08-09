@@ -1,0 +1,9 @@
+{
+	"_comment": "T-295: per-class primary-attribute growth. `base` = the level-1 value of every primary; `per_level` = the gain added per level-up, keyed by class archetype. This is the canonical source for leveling.gd (which mirrors it in-code as a deterministic fallback if this file is missing). Class identity: warrior = STR/STA (melee + HP), mage = INT (spell power/mana), priest = INT/Spirit (healing + mana regen). Adding a class is a new row here. Evolution of T-061's in-code table.",
+	"base": {"str": 10, "int": 10, "dex": 10, "spirit": 10, "stamina": 10},
+	"per_level": {
+		"warrior": {"str": 3, "int": 0, "dex": 1, "spirit": 0, "stamina": 3},
+		"mage": {"str": 0, "int": 3, "dex": 1, "spirit": 1, "stamina": 1},
+		"priest": {"str": 1, "int": 2, "dex": 0, "spirit": 3, "stamina": 1}
+	}
+}

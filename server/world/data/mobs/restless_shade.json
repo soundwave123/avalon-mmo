@@ -1,0 +1,51 @@
+{
+    "mob_type_id": 32,
+    "mob_id": "mob_restless_shade",
+    "name": "Restless Shade",
+    "difficulty": 3,
+    "level": 13,
+    "xp": 22,
+    "str": 14,
+    "int": 16,
+    "dex": 24,
+    "stamina": 16,
+    "spirit": 8,
+    "weapon_speed": 1.6,
+    "aggro_radius": 5.5,
+    "leash_radius": 20.0,
+    "melee_range": 2.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Swordsmanship": 25,
+        "Tactics": 15
+    },
+    "base_damage": 9,
+    "variance_min": 0.9,
+    "variance_max": 1.15,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.18,
+    "parry_chance": 0.0,
+    "crit_chance": 0.08,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_spectral_essence",
+            "chance": 1.0,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_grave_dust",
+            "chance": 0.5,
+            "count_min": 1,
+            "count_max": 2
+        }
+    ],
+    "patrol_radius": 1.5
+}

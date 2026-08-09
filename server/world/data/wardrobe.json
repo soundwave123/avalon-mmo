@@ -1,0 +1,99 @@
+{
+  "_doc": "T-428 wardrobe catalog + T-476 store prices + T-482 prestige tiers. Appearance rows are presentation-only: id is what stores/drops grant, display_item selects an existing visual, slot constrains use, armor_type routes the mesh family, dye_mask selects authored material channels. A row with store:true + a positive price is buyable with the earned cosmetic_currency; prestige_tier ranks visual prestige and is BINDING per docs/design/cosmetic-monetization-charter.md — store rows sit at/below STORE_CEILING(2) and can never reach the earned MARQUEE_TIER(4). Dyes are direct deterministic colors; no loot boxes, no discount/expiry fields, no power fields.",
+  "appearances": [
+    {
+      "id": "cos_gilded_blade",
+      "name": "Gilded Blade",
+      "display_item": "itm_iron_sword",
+      "slot": "weapon",
+      "armor_type": "none",
+      "rarity": "epic",
+      "dye_mask": "all",
+      "store": true,
+      "price": 120,
+      "prestige_tier": 2
+    },
+    {
+      "id": "cos_smith_broadsword",
+      "name": "Guild-Smith Broadsword",
+      "display_item": "itm_smith_broadsword",
+      "slot": "weapon",
+      "armor_type": "none",
+      "rarity": "uncommon",
+      "dye_mask": "all",
+      "store": true,
+      "price": 60,
+      "prestige_tier": 1
+    },
+    {
+      "id": "cos_arcanist_cowl",
+      "name": "Arcanist's Cowl",
+      "display_item": "itm_arcanist_cowl",
+      "slot": "head",
+      "armor_type": "robe",
+      "rarity": "rare",
+      "dye_mask": "all",
+      "store": true,
+      "price": 90,
+      "prestige_tier": 1
+    },
+    {
+      "id": "cos_ironward_cuirass",
+      "name": "Ironward Cuirass",
+      "display_item": "itm_ironward_cuirass",
+      "slot": "chest",
+      "armor_type": "plate",
+      "rarity": "rare",
+      "dye_mask": "all",
+      "store": true,
+      "price": 180,
+      "prestige_tier": 2
+    },
+    {
+      "id": "mentor_sigil_blade",
+      "name": "Mentor's Sigil Blade",
+      "display_item": "itm_iron_sword",
+      "slot": "weapon",
+      "armor_type": "none",
+      "rarity": "rare",
+      "dye_mask": "all",
+      "prestige_tier": 4
+    },
+    {
+      "id": "guild_tabard_vanguard",
+      "name": "Guild Vanguard Tabard",
+      "display_item": "itm_ironward_cuirass",
+      "slot": "chest",
+      "armor_type": "plate",
+      "rarity": "epic",
+      "dye_mask": "all",
+      "prestige_tier": 4
+    },
+    {
+      "id": "guild_crest_shoulders",
+      "name": "Guild Crest Mantle",
+      "display_item": "itm_ironward_pauldrons",
+      "slot": "shoulders",
+      "armor_type": "plate",
+      "rarity": "epic",
+      "dye_mask": "all",
+      "prestige_tier": 4
+    },
+    {
+      "id": "guild_regalia_head",
+      "name": "Guild Regalia Crown",
+      "display_item": "itm_arcanist_cowl",
+      "slot": "head",
+      "armor_type": "robe",
+      "rarity": "epic",
+      "dye_mask": "all",
+      "prestige_tier": 4
+    }
+  ],
+  "dyes": [
+    {"id": "dye_crimson", "name": "Crimson", "color": "#9f3142"},
+    {"id": "dye_royal_blue", "name": "Royal Blue", "color": "#355b9f"},
+    {"id": "dye_forest", "name": "Forest", "color": "#3e7048"},
+    {"id": "dye_ash", "name": "Ash", "color": "#77777f"}
+  ]
+}

@@ -1,0 +1,868 @@
+{
+    "nodes": [
+        {
+            "id": "gn_meadow_bloodthorn_1",
+            "kind": "herb",
+            "display_name": "Bloodthorn",
+            "item_id": "itm_herb_bloodthorn",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 2.0,
+            "y": 28.0,
+            "region": "era1_meadow",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_meadow_bloodthorn_2",
+            "kind": "herb",
+            "display_name": "Bloodthorn",
+            "item_id": "itm_herb_bloodthorn",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -2.0,
+            "y": 30.0,
+            "region": "era1_meadow",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_forest_marshmint_1",
+            "kind": "herb",
+            "display_name": "Marshmint",
+            "item_id": "itm_herb_marshmint",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 42.0,
+            "y": 30.0,
+            "region": "era1_forest",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_forest_marshmint_2",
+            "kind": "herb",
+            "display_name": "Marshmint",
+            "item_id": "itm_herb_marshmint",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 46.0,
+            "y": 34.0,
+            "region": "era1_forest",
+            "respawn_ticks": 720,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_ashmoor_emberroot_1",
+            "kind": "herb",
+            "display_name": "Emberroot",
+            "item_id": "itm_herb_emberroot",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_emberroot",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_emberroot",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -28.0,
+            "y": -134.0,
+            "region": "ashmoor",
+            "respawn_ticks": 900,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_rocks_ironvein_1",
+            "kind": "ore",
+            "display_name": "Iron Vein",
+            "item_id": "itm_ore_iron",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -32.0,
+            "y": -36.0,
+            "region": "west_rocks",
+            "respawn_ticks": 720,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_rocks_ironvein_2",
+            "kind": "ore",
+            "display_name": "Iron Vein",
+            "item_id": "itm_ore_iron",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 34.0,
+            "y": -39.0,
+            "region": "east_rocks",
+            "respawn_ticks": 720,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_rocks_coppervein_1",
+            "kind": "ore",
+            "display_name": "Copper Vein",
+            "item_id": "itm_copper_ore",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 18.0,
+            "y": -5.0,
+            "region": "village_forge",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_rocks_coppervein_2",
+            "kind": "ore",
+            "display_name": "Copper Vein",
+            "item_id": "itm_copper_ore",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 21.0,
+            "y": -8.0,
+            "region": "village_forge",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hk_ironvein_1",
+            "kind": "ore",
+            "display_name": "Iron Vein",
+            "item_id": "itm_ore_iron",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -20.0,
+            "y": -116.0,
+            "region": "highkeep_approach",
+            "respawn_ticks": 900,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_forest_timber_1",
+            "kind": "timber",
+            "display_name": "Timber",
+            "item_id": "itm_timber_rough",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_timber_heartwood",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 38.0,
+            "y": 27.0,
+            "region": "era1_forest",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_forest_timber_2",
+            "kind": "timber",
+            "display_name": "Timber",
+            "item_id": "itm_timber_rough",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_timber_heartwood",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 48.0,
+            "y": 38.0,
+            "region": "era1_forest",
+            "respawn_ticks": 720,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_crystal_lake_fishing_1",
+            "kind": "fishing",
+            "display_name": "Crystal Lake Fishing Spot",
+            "item_id": "itm_fish_lake_perch",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_fish_lake_perch",
+                    "chance": 0.55,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_fish_reed_minnow",
+                    "chance": 0.4,
+                    "count_min": 1,
+                    "count_max": 2
+                },
+                {
+                    "item_id": "itm_fish_crystalfin",
+                    "chance": 0.05,
+                    "count_min": 1,
+                    "count_max": 1
+                }
+            ],
+            "x": 7.0,
+            "y": 27.5,
+            "region": "era1_meadow",
+            "gather_seconds": 2.5,
+            "respawn_ticks": 900
+        },
+        {
+            "id": "gn_crystal_lake_fishing_2",
+            "kind": "fishing",
+            "display_name": "Crystal Lake Fishing Spot",
+            "item_id": "itm_fish_lake_perch",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_fish_lake_perch",
+                    "chance": 0.55,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_fish_reed_minnow",
+                    "chance": 0.4,
+                    "count_min": 1,
+                    "count_max": 2
+                },
+                {
+                    "item_id": "itm_fish_crystalfin",
+                    "chance": 0.05,
+                    "count_min": 1,
+                    "count_max": 1
+                }
+            ],
+            "x": 25.5,
+            "y": 32.0,
+            "region": "era1_meadow",
+            "gather_seconds": 2.5,
+            "respawn_ticks": 900
+        },
+        {
+            "id": "gn_crystal_lake_fishing_3",
+            "kind": "fishing",
+            "display_name": "Crystal Lake Fishing Spot",
+            "item_id": "itm_fish_lake_perch",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_fish_lake_perch",
+                    "chance": 0.55,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_fish_reed_minnow",
+                    "chance": 0.4,
+                    "count_min": 1,
+                    "count_max": 2
+                },
+                {
+                    "item_id": "itm_fish_crystalfin",
+                    "chance": 0.05,
+                    "count_min": 1,
+                    "count_max": 1
+                }
+            ],
+            "x": 29.5,
+            "y": 18.0,
+            "region": "era1_meadow",
+            "gather_seconds": 2.5,
+            "respawn_ticks": 900
+        },
+        {
+            "id": "gn_hw_min_1",
+            "kind": "herb",
+            "display_name": "Bloodthorn",
+            "item_id": "itm_herb_bloodthorn",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 330.7,
+            "y": -46.0,
+            "region": "heartwold_eastern_farmland",
+            "respawn_ticks": 480,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hw_min_2",
+            "kind": "herb",
+            "display_name": "Marshmint",
+            "item_id": "itm_herb_marshmint",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 105.0,
+            "y": 376.2,
+            "region": "heartwold_southern_darkwood",
+            "respawn_ticks": 540,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hw_min_3",
+            "kind": "ore",
+            "display_name": "Iron Vein",
+            "item_id": "itm_ore_iron",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -85.0,
+            "y": 98.8,
+            "region": "heartwold_western_diggings",
+            "respawn_ticks": 900,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hw_min_4",
+            "kind": "ore",
+            "display_name": "Copper Vein",
+            "item_id": "itm_copper_ore",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -114.5,
+            "y": 288.6,
+            "region": "heartwold_western_diggings",
+            "respawn_ticks": 720,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hw_min_5",
+            "kind": "timber",
+            "display_name": "Timber",
+            "item_id": "itm_timber_rough",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_timber_heartwood",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 111.1,
+            "y": 232.1,
+            "region": "heartwold_southern_darkwood",
+            "respawn_ticks": 600,
+            "spawn_chance": 1.0
+        },
+        {
+            "id": "gn_hw_bonus_6",
+            "kind": "herb",
+            "display_name": "Bloodthorn",
+            "item_id": "itm_herb_bloodthorn",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_bloodthorn",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": 488.8,
+            "y": 34.8,
+            "region": "heartwold_eastern_farmland",
+            "respawn_ticks": 600,
+            "spawn_chance": 0.6
+        },
+        {
+            "id": "gn_hw_bonus_7",
+            "kind": "herb",
+            "display_name": "Marshmint",
+            "item_id": "itm_herb_marshmint",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_marshmint",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -192.7,
+            "y": 198.3,
+            "region": "heartwold_southern_darkwood",
+            "respawn_ticks": 660,
+            "spawn_chance": 0.6
+        },
+        {
+            "id": "gn_hw_bonus_8",
+            "kind": "ore",
+            "display_name": "Iron Vein",
+            "item_id": "itm_ore_iron",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_ore_iron",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -189.4,
+            "y": 163.0,
+            "region": "heartwold_western_diggings",
+            "respawn_ticks": 1000,
+            "spawn_chance": 0.5
+        },
+        {
+            "id": "gn_hw_bonus_9",
+            "kind": "ore",
+            "display_name": "Copper Vein",
+            "item_id": "itm_copper_ore",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -93.3,
+            "y": 177.7,
+            "region": "heartwold_western_diggings",
+            "respawn_ticks": 840,
+            "spawn_chance": 0.6
+        },
+        {
+            "id": "gn_hw_bonus_10",
+            "kind": "timber",
+            "display_name": "Timber",
+            "item_id": "itm_timber_rough",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_timber_rough",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_timber_heartwood",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -77.5,
+            "y": 546.8,
+            "region": "heartwold_southern_darkwood",
+            "respawn_ticks": 720,
+            "spawn_chance": 0.6
+        },
+        {
+            "id": "gn_hw_bonus_11",
+            "kind": "ore",
+            "display_name": "Copper Vein",
+            "item_id": "itm_copper_ore",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_copper_ore",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_gem_raw",
+                "chance": 0.03,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -203.8,
+            "y": -309.1,
+            "region": "heartwold_northern_high_moor",
+            "respawn_ticks": 900,
+            "spawn_chance": 0.5
+        },
+        {
+            "id": "gn_hw_rare_12",
+            "kind": "herb",
+            "display_name": "Emberroot Bloom",
+            "item_id": "itm_herb_emberroot",
+            "count": 1,
+            "drops": [
+                {
+                    "item_id": "itm_herb_emberroot",
+                    "chance": 0.75,
+                    "count_min": 1,
+                    "count_max": 1
+                },
+                {
+                    "item_id": "itm_herb_emberroot",
+                    "chance": 0.25,
+                    "count_min": 2,
+                    "count_max": 3
+                }
+            ],
+            "bonus_find": {
+                "item_id": "itm_herb_emberbloom",
+                "chance": 0.04,
+                "count_min": 1,
+                "count_max": 1
+            },
+            "x": -165.8,
+            "y": -298.3,
+            "region": "heartwold_northern_high_moor",
+            "respawn_ticks": 3600,
+            "spawn_chance": 0.15
+        }
+    ]
+}

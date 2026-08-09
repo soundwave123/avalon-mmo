@@ -1,0 +1,19 @@
+{
+    "id": "q003",
+    "title": "Sharpen Your Fangs",
+    "giver_npc": "npc_trainer",
+    "turnin_npc": "npc_trainer",
+    "min_level": 1,
+    "prerequisite_quest": null,
+    "description": "Master-at-Arms Kessa nods past the training yard, toward the treeline. \"Dummies don't bite back. The gray wolves out there do. Bring down three and you've earned that steel on your hip.\"",
+    "objectives": [
+        { "type": "kill", "target": "mob_wolf", "count": 3, "desc": "Slay gray wolves" }
+    ],
+    "rewards": {
+        "xp": 150,
+        "items": [
+            { "item": "itm_starter_weapon", "count": 1 },
+            { "item": "itm_skill_book", "count": 1 }
+        ]
+    }
+}

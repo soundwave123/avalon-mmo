@@ -1,0 +1,29 @@
+{
+    "id": "q_wold_deepwood_matriarch",
+    "title": "The Deepwood Matriarch",
+    "giver_npc": "npc_village_bounty_board",
+    "turnin_npc": "npc_village_bounty_board",
+    "min_level": 13,
+    "prerequisite_quest": null,
+    "description": "POSTED: Direfang, the great she-wolf that whelped the dire packs plaguing the darkwood, dens in the deep wood and will not be taken by a lone blade. The huntsmaster's bounty is honest coin \u2014 muster a party and end her line.",
+    "recommended_players": 3,
+    "location_hint": "Deep in the southern darkwood, toward the lake.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_direfang_matriarch",
+            "count": 1,
+            "desc": "Slay Direfang the Matriarch with a party"
+        }
+    ],
+    "rewards": {
+        "xp": 700,
+        "coins": 130,
+        "items": [
+            {
+                "item": "itm_smith_broadsword",
+                "count": 1
+            }
+        ]
+    }
+}

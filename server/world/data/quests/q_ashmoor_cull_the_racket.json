@@ -1,0 +1,21 @@
+{
+    "id": "q_ashmoor_cull_the_racket",
+    "title": "Standing Order: Cut the Take",
+    "giver_npc": "npc_ashmoor_sergeant",
+    "turnin_npc": "npc_ashmoor_sergeant",
+    "min_level": 25,
+    "prerequisite_quest": "q_ashmoor_street_tax",
+    "description": "Coyle keeps a standing bounty on Syndicate gunsels — every one you drop is a shift the racket can't run. It never closes and it never runs dry; bring him a tally whenever your knuckles are sore and he'll pay it out of the ward's discretionary purse. A rolling bonus objective for the long climb: not a story, just a good reason to keep hunting when the quest board's gone quiet.",
+    "repeatable": true,
+    "bounty": false,
+    "location_hint": "Ashmoor High Street — wherever the Gunsels post up.",
+    "recommended_players": 1,
+    "objectives": [
+        { "type": "kill", "target": "mob_syndicate_gunsel", "count": 8, "desc": "Cut down Syndicate Gunsels" }
+    ],
+    "rewards": {
+        "xp": 720,
+        "coins": 200,
+        "items": []
+    }
+}

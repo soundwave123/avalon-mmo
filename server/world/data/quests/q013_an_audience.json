@@ -1,0 +1,22 @@
+{
+    "id": "q013",
+    "title": "An Audience",
+    "giver_npc": "npc_hk_regent",
+    "turnin_npc": "npc_hk_castellan",
+    "min_level": 1,
+    "prerequisite_quest": "q012",
+    "description": "Deliver the Regent's sealed introduction to Lord Castellan Berenger in Highkeep's great hall.",
+    "objectives": [
+        { "type": "talk", "target": "npc_hk_castellan", "count": 1, "desc": "Deliver the sealed introduction to Lord Castellan Berenger" }
+    ],
+    "rewards": {
+        "xp": 400,
+        "coins": 250,
+        "items": [
+            { "item": "itm_vault_voucher", "count": 1 }
+        ]
+    },
+    "provided_items": [
+        { "item": "itm_letter_of_introduction", "count": 1 }
+    ]
+}

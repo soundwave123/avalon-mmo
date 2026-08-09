@@ -1,0 +1,27 @@
+{
+    "id": "q_wold_crag_reavers",
+    "title": "The Crag Reavers",
+    "giver_npc": "npc_hk_warrior_trainer",
+    "turnin_npc": "npc_hk_warrior_trainer",
+    "min_level": 17,
+    "prerequisite_quest": "q_wold_barrow_hounds",
+    "description": "Higher still, where the moor breaks into bare crag, a warren of reaver kobolds has cut a road of their own and taxes anything that climbs it. Warmaster Bralt wants the high road opened. Clear the reavers off the crag.",
+    "objectives": [
+        {
+            "type": "kill",
+            "target": "mob_crag_reaver",
+            "count": 6,
+            "desc": "Clear the crag reavers off the high road"
+        }
+    ],
+    "rewards": {
+        "xp": 620,
+        "coins": 110,
+        "items": [
+            {
+                "item": "itm_smith_broadsword",
+                "count": 1
+            }
+        ]
+    }
+}

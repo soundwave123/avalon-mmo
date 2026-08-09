@@ -1,0 +1,19 @@
+{
+    "id": "q_wold_iron_levy",
+    "title": "The Iron Levy",
+    "giver_npc": "npc_blacksmith",
+    "turnin_npc": "npc_blacksmith",
+    "min_level": 8,
+    "prerequisite_quest": null,
+    "description": "The Highkeep quartermaster has levied iron off every forge in the wold, and Smith Dorrun means to meet his share without touching the militia's stock. The deep veins in the western diggings run true iron if you can work them clear. Bring the ore and the levy is paid.",
+    "objectives": [
+        { "type": "collect", "target": "itm_ore_iron", "count": 8, "desc": "Work the deep iron veins clear" }
+    ],
+    "rewards": {
+        "xp": 380,
+        "coins": 70,
+        "items": [
+            { "item": "itm_salvaging_kit", "count": 1 }
+        ]
+    }
+}

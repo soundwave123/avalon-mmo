@@ -1,0 +1,22 @@
+{
+    "id": "q_ward_the_graves",
+    "title": "Ward the Graves",
+    "giver_npc": "npc_village_parson",
+    "turnin_npc": "npc_village_parson",
+    "min_level": 16,
+    "prerequisite_quest": "q_osric_registers",
+    "description": "The registers told Osric the truth he feared: the old wardens' binding sigils have worn away, and that is why the graves won't hold. He hands you the warding chalk his predecessors used and sends you to re-score the two failing wards — the lych-gate and the crypt porch — while the ghouls that gnaw at the old lines are still few enough to fight. Hold the lines, and buy the village time.",
+    "location_hint": "The churchyard wards",
+    "objectives": [
+        { "type": "reach", "target": "loc_lychgate_ward", "count": 1, "desc": "Re-score the failing ward at the lych-gate", "x": 8.0, "y": -10.0, "radius": 3.0 },
+        { "type": "reach", "target": "loc_porch_ward", "count": 1, "desc": "Re-score the failing ward at the crypt porch", "x": 14.0, "y": -12.5, "radius": 3.0 },
+        { "type": "kill", "target": "mob_crypt_ghoul", "count": 4, "desc": "Cut down the ghouls gnawing at the binding lines" }
+    ],
+    "rewards": {
+        "xp": 1350,
+        "coins": 300,
+        "items": [
+            { "item": "itm_gravewarden_hauberk", "count": 1 }
+        ]
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "_comment": "T-719 tutorial-capstone trash. Seeded INSTANCE-SCOPED from data/instances/shallow_graves.json (never open-world spawns.json) and also raised as Pallbearer Ost's summoned add. Tuned against a FRESH L2's derived pools (warrior 115 HP, mage/priest 105): stamina 5 => 75 HP, base_damage 4 at weapon_speed 2.0 => ~2 dps, so a pair pulled together costs a squishy L2 roughly half a bar over a ~12s fight and can never wipe one. render_kind reuses the T-341 skeletal-warrior silhouette, so this ships with zero new art; mob_id stays a unique kill-credit alias for q_tut_04.",
+    "mob_type_id": 33,
+    "mob_id": "mob_grave_husk",
+    "name": "Grave-Bound Husk",
+    "difficulty": 2,
+    "level": 2,
+    "render_kind": "mob_skeletal_warrior",
+    "str": 7,
+    "int": 5,
+    "dex": 12,
+    "stamina": 5,
+    "spirit": 5,
+    "weapon_speed": 2.6,
+    "aggro_radius": 3.0,
+    "leash_radius": 12.0,
+    "melee_range": 2.0,
+    "skills": {
+        "Swordsmanship": 8,
+        "Tactics": 4
+    },
+    "base_damage": 4,
+    "variance_min": 0.85,
+    "variance_max": 1.0,
+    "attacker_skill_coeffs": {
+        "Swordsmanship": 0.2
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.0,
+    "dodge_chance": 0.05,
+    "parry_chance": 0.0,
+    "crit_chance": 0.03,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.0,
+    "loot": [
+        {
+            "item_id": "itm_grave_dust",
+            "chance": 0.5,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 0.0
+}

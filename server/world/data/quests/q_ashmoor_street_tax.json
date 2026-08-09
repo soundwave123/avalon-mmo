@@ -1,0 +1,20 @@
+{
+    "id": "q_ashmoor_street_tax",
+    "title": "The Street Tax",
+    "giver_npc": "npc_ashmoor_sergeant",
+    "turnin_npc": "npc_ashmoor_sergeant",
+    "min_level": 20,
+    "prerequisite_quest": "q_ashmoor_first_blood",
+    "description": "You thinned the crew once; the sergeant admits that only opened his eyes. Every shopfront on the High Street pays a 'street tax' to the Syndicate, and every Legbreaker who collects it walks past the constabulary steps like he owns them. He does. The sergeant can't move against his own precinct openly — but a stranger cracking skulls in the alley behind the pawnbroker is just another Tuesday. Put the collectors down and bring the takings back.",
+    "location_hint": "High Street pawnbroker alley, Ashmoor",
+    "objectives": [
+        { "type": "kill", "target": "mob_syndicate_legbreaker", "count": 6, "desc": "Drop the Legbreakers running the street-tax collection" }
+    ],
+    "rewards": {
+        "xp": 1600,
+        "coins": 500,
+        "items": [
+            { "item": "itm_brass_knuckles", "count": 1 }
+        ]
+    }
+}

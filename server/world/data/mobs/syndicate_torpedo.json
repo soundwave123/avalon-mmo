@@ -1,0 +1,69 @@
+{
+    "_comment": "T-349 stub -> LIVE in T-350. The tommy-gun ELITE / pack-leader on the T-294 elite chassis (elite:true bakes elite_hp_mult/elite_damage_mult + low-HP enrage). Burst fire = ranged_burst 3: one firing window emits three hitscan shots (three tracers + three hits) so it reads HEAVIER than the revolver (base_damage per shot is authored low, 12, because it lands three). Visual: char_hero_warrior.glb + tommy-gun GLB, procedural recoil. Party-tier L24 elite.",
+    "_ranged": {
+        "min_range": 6.0,
+        "max_range": 15.0,
+        "attack": "tommy_burst",
+        "burst": 3
+    },
+    "mob_type_id": 54,
+    "mob_id": "mob_syndicate_torpedo",
+    "name": "Syndicate Torpedo",
+    "difficulty": 4,
+    "level": 24,
+    "xp": 70,
+    "elite": true,
+    "elite_hp_mult": 2.5,
+    "elite_damage_mult": 2.0,
+    "enrage_threshold": 0.3,
+    "enrage_mult": 1.4,
+    "str": 24,
+    "int": 8,
+    "dex": 24,
+    "stamina": 40,
+    "spirit": 6,
+    "weapon_speed": 0.6,
+    "aggro_radius": 18.0,
+    "leash_radius": 26.0,
+    "melee_range": 15.0,
+    "spawn_x": 0.0,
+    "spawn_y": 0.0,
+    "skills": {
+        "Marksmanship": 50,
+        "Tactics": 35
+    },
+    "base_damage": 12,
+    "variance_min": 0.85,
+    "variance_max": 1.05,
+    "attacker_skill_coeffs": {
+        "Marksmanship": 0.22
+    },
+    "mitigation_skill_coeffs": {},
+    "miss_chance": 0.05,
+    "dodge_chance": 0.08,
+    "parry_chance": 0.0,
+    "crit_chance": 0.08,
+    "crit_multiplier": 2.0,
+    "threat_multiplier": 1.25,
+    "loot": [
+        {
+            "item_id": "itm_clipped_shilling",
+            "chance": 1.0,
+            "count_min": 6,
+            "count_max": 14
+        },
+        {
+            "item_id": "itm_brass_knuckles",
+            "chance": 0.25,
+            "count_min": 1,
+            "count_max": 1
+        },
+        {
+            "item_id": "itm_seance_sigil_chalk",
+            "chance": 0.2,
+            "count_min": 1,
+            "count_max": 1
+        }
+    ],
+    "patrol_radius": 1.0
+}

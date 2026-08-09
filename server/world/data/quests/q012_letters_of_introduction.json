@@ -1,0 +1,18 @@
+{
+    "id": "q012",
+    "title": "Letters of Introduction",
+    "giver_npc": "npc_hk_watch_gate_east",
+    "turnin_npc": "npc_hk_regent",
+    "min_level": 1,
+    "prerequisite_quest": "q011",
+    "description": "Learn the capital's essential services, then present yourself at the keep in the Regent's name.",
+    "objectives": [
+        { "type": "talk", "target": "npc_hk_banker", "count": 1, "desc": "Introduce yourself to Banker Coyne" },
+        { "type": "talk", "target": "npc_hk_auctioneer", "count": 1, "desc": "Meet Auctioneer Hollis" },
+        { "type": "talk", "target": "npc_hk_warrior_trainer", "count": 1, "desc": "Report to Warmaster Bralt" }
+    ],
+    "rewards": {
+        "xp": 300,
+        "items": []
+    }
+}

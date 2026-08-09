@@ -1,0 +1,19 @@
+{
+  "_comment": "T-330 Hollowed Crypt spawn set — the real T-341 undead trash packs at the catacomb's WORLD anchors (server ground x,y in the distant flat offset region ~x=420). Consumed by instance_service._seed on a party's first descent (T-331 soft-instance). 7 trash packs / 18 mobs (design target 6-9 packs, 2-4 each) PLUS the three T-332 bosses (crypt_aldric/vharis/maldrath) seeded here instance-scoped at their layout.json anchors — boss ENCOUNTER logic (summon/dirge/phase) rides the T-294 elite chassis + boss_mechanics.gd; the anchors mirror data/dungeons/hollowed_crypt_layout.json bosses[]. mob_file resolves under res://data/mobs/. Positions convert from the crypt GLB's Blender-local coords by world=(420+bx, -by); see gen_hollowed_crypt_real.py.",
+  "spawns": [
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.3, -7.3], [420.7, -7.9]] },
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.3, -9.5], [420.7, -9.0]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[420.0, -10.4]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[426.5, -11.5], [428.0, -12.5]] },
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.3, -19.0], [420.7, -20.0]] },
+    { "mob_file": "restless_shade.json", "positions": [[420.0, -18.3]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[416.0, -24.5], [418.0, -25.5]] },
+    { "mob_file": "restless_shade.json", "positions": [[417.0, -26.2]] },
+    { "mob_file": "restless_shade.json", "positions": [[419.4, -34.0], [420.6, -35.0]] },
+    { "mob_file": "skeletal_warrior.json", "positions": [[419.2, -38.5], [420.8, -38.0]] },
+    { "mob_file": "crypt_ghoul.json", "positions": [[420.0, -39.5]] },
+    { "mob_file": "crypt_aldric.json", "positions": [[420.0, -12.0]] },
+    { "mob_file": "crypt_vharis.json", "positions": [[420.0, -27.5]] },
+    { "mob_file": "crypt_maldrath.json", "positions": [[420.0, -41.5]] }
+  ]
+}

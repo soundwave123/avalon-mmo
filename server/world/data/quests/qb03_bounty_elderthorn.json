@@ -1,0 +1,21 @@
+{
+    "id": "qb03",
+    "title": "Bounty: Elderthorn the Ancient",
+    "giver_npc": "npc_hk_bounty_board",
+    "turnin_npc": "npc_hk_bounty_board",
+    "min_level": 3,
+    "prerequisite_quest": null,
+    "description": "Elderthorn, an ancient bloodthorn guardian, has woken in the southern thicket and lashes any who near. No single blade can fell it — gather a party.",
+    "bounty": true,
+    "repeatable": true,
+    "recommended_players": 3,
+    "location_hint": "Southern thicket, south-west of the village (-50, -45).",
+    "objectives": [
+        { "type": "kill", "target": "mob_elderthorn", "count": 1, "desc": "Fell Elderthorn the Ancient" }
+    ],
+    "rewards": {
+        "xp": 600,
+        "coins": 150,
+        "items": []
+    }
+}

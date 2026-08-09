@@ -1,0 +1,17 @@
+{
+    "id": "q_wold_kingsroad_ashmoor",
+    "title": "Rumours Out of Ashmoor",
+    "giver_npc": "npc_outpost_guard",
+    "turnin_npc": "npc_ashmoor_flightmaster",
+    "min_level": 10,
+    "prerequisite_quest": null,
+    "description": "Travellers off the western sky-lane bring uneasy talk of Ashmoor — a gaslit city with its own troubles, and its own coin for capable hands. The warden has no writ that far, but he'll not stop you looking. Take the lane to the Ashmoor Sky Dock and see the far country for yourself; there is work there for those the wold has outgrown.",
+    "objectives": [
+        { "type": "reach", "target": "loc_ashmoor_skydock", "count": 1, "desc": "Ride the sky-lane to the Ashmoor Sky Dock", "x": -408.0, "y": -4.0, "radius": 12.0 }
+    ],
+    "rewards": {
+        "xp": 120,
+        "coins": 10,
+        "items": []
+    }
+}

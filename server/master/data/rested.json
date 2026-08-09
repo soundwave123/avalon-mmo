@@ -1,0 +1,10 @@
+{
+  "_doc": "T-360 Rested XP tuning — owner-editable, no code change needed. game-direction.md names rested three times as the flagship endowed-progress / appointment-to-habit lever ('rested bonus FOR logging off — WoW's genius'). A character banks a rested pool while LOGGED OUT and spends it as bonus XP on the next quest turn-ins.",
+  "accrual_per_hour": 50,
+  "cap_levels_multiplier": 1.5,
+  "bonus_percent": 100,
+  "_accrual_per_hour": "XP-equivalent banked per hour spent logged out.",
+  "_cap_levels_multiplier": "Pool ceiling = this * the current level's XP span (WoW's 150% cap).",
+  "_bonus_percent": "Extra XP per boosted base point. 100 = rested doubles XP (WoW parity).",
+  "_inn_rate_multiplier_FUTURE": "Inn-accelerated accrual (game-direction 'resting in a town/inn'). Deferred: logout position is not persisted server-side yet, so the server cannot know if a character logged out inside a T-092/T-187 inn volume. When position persistence lands, multiply accrual_per_hour by this while the logout point is inside an inn interior volume."
+}
