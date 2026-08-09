@@ -11,7 +11,9 @@
 
 set -euo pipefail
 
-PROJECTS=(client server/gateway server/master server/world)
+# tools/server-manager is the T-742 self-host wizard (GUT rides in via its addons/gut
+# symlink into client/addons/gut).
+PROJECTS=(client server/gateway server/master server/world tools/server-manager)
 
 # Parallel-lane isolation: two concurrent runners sharing one log dir rm -rf each other's logs
 # mid-run and the four-condition parse reads a half-written/deleted log as tests=0 (the documented

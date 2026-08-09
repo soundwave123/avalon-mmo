@@ -76,6 +76,46 @@ func test_runtime_override_keeps_gateway_route_host_for_world_connect() -> void:
 	)
 
 
+# T-742: optional gateway port for self-hosts on non-default ports.
+func test_gateway_port_defaults_without_config() -> void:
+	assert_eq(
+		ServerConnectionConfig.resolve_runtime_gateway_port("user://missing/Avalon", ""), 9001
+	)
+
+
+func test_gateway_port_env_override_wins() -> void:
+	assert_eq(
+		ServerConnectionConfig.resolve_runtime_gateway_port("user://missing/Avalon", " 9010 "), 9010
+	)
+
+
+func test_gateway_port_reads_config_beside_executable() -> void:
+	DirAccess.make_dir_recursive_absolute("user://t742")
+	var cfg := ConfigFile.new()
+	cfg.set_value("server", "port", 9020)
+	assert_eq(cfg.save("user://t742/server.cfg"), OK)
+	assert_eq(ServerConnectionConfig.resolve_runtime_gateway_port("user://t742/Avalon", ""), 9020)
+	assert_eq(
+		ServerConnectionConfig.resolve_runtime_gateway_port("user://t742/Avalon", "9030"),
+		9030,
+		"env still wins over the config file"
+	)
+	DirAccess.remove_absolute("user://t742/server.cfg")
+
+
+func test_gateway_port_garbage_falls_back() -> void:
+	DirAccess.make_dir_recursive_absolute("user://t742")
+	var cfg := ConfigFile.new()
+	cfg.set_value("server", "port", "not-a-port")
+	assert_eq(cfg.save("user://t742/server.cfg"), OK)
+	assert_eq(
+		ServerConnectionConfig.resolve_runtime_gateway_port("user://t742/Avalon", "70000"),
+		9001,
+		"out-of-range env and garbage config both fall back to the default"
+	)
+	DirAccess.remove_absolute("user://t742/server.cfg")
+
+
 func _remove_tmp_config() -> void:
 	var path := ProjectSettings.globalize_path(TMP_CFG)
 	if FileAccess.file_exists(path):

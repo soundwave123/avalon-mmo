@@ -24,6 +24,9 @@ extends Node
 #
 # Exit codes: 0 = pass, 1 = failure
 
+# T-724: instance_service.CRYPT_PORCH — the churchyard spot enter_instance is proximity-gated on.
+const CRYPT_PORCH := Vector2(14.0, -12.5)
+
 var _host: String = "127.0.0.1"
 var _port: int = 9200
 var _token: String = ""
@@ -118,6 +121,18 @@ var _my_pos_known: bool = false
 var _giver_move_sent: bool = false
 var _giver_x: float = 4.8
 var _giver_y: float = 1.5
+
+# T-724: death-payload probe. Drives a REAL death over ENet (the dev-only debug_kill self-intent)
+# and keeps the raw player_death broadcast, so a harness can assert the payload's `wear_applied`
+# flag — the field the client's "Your gear was damaged." line is gated on. With AVALON_DEATH_TRIAL
+# it first descends the churchyard stair: a level-1 character routes to the Shallow Graves
+# (KIND_TRIAL), where T-719 waives durability wear and the flag must therefore arrive false.
+var _death_mode: bool = false
+var _death_trial: bool = false
+var _death_enter_sent: bool = false
+var _death_kill_sent: bool = false
+var _death_done: bool = false
+var _death_events: Array = []
 
 # T-047: Quest-loop mode (additive). Wraps the ability kill loop with accept-before + turn_in-after,
 # all over real ENet: accept_quest → (kill via ability mode) → request_quest_log → turn_in.
@@ -392,6 +407,13 @@ func _parse_args() -> void:
 	if env_ability_y != null and env_ability_y != "":
 		_ability_target_y = float(env_ability_y)
 
+	# T-724: death-payload probe (world needs AVALON_DEBUG_INTENTS for the self-kill to fire).
+	if OS.get_environment("AVALON_DEATH_MODE") == "1":
+		_death_mode = true
+		_death_trial = OS.get_environment("AVALON_DEATH_TRIAL") == "1"
+		_movement_duration = 0.0
+		_test_timeout = 45.0
+
 	# T-047: Quest-loop integration mode (reuses the ability kill loop)
 	var env_quest = OS.get_environment("AVALON_QUEST_MODE")
 	if env_quest != null and env_quest != "" and env_quest != "0":
@@ -608,6 +630,10 @@ func _process(delta: float) -> void:
 	elif _collect_mode and _handshake_ok and not _collect_done:
 		_process_collect_mode()
 
+	# T-724: death-payload probe — (optionally descend), self-kill, capture the player_death dict.
+	elif _death_mode and _handshake_ok and not _death_done:
+		_process_death_mode()
+
 	# T-047: Quest-loop mode wraps the ability kill loop (accept before, turn_in after).
 	elif _quest_mode and _handshake_ok and not _quest_done:
 		_process_quest_mode()
@@ -736,6 +762,25 @@ func _move_to_giver() -> bool:
 	_my_pos = Vector2(_giver_x, _giver_y)
 	_giver_move_sent = true
 	return true
+
+
+# T-724: walk onto the porch and descend (one move — MAX_SPEED_PER_TICK dwarfs the distance, and
+# enter_instance rides the same reliable in-order channel, so the proximity gate sees us there),
+# then self-kill on the NEXT frame so the instance move has landed. _receive_message captures our
+# player_death broadcast and ends the run.
+func _process_death_mode() -> void:
+	if _death_trial and not _death_enter_sent:
+		if not _my_pos_known:
+			return
+		var delta := CRYPT_PORCH - _my_pos
+		_receive_message.rpc_id(1, {"type": "request_move", "dx": delta.x, "dy": delta.y})
+		_my_pos = CRYPT_PORCH
+		_receive_message.rpc_id(1, {"type": "enter_instance"})
+		_death_enter_sent = true
+		return
+	if not _death_kill_sent:
+		_receive_message.rpc_id(1, {"type": "debug_kill"})
+		_death_kill_sent = true
 
 
 # T-049: accept → one move into the reach radius → poll the log until the reach objective credits.
@@ -1199,6 +1244,11 @@ func _receive_message(data: Dictionary, _mirror: bool = false) -> void:
 			_latency_waiting = false
 	elif msg_type == "mob_death":
 		_handle_ability_message(data)
+	elif msg_type == "player_death" and int(data.get("peer_id", -1)) == _my_peer_id:
+		# T-724: RAW dict — the harness asserts fields (wear_applied) the client never interprets.
+		_death_events.append(data.duplicate())
+		_death_done = true
+		_movement_complete = true
 
 
 @rpc("any_peer", "reliable")
@@ -1473,6 +1523,14 @@ func _finish() -> void:
 		"rtt_max_ms": rtt_max,
 		"ping_rtt_ms": _ping_rtt_ms,
 	}
+
+	# T-724: death-payload probe result — the raw player_death dict(s) we received over ENet.
+	if _death_mode:
+		result["death_mode"] = true
+		result["death_trial"] = _death_trial
+		result["player_death_events"] = _death_events
+		result["pass"] = _handshake_ok and not _death_events.is_empty()
+		pass_test = result["pass"]
 
 	# T-064: talent mode result — raw server replies for the harness to assert.
 	if _talent_mode:

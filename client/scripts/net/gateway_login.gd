@@ -12,7 +12,8 @@ const CharacterSelect = preload("res://scripts/ui/character_select.gd")  # T-507
 # gitignored local artifact that can lag a new script (s26 import-cache trap), and the neighbours
 # in this file already use the preload-const idiom.
 const BootClock = preload("res://scripts/net/boot_clock.gd")
-const GATEWAY_PORT := 9001
+# T-742: the gateway port now resolves through ServerConnectionConfig (env override ->
+# server.cfg `port` key -> 9001 default) so self-hosts can run on non-default ports.
 const TIMEOUT_SECS := 10.0
 
 static var _pending_notice := ""
@@ -194,7 +195,10 @@ func _begin_login() -> void:
 	)
 	_request = login_request(username, _password.text, build, _manage.button_pressed)
 	_socket = WebSocketPeer.new()
-	var url := "ws://%s:%d" % [_url_host(_host), GATEWAY_PORT]
+	var gateway_port := ServerConnectionConfig.resolve_runtime_gateway_port(
+		OS.get_executable_path(), OS.get_environment("AVALON_GATEWAY_PORT")
+	)
+	var url := "ws://%s:%d" % [_url_host(_host), gateway_port]
 	var err := _socket.connect_to_url(url)
 	if err != OK:
 		_fail("connection_failed")

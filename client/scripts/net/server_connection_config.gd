@@ -7,7 +7,9 @@ const FILE_NAME := "server.cfg"
 const SECTION := "server"
 const HOST_KEY := "host"
 const BUILD_KEY := "build"  # T-514: baked build stamp (ISO-8601 UTC) sent to the server at login
+const PORT_KEY := "port"  # T-742: optional gateway login port (self-hosts on non-default ports)
 const LOOPBACK_HOST := "127.0.0.1"
+const DEFAULT_GATEWAY_PORT := 9001
 
 
 static func config_path_for_executable(executable_path: String) -> String:
@@ -40,6 +42,29 @@ static func _load_host(config_path: String) -> String:
 	if cfg.load(config_path) != OK:
 		return ""
 	return str(cfg.get_value(SECTION, HOST_KEY, "")).strip_edges()
+
+
+# T-742: the gateway login port. Same precedence family as the host: env override
+# (dev/harness), else the server.cfg beside the executable, else the 9001 default.
+# Invalid or out-of-range values fall back rather than strand the client.
+static func resolve_runtime_gateway_port(executable_path: String, environment_port: String) -> int:
+	var env_port := _parse_port(environment_port)
+	if env_port != 0:
+		return env_port
+	var cfg := ConfigFile.new()
+	if cfg.load(config_path_for_executable(executable_path)) == OK:
+		var cfg_port := _parse_port(str(cfg.get_value(SECTION, PORT_KEY, "")))
+		if cfg_port != 0:
+			return cfg_port
+	return DEFAULT_GATEWAY_PORT
+
+
+static func _parse_port(raw: String) -> int:
+	var trimmed := raw.strip_edges()
+	if trimmed == "" or not trimmed.is_valid_int():
+		return 0
+	var port := int(trimmed)
+	return port if port >= 1 and port <= 65535 else 0
 
 
 # T-514: the build stamp this client reports at login. AVALON_CLIENT_BUILD overrides (source/dev),

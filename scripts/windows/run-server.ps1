@@ -90,6 +90,10 @@ Get-Content $envFile | ForEach-Object {
 }
 if (-not $env:AVALON_PG_PASSWORD) { $env:AVALON_PG_PASSWORD = "avalon_dev_only_not_for_prod" }
 
+# T-742: ports may be customized in .env (the Server Manager wizard writes them there).
+$gatewayPort = if ($env:AVALON_GATEWAY_PORT) { $env:AVALON_GATEWAY_PORT } else { "9001" }
+$worldPort = if ($env:AVALON_PORT) { $env:AVALON_PORT } else { "9200" }
+
 # ---- 4. Migrations (tracked, skip-applied — mirrors scripts/apply-migrations.sh) ----
 Write-Host "[avalon] applying database migrations..."
 docker exec avalon-postgres psql -U avalon -d avalon -v ON_ERROR_STOP=1 -c `
@@ -123,14 +127,14 @@ function Start-Service([string]$name, [string]$projectDir) {
 
 Start-Service "master  (ws://0.0.0.0:9100)" "server\master"
 Start-Sleep -Seconds 3   # gateway and world both connect to the master on boot
-Start-Service "gateway (ws://0.0.0.0:9001)" "server\gateway"
-Start-Service "world   (enet://0.0.0.0:9200)" "server\world"
+Start-Service "gateway (ws://0.0.0.0:$gatewayPort)" "server\gateway"
+Start-Service "world   (enet://0.0.0.0:$worldPort)" "server\world"
 
 Write-Host ""
 Write-Host "[avalon] server stack is up:" -ForegroundColor Green
 Write-Host "  master   ws://localhost:9100   (internal)"
-Write-Host "  gateway  ws://localhost:9001   (clients log in here)"
-Write-Host "  world    enet://localhost:9200 (clients play here)"
+Write-Host "  gateway  ws://localhost:$gatewayPort   (clients log in here)"
+Write-Host "  world    enet://localhost:$worldPort (clients play here)"
 Write-Host ""
 Write-Host "  Point a client at it: edit server.cfg next to Avalon.exe -> host=`"localhost`""
 Write-Host "  Stop everything:      scripts\windows\stop-server.bat"

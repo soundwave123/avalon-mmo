@@ -27,11 +27,13 @@ func test_movement_label_is_derived_from_the_wasd_keycodes() -> void:
 		)
 
 
-func test_ability_row_collapses_the_1_to_4_run() -> void:
-	# A contiguous keycode run renders as a range, sourced from KEY_1 / KEY_4.
+func test_ability_row_collapses_the_whole_keyed_run() -> void:
+	# T-723: the run is sourced from AbilityKeybinds (the live slot->key map), not KEY_1/KEY_4
+	# literals, and a contiguous run renders as a range — so the row ends at the LAST keyed slot.
 	var label := _label_for("Abilities")
-	assert_true(OS.get_keycode_string(KEY_1) in label, "ability label must include the '1' key")
-	assert_true(OS.get_keycode_string(KEY_4) in label, "ability label must include the '4' key")
+	var last := AbilityKeybinds.slot_label(AbilityKeybinds.SLOT_COUNT - 1)
+	assert_true(AbilityKeybinds.slot_label(0) in label, "ability label must include the first key")
+	assert_true(last in label, "ability label must run to the last keyed slot (%s)" % last)
 
 
 func test_help_keycode_matches_the_help_row() -> void:

@@ -46,7 +46,13 @@ func _emit(data: Dictionary, involved: Array, origin: Dictionary) -> void:
 
 # T-699: identical wire shape to the pre-T-699 main._check_death_player broadcast (recipient list
 # only narrows). Kept here so main.gd stays under the gdlint max-file-lines cap.
-static func player_death(pid: int, player_name: String, max_hp: int) -> Dictionary:
+#
+# T-724: `wear_applied` is the server's verdict on whether this death actually cost durability
+# (instance_service.on_player_died waives it inside the KIND_TRIAL tutorial capstone). The client
+# gates its "Your gear was damaged." line on this flag and never re-derives the rule locally.
+static func player_death(
+	pid: int, player_name: String, max_hp: int, wear_applied: bool
+) -> Dictionary:
 	return {
 		"type": "player_death",
 		"peer_id": pid,
@@ -58,6 +64,7 @@ static func player_death(pid: int, player_name: String, max_hp: int) -> Dictiona
 		"caster_id": "",
 		"hp": 0,
 		"max_hp": max_hp,
+		"wear_applied": wear_applied,
 	}
 
 

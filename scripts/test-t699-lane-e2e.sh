@@ -4,6 +4,10 @@
 # Proves the T-699 mob DELTA frames + player delta reconstruct correctly through real ENet: a second
 # real client SEES the first player (players via delta) AND the region's mobs (mob keyframe+delta
 # reconstruction — entity_count > player_count). Netcode hides from unit tests (T-320); this is that.
+#
+# PHASE 2 (T-724): the same isolated world proves the player_death PAYLOAD SHAPE over real ENet —
+# `wear_applied` must arrive false for a waived trial death (T-719's tutorial capstone) and true for
+# an open-world death. A payload field is exactly the thing unit fakes cannot vouch for.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -16,6 +20,8 @@ WORLD_LOG=/tmp/t699-lane-world.log
 OBS_LOG=/tmp/t699-obs.log
 MOVER_LOG=/tmp/t699-mover.log
 RESULT=/tmp/t699-observer.json
+TRIAL_RESULT=/tmp/t724-trial-death.json  # T-724 phase 2: raw player_death payloads off the wire
+WORLD_RESULT=/tmp/t724-world-death.json
 log() { echo "[t699-e2e] $*"; }
 psql_exec() { podman exec -i avalon-postgres psql -U avalon -d avalon -c "$1" >/dev/null 2>&1; }
 
@@ -43,12 +49,13 @@ log "importing + booting lane world (worktree code) on :$LANE_PORT → live mast
 "$GODOT" --headless --path "$PROJECT_DIR/server/world" --import >/dev/null 2>&1
 "$GODOT" --headless --path "$PROJECT_DIR/client" --import >/dev/null 2>&1
 AVALON_PORT=$LANE_PORT AVALON_MASTER_HOST=127.0.0.1 AVALON_MASTER_PORT=9100 \
-	AVALON_SPAWN_FIXED=1 AVALON_OPS_PORT=$LANE_OPS_PORT \
+	AVALON_SPAWN_FIXED=1 AVALON_OPS_PORT=$LANE_OPS_PORT AVALON_DEBUG_INTENTS=1 \
 	"$GODOT" \
 	--env="AVALON_JWT_SECRET=${AVALON_JWT_SECRET}" \
 	--env="AVALON_PG_PASSWORD=${AVALON_PG_PASSWORD:-}" \
 	--env="AVALON_PORT=$LANE_PORT" --env="AVALON_MASTER_HOST=127.0.0.1" --env="AVALON_MASTER_PORT=9100" \
 	--env="AVALON_SPAWN_FIXED=1" --env="AVALON_OPS_PORT=$LANE_OPS_PORT" \
+	--env="AVALON_DEBUG_INTENTS=1" \
 	--filesystem="$PROJECT_DIR" --filesystem=/tmp \
 	--headless --path "$PROJECT_DIR/server/world" --scene res://scenes/main.tscn >"$WORLD_LOG" 2>&1 &
 WORLD_PID=$!
@@ -101,3 +108,66 @@ if players >= 1 and mobs >= 1:
 print("[t699-e2e] FAIL — players=%d mobs=%d (delta reconstruction broken)" % (players, mobs))
 sys.exit(1)
 PY
+RC_DELTA=$?
+
+# ---- Phase 2 (T-724): the death payload's wear_applied flag over the same real ENet -------------
+# Two throwaway level-1 characters die on this lane world through the dev-only debug_kill intent:
+# one descends the churchyard stair first (level 1 routes to the Shallow Graves = KIND_TRIAL, where
+# T-719 waives durability wear), one dies where it stands in the open world. The client's
+# "Your gear was damaged." line is gated on the flag these payloads carry, so the flag itself has to
+# survive the wire with the right value — the one thing a unit fake cannot prove.
+log "T-724: death payload — trial (waived) vs open world (worn), both on :$LANE_PORT"
+for U in t724trial t724world; do
+	T="$(gen_token "$U")"
+	[[ "$U" == "t724trial" ]] && TOK_TRIAL="$T" || TOK_WORLD="$T"
+	psql_exec "INSERT INTO auth.sessions (token,username,issued_at,expires_at,revoked)
+		VALUES ('$T','$U',NOW(),NOW()+INTERVAL '1 hour',false)
+		ON CONFLICT (token) DO UPDATE SET username='$U',revoked=false;"
+	psql_exec "INSERT INTO chars.characters (username) VALUES ('$U') ON CONFLICT (username) DO NOTHING;"
+done
+
+run_death() {  # $1 = token, $2 = result file, $3 = AVALON_DEATH_TRIAL, $4 = log
+	rm -f "$2"
+	timeout 60 "$GODOT" \
+		--env="AVALON_HOST=127.0.0.1" --env="AVALON_PORT=$LANE_PORT" --env="AVALON_TOKEN=$1" \
+		--env="AVALON_DEATH_MODE=1" --env="AVALON_DEATH_TRIAL=$3" --env="AVALON_RESULT_FILE=$2" \
+		--filesystem="$PROJECT_DIR" --filesystem=/tmp \
+		--headless --path "$PROJECT_DIR/server/world" --scene res://tests/test_client.tscn \
+		>"$4" 2>&1
+}
+run_death "$TOK_TRIAL" "$TRIAL_RESULT" 1 /tmp/t724-trial.log
+run_death "$TOK_WORLD" "$WORLD_RESULT" 0 /tmp/t724-world.log
+
+python3 - "$TRIAL_RESULT" "$WORLD_RESULT" <<'PY'
+import json, sys
+
+def wear_flag(path, who):
+	try:
+		d = json.load(open(path))
+	except Exception as e:
+		print("[t724-e2e] FAIL — no %s death result (%s)" % (who, e)); sys.exit(1)
+	events = [e for e in d.get("player_death_events", []) if e.get("type") == "player_death"]
+	if not events:
+		print("[t724-e2e] FAIL — %s never received its own player_death over ENet" % who); sys.exit(1)
+	ev = events[0]
+	if "wear_applied" not in ev:
+		print("[t724-e2e] FAIL — %s player_death payload has no wear_applied key" % who); sys.exit(1)
+	flag = ev["wear_applied"]
+	if not isinstance(flag, bool):
+		print("[t724-e2e] FAIL — %s wear_applied is %r, not a bool" % (who, flag)); sys.exit(1)
+	print("[t724-e2e] %s: wear_applied=%s" % (who, flag))
+	return flag
+
+trial = wear_flag(sys.argv[1], "trial")
+world = wear_flag(sys.argv[2], "open-world")
+if trial is False and world is True:
+	print("[t724-e2e] PASS — a waived trial death reports no wear; an open-world death reports it")
+	sys.exit(0)
+print("[t724-e2e] FAIL — expected trial=False world=True, got trial=%s world=%s" % (trial, world))
+sys.exit(1)
+PY
+RC_DEATH=$?
+
+log "verdicts: T-699 delta rc=$RC_DELTA, T-724 death payload rc=$RC_DEATH"
+[[ $RC_DELTA -eq 0 && $RC_DEATH -eq 0 ]] && exit 0
+exit 1

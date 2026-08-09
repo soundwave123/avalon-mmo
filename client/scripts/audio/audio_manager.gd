@@ -13,8 +13,13 @@ const AMBIENT_INDOOR_MUFFLE_DB := -12.0  # T-187: walls dampen the outdoor bed w
 # a dead flat drone. Sits below the meadow base, gated by the world day clock (silent at night) and
 # muffled indoors like the meadow. (Positional treeline birdsong is separate, in ambient_fx_layer.)
 const BIRDSONG_BED := "res://assets/audio/amb_birdsong.wav"
-const BIRDSONG_BASE_DB := -24.0  # quieter than the meadow bed — a background layer, not foreground
+# T-733: pulled 3 dB down from the shipped -24 (owner: "too many birds tweeting") and, more
+# importantly, DENSITY-GATED below. A bed can't be scheduled the way the T-733 treeline calls are —
+# it is one looping player — so it rides the same BirdCalls.DENSITY_BY_DAY_T curve as an
+# attenuation: full at the dawn chorus, deeply pulled back through the midday hours.
+const BIRDSONG_BASE_DB := -27.0  # quieter than the meadow bed — a background layer, not foreground
 const BIRDSONG_NIGHT_ATTEN_DB := -50.0  # faded to ~inaudible after dark
+const BIRDSONG_DENSITY_DIM_DB := -11.0  # the dim at zero density (BirdCalls.bed_density_atten_db)
 # T-409: the Era-2 ASHMOOR global bed — a low distant city hum that REPLACES the meadow/birdsong
 # beds inside the 1920s district (the Era-1 counterpart to the meadow bed). Both sides era-gate in
 # _process (mirroring the birdsong day-gate): the meadow+birdsong fade to silence inside Ashmoor
@@ -329,6 +334,10 @@ func _process(delta: float) -> void:
 		+ _indoor_muffle_db
 		+ day_gate_atten_db(day)
 		+ era1_atten
+		# T-733: the bed follows the bird-density curve too — dawn chorus full, midday a whisper.
+		+ BirdCalls.bed_density_atten_db(
+			BirdCalls.density_at(_day_t_raw()), BIRDSONG_DENSITY_DIM_DB
+		)
 	)
 	if ambient != null:
 		ambient.volume_db = AMBIENT_BASE_DB + _ambient_volume_db + _indoor_muffle_db + era1_atten
@@ -365,6 +374,16 @@ func _day_factor() -> float:
 		return 1.0
 	# sun above the horizon when sin(day_t*TAU) > 0; smooth across dusk/dawn.
 	return clampf(smoothstep(-0.05, 0.25, sin(float(dt) * TAU)), 0.0, 1.0)
+
+
+# T-733: the RAW day clock (0..1, T-415 convention: noon = 0.25) — the bird-density curve needs the
+# phase, not just "is the sun up". Fails OPEN with no world (headless): 0.0 = sunrise, full density.
+func _day_t_raw() -> float:
+	var wv := get_node_or_null("/root/Main/WorldView")
+	if wv == null:
+		return 0.0
+	var dt = wv.get("_day_t")
+	return 0.0 if dt == null else fposmod(float(dt), 1.0)
 
 
 # T-675: the outdoor rain truth — WorldView._rain_wanted, the SAME state that drives the T-614

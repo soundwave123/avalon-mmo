@@ -67,6 +67,13 @@ scripts\windows\create-account.bat    makes a player account (prints the generat
 scripts\windows\stop-server.bat       stops everything (your data is kept)
 ```
 
+Prefer a guided setup? The **Avalon Server Manager** (`scripts/build-server-manager.sh`
+produces `dist/avalon-server-manager-windows.zip`) is a small GUI wizard over those same
+scripts: ports with a built-in test + firewall helper, your address with a
+"give this to your friends" summary, player accounts, and an end-to-end self-check.
+Unzip it into this folder and double-click `AvalonServerManager.exe`; re-run it any time
+to change settings.
+
 **Linux** — requires Godot 4.7.1, a Postgres container (Docker or Podman), and `psql`:
 
 ```bash

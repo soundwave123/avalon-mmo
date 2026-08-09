@@ -691,7 +691,8 @@ func _on_combat(data: Dictionary) -> void:
 		if dead_peer == _my_peer_id:
 			_clear_target()
 			if death_presentation != null:
-				death_presentation.begin_death()
+				# T-724: the server says whether this death actually wore gear (waived in the trial).
+				death_presentation.begin_death(bool(data.get("wear_applied", false)))
 		_trigger_actor_anim(dead_peer, "death")
 	if str(data.get("type", "")) == "player_respawn":  # T-123: clear the corpse pose
 		var pid := int(data.get("peer_id", -1))
@@ -738,33 +739,30 @@ func _on_player_stats(d: Dictionary) -> void:
 func _on_entity_clicked(target_id: int) -> void:  # T-057: click an entity to target it
 	_target_id = target_id
 	remote_entities.set_target(target_id)
+	if _autoattack:
+		_set_autoattack(true)  # T-729: sticky mode resumes on the new target, no re-toggle needed
 	if target_id != -1:  # T-557: hint range tracks the live filled-slot count, not a stale "1-4"
 		var slots := player_hud.action_bar.slot_count() if player_hud != null else 5
 		_onboarding.hint("target", HintReference.target_hint(slots))
 
 
+# T-729: a MODE, not a per-target toggle — it arms with or without a target and survives kills,
+# target switches and deaths. AutoAttackMode owns the lifecycle rules (and never auto-acquires).
 func _toggle_autoattack() -> void:
-	if _target_id == -1:
-		return
 	_set_autoattack(not _autoattack)
-	if _autoattack:
-		_attack_timer.start()
-		_on_attack_tick()  # swing immediately, then on the GCD
-	else:
-		_attack_timer.stop()
 
 
 func _set_autoattack(active: bool) -> void:  # T-571 (#26): the one place `_autoattack` changes
 	_autoattack = active
-	if player_hud != null:
-		player_hud.set_autoattack(active)
+	if active and _attack_timer != null:
+		_attack_timer.start()  # (re)phase the swing clock, then swing now if a hostile is up
+	_on_attack_tick()  # stops the timer + renders OFF when active is false
 
 
-func _clear_target() -> void:
+func _clear_target() -> void:  # T-729: clears the SELECTION only; the sticky mode stays armed
 	_target_id = -1
-	_set_autoattack(false)
-	_attack_timer.stop()
 	remote_entities.set_target(-1)
+	AutoAttackMode.render(self)
 	if player_hud != null:
 		player_hud.clear_target()
 
@@ -834,15 +832,11 @@ func _cast_kit_slot(slot: int) -> void:
 	CastFx.on_cast_sent(audio, vfx, local_player, remote_entities, _target_id, ability_id)
 
 
-# T-057: each GCD tick, Strike the target. Stop (and drop the target) once it has died / left.
+# T-057/T-729: each GCD tick, Strike — but ONLY a live hostile selection. No target, a corpse
+# (T-721's ~94 `target_is_dead` rejects/session) or a death-locked client sends nothing at all
+# and leaves the mode armed, so the next hostile you select resumes swinging on its own.
 func _on_attack_tick() -> void:
-	if not _autoattack or _target_id == -1 or not remote_entities.has_target(_target_id):
-		_set_autoattack(false)
-		_attack_timer.stop()
-		_target_id = -1
-		return
-	if _net != null:
-		_net.request_use_ability(1, _target_id)  # ability 1 = Strike
+	AutoAttackMode.tick(self)
 
 
 func _wire_result_handler(quest_action_toast: Callable) -> Callable:
@@ -937,10 +931,12 @@ func _input(event: InputEvent) -> void:
 		)
 		if next_id != -1:
 			_on_entity_clicked(next_id)
-	elif key.keycode >= KEY_1 and key.keycode <= KEY_4:
+	elif AbilityKeybinds.slot_for_keycode(key.keycode) != -1:
 		# T-065: while the class panel is up, 1-3 belong to class selection, not the bar.
 		if class_panel == null or not class_panel.visible:
-			_cast_kit_slot(key.keycode - KEY_1)  # T-063: class action-bar slots 1-4
+			# T-063 slots, T-723 range: the WHOLE keyed bar (1-9), not just the first four —
+			# the interrupts sit past slot 4 on a trained kit's default layout.
+			_cast_kit_slot(AbilityKeybinds.slot_for_keycode(key.keycode))
 	elif key.keycode == KEY_ESCAPE:
 		_handle_escape()
 

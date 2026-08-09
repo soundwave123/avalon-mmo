@@ -66,8 +66,12 @@ const AUDIO_ZONES: Array = [
 	{"name": "village_forge", "x": -6.5, "z": -8.5, "r": 14.0, "stream": FORGE},
 	{"name": "village_market", "x": 2.5, "z": 8.0, "r": 16.0, "stream": CROWD, "day": true},
 	{"name": "watermill", "x": 26.0, "z": 26.0, "r": 16.0, "stream": MILL},
-	{"name": "treeline_n", "x": 2.0, "z": -40.0, "r": 34.0, "stream": BIRDSONG, "day": true},
-	{"name": "treeline_e", "x": 33.0, "z": -23.0, "r": 22.0, "stream": BIRDSONG, "day": true},
+	# T-733: the two treelines are the BIRD layer, and are no longer beds. A "calls" tag makes a zone
+	# a scheduled one-shot voice (BirdCalls) — short slices of the recording on a Poisson schedule, not
+	# the loop running all day. No "day" tag: BirdCalls.DENSITY_BY_DAY_T IS the day gate for them (it
+	# has to be, or the -50 dB night gate would swallow the evening chorus the curve keeps).
+	{"name": "treeline_n", "x": 2.0, "z": -40.0, "r": 34.0, "stream": BIRDSONG, "calls": "tree"},
+	{"name": "treeline_e", "x": 33.0, "z": -23.0, "r": 22.0, "stream": BIRDSONG, "calls": "tree"},
 	# --- Ashmoor 1920s district (T-409 new) — ERA 2; coords from data/regions/ashmoor.json. All sit
 	# inside the ASHMOOR_SOOT_RECT era-detection footprint (the arrival plaza + High Street terraces)
 	# so the era gate engages where the player actually stands; no birdsong/meadow, 1920s register. ---
@@ -293,6 +297,9 @@ const _BIRD_PATHS: Array = [
 const _BIRD_CULL_DISTANCE := 260.0
 
 var particle_count: int = 0  # headless-test accessor
+# T-733: the bird-call scheduler + the emitters it drives (a subset of _emitters, tagged "calls").
+# Kept separate so the per-frame envelope work touches two nodes, not all ~40.
+var birds := BirdCalls.new()
 var smoke_count: int = 0  # T-209 headless-test accessor (socket-derived smoke columns)
 var rift_count: int = 0  # T-407 headless-test accessor (socket-derived rift shimmer + motes)
 var bird_count: int = 0  # T-310 headless-test accessor (sky birds crossing overhead)
@@ -301,6 +308,8 @@ var _birds: Array = []  # [{node, center, radius, height, speed, phase}] — see
 var _emitters: Array = []  # T-305/T-409/T-675: [{node, base_db, day, night, interior, era}]
 var _indoor_muffle_db := 0.0  # T-675 item 6: the T-305 indoor muffle, extended to the zone beds
 var _vol_accum := _VOLUME_TICK_S  # T-697 fix 8: volume-tick accumulator (born due)
+var _call_emitters: Array = []  # [{key, node, base_db, profile, active, elapsed_s, burst_s, gain}]
+var _gate_era_atten := 0.0  # cached at the 10 Hz tick so the per-frame call envelope stays cheap
 
 
 static func zones_at(x: float, z: float) -> Array:
@@ -390,10 +399,12 @@ func _process(delta: float) -> void:
 	# medieval beds die inside Ashmoor and the Ashmoor beds die outside it. Both are additive dB terms
 	# on the base level. Cheap: one sin() off the day clock + one rect test at the camera.
 	_vol_accum += delta  # T-697 fix 8: dB writes at ~10 Hz (see _VOLUME_TICK_S)
-	if not _emitters.is_empty() and _vol_accum >= _VOLUME_TICK_S:
+	if _vol_accum >= _VOLUME_TICK_S:
 		_vol_accum = 0.0
 		var day := _day_factor()
 		var here := listener_era(self)
+		# T-733: cache the slow era gate for the per-frame bird-call envelope below.
+		_gate_era_atten = era_gate_atten(ERA_MEDIEVAL, here)
 		for e: Dictionary in _emitters:
 			var enode: AudioStreamPlayer3D = e["node"]
 			var vol := float(e["base_db"]) + era_gate_atten(int(e["era"]), here)
@@ -408,6 +419,9 @@ func _process(delta: float) -> void:
 				# (tagged interior) is exempt — it IS the indoors the player is standing in.
 				vol += _indoor_muffle_db
 			enode.volume_db = vol
+	# T-733: the bird layer — scheduled one-shot calls, not a loop. See bird_calls.gd.
+	if not _call_emitters.is_empty():
+		_tick_bird_calls(delta)
 	# T-310: birds fly a simple closed loop (no per-frame allocations — just trig on cached state).
 	for b: Dictionary in _birds:
 		var cfg: Dictionary = b["cfg"]
@@ -537,8 +551,16 @@ func build_emitters() -> void:
 		var stream := load(str(zone["stream"])) as AudioStream
 		if stream == null:
 			continue  # fail-closed: a missing/bad asset drops the emitter, never a silent one
+		var is_calls: bool = str(zone.get("calls", "")) != ""
 		if stream is AudioStreamWAV:
-			(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+			# T-733: a CALL zone plays one-shot slices, so it needs its own unlooped copy of the
+			# sample — the loaded resource is shared with the looping beds (and the T-415 gate
+			# asserts the IMPORT still loops), so mutate a duplicate, never the cached original.
+			if is_calls:
+				stream = (stream as AudioStreamWAV).duplicate()
+				(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_DISABLED
+			else:
+				(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
 		var radius := float(zone["r"])
 		var base_db := float(zone.get("vol", _ZONE_DEFAULT_DB))
 		var e := AudioStreamPlayer3D.new()
@@ -552,8 +574,30 @@ func build_emitters() -> void:
 		# T-409: born at the era-gated level (a cross-era bed starts silent — no one-frame leak);
 		# _process re-derives the gate every frame as the listener moves.
 		e.volume_db = base_db + era_gate_atten(zone_era(zone), listener_era(self))
-		e.autoplay = true
+		e.autoplay = not is_calls  # T-733: a call emitter is SILENT until the scheduler fires it
 		add_child(e)
+		emitter_count += 1
+		if is_calls:
+			# T-733: scheduled voice — no autoplay, no day/night gate term (the density curve is
+			# the gate), and it stays out of _emitters so the 10 Hz bed loop never stomps the
+			# per-call envelope.
+			birds.add_voice(str(zone["name"]), str(zone["calls"]))
+			(
+				_call_emitters
+				. append(
+					{
+						"key": str(zone["name"]),
+						"node": e,
+						"base_db": base_db,
+						"profile": BirdCalls.PROFILES.get(str(zone["calls"]), {}),
+						"active": false,
+						"elapsed_s": 0.0,
+						"burst_s": 0.0,
+						"gain_db": 0.0,
+					}
+				)
+			)
+			continue
 		e.play()
 		_emitters.append(
 			{
@@ -565,7 +609,6 @@ func build_emitters() -> void:
 				"era": zone_era(zone)
 			}
 		)
-		emitter_count += 1
 
 
 # T-675 item 6: the T-305 indoor muffle reaches the positional beds — invoked via the
@@ -586,6 +629,60 @@ func _day_factor() -> float:
 	if dt == null:
 		return 1.0
 	return clampf(smoothstep(-0.05, 0.25, sin(float(dt) * TAU)), 0.0, 1.0)
+
+
+# T-733: the RAW day clock (0..1, T-415 convention: noon = 0.25) off the same WorldView._day_t the
+# day factor reads — the bird density curve needs the phase, not just "is the sun up". Client-local
+# today (T-734); when the day clock becomes server-authoritative this reader is the one seam.
+# Fails OPEN with no world (headless tests): 0.0 = sunrise = full density, the same spirit as
+# _day_factor's full-daylight fallback — a missing day clock never silences a layer.
+func _day_t() -> float:
+	var p := get_parent()
+	if p == null:
+		return 0.0
+	var dt = p.get("_day_t")
+	return 0.0 if dt == null else fposmod(float(dt), 1.0)
+
+
+# T-733: advance the bird schedule, start the calls it fires, and run each live call's fade
+# envelope. Only the tagged call emitters are touched (two of them), so this is per-frame-cheap.
+func _tick_bird_calls(delta: float) -> void:
+	for call: Dictionary in birds.tick(delta, _day_t()):
+		for e: Dictionary in _call_emitters:
+			if str(e["key"]) != str(call["key"]):
+				continue
+			e["active"] = true
+			e["elapsed_s"] = 0.0
+			e["burst_s"] = float(call["burst_s"])
+			e["gain_db"] = float(call["gain_db"])
+			var node: AudioStreamPlayer3D = e["node"]
+			node.pitch_scale = float(call["pitch"])
+			node.volume_db = _call_volume_db(e, 0.0)
+			node.play(float(call["offset_s"]))  # a random slice of the source, never the same twice
+			break
+	for e: Dictionary in _call_emitters:
+		if not bool(e["active"]):
+			continue
+		e["elapsed_s"] = float(e["elapsed_s"]) + delta
+		var node: AudioStreamPlayer3D = e["node"]
+		if float(e["elapsed_s"]) >= float(e["burst_s"]):
+			e["active"] = false
+			node.stop()
+			continue
+		node.volume_db = _call_volume_db(e, float(e["elapsed_s"]))
+
+
+func _call_volume_db(e: Dictionary, elapsed_s: float) -> float:
+	var prof: Dictionary = e["profile"]
+	var env := BirdCalls.envelope_db(
+		elapsed_s,
+		float(e["burst_s"]),
+		float(prof.get("attack_s", 0.15)),
+		float(prof.get("release_s", 0.4))
+	)
+	# base zone level + this call's own gain draw + its fade envelope + the shared era/indoor gates.
+	# No day-gate term: BirdCalls.DENSITY_BY_DAY_T already decides whether birds call at all.
+	return float(e["base_db"]) + float(e["gain_db"]) + env + _gate_era_atten + _indoor_muffle_db
 
 
 # --- shared builders --------------------------------------------------------

@@ -290,7 +290,9 @@ func _broadcast_positions() -> void:
 		ServerConfig.get_aoi_radius(),
 		ServerConfig.get_aoi_max_peers(),
 		_titles,  # T-401: worn titles ride the per-peer frame (nameplate)
-		_char_gender  # T-535: gender rides the frame so remote clients pick the female body mesh
+		_char_gender,  # T-535: gender rides the frame so remote clients pick the female body mesh
+		bnow,  # T-722: same clock the player casts use — a channeling boss ships its wind-up too
+		ServerConfig.TICK_RATE_HZ
 	)
 	# T-372: compress each per-peer AOI frame to a delta vs its last-sent frame (periodic keyframe).
 	var deltaed: Dictionary = _BB.positions_delta_frames(
@@ -309,16 +311,11 @@ func _on_peer_connected(peer_id: int) -> void:
 # T-186: record one gameplay event for a peer (T-507: account = login account, character = name).
 # T-705: a non-empty `once_key` records the event at most once per SESSION under that key — the
 # funnel reads only the first of each, so the high-frequency beats cost one row, not thousands.
+# T-722: the account/character resolution + once-vs-plain dispatch moved to
+# TelemetryEmitter.record_for — this script sits ON the 1000-line cap, so it carved to make room.
 func _tel(event_type: String, pid: int, payload: Dictionary = {}, once_key: String = "") -> void:
-	if _telemetry == null:
-		return
-	var p: Dictionary = _connected_players.get(pid, {})
-	var u := str(p.get("username", ""))
-	var account := str(p.get("account", u))
-	if once_key == "":
-		_telemetry.record(event_type, account, u, payload)
-	else:
-		_telemetry.record_once(pid, event_type, account, u, payload, once_key)
+	if _telemetry != null:
+		_telemetry.record_for(pid, _connected_players.get(pid, {}), event_type, payload, once_key)
 
 
 func _on_peer_disconnected(peer_id: int) -> void:
@@ -790,13 +787,15 @@ func _check_death_player(pid: int, now: int) -> void:
 	)
 	# T-364: bounded death penalty — wear gear ONCE on the alive→dead edge (server-observed).
 	var dead_user := str(_connected_players.get(pid, {}).get("username", ""))
+	# T-724: the hook's return is the ONLY truth about whether gear was worn; it rides the broadcast
+	# so the client's damage line can't claim a cost the trial waived (a repeat broadcast wears none).
+	var worn := false
 	if not was_dead and _combat_states[pid].state == _CS.CombatStateEnum.DEAD and dead_user != "":
-		_instance_svc.on_player_died(_master_client, pid, dead_user)  # T-719 waives it in a trial
+		worn = _instance_svc.on_player_died(_master_client, pid, dead_user)  # T-719 trial waiver
 	# T-699: region-scoped to the dead player's instance+region ∪ self + party (was all-peers).
 	var death_max_hp: int = _combat_resources.get(pid, _CR.new()).max_hp
-	_events.involving(
-		_ED.player_death(pid, dead_user if dead_user != "" else "Unknown", death_max_hp), [pid]
-	)
+	var who := dead_user if dead_user != "" else "Unknown"
+	_events.involving(_ED.player_death(pid, who, death_max_hp, worn), [pid])
 	if not was_dead:
 		_recap.finish_player_death(pid, dead_user, now)
 	print("[world] player_death peer_id=%d respawn_at=%d" % [pid, _combat_states[pid].respawn_at])

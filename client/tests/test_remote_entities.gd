@@ -654,6 +654,86 @@ func test_friendly_player_cast_is_hidden() -> void:
 	assert_false(l.cast_bar_for("player_7").visible, "friendly player cast is hidden (WoW)")
 
 
+# ---- T-722: the boss wind-up telegraph (dirge_start / dirge_end) ----
+#
+# The client half of the fix. The server never sends a "dirge_start" message — the wind-up rides
+# the positions broadcast as the ordinary `cast` dict (server/world/tests/test_boss_telegraph.gd
+# proves that payload), and the ONLY reason it stayed invisible client-side was the T-266 gate:
+# every boss whose wind-up matters (Sexton Marrow, Pallbearer Ost, the q_tut_03 effigy) is
+# retaliate_only -> hostile:false -> Rel.NEUTRAL, which the hostile-only gate suppressed.
+
+
+# A Sexton Marrow row exactly as the broadcast builds it: elite, retaliate_only (hostile:false).
+func _marrow(cast: Dictionary) -> Dictionary:
+	var row := {
+		"mob_id": 4004,
+		"kind": "mob_skeletal_warrior",
+		"name": "Sexton Marrow",
+		"elite": true,
+		"hostile": false,  # retaliate_only — the whole trap this test locks down
+		"x": 5,
+		"y": 6,
+		"z": 0,
+		"hp": 351,
+		"max_hp": 351,
+	}
+	if not cast.is_empty():
+		row["cast"] = cast
+	return row
+
+
+# The 3 s window as the server ships it: dirge_channel_ticks 60 / 20 Hz. No literal 3 in the client.
+func _dirge(remaining_s: float) -> Dictionary:
+	return {"ability_id": 9001, "remaining_s": remaining_s, "total_s": 3.0}
+
+
+func test_dirge_start_telegraphs_on_a_retaliate_only_boss() -> void:
+	var l = _layer()
+	l.ingest({"players": [], "mobs": [_marrow(_dirge(3.0))]}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	var bar := l.cast_bar_for("mob_4004")
+	assert_true(bar.visible, "the 3 s dirge wind-up is VISIBLE — T-722's whole point")
+
+
+func test_dirge_windup_fills_across_the_interrupt_window() -> void:
+	# The player has to read HOW MUCH of the window is left to decide to kick — so the bar must
+	# actually track remaining_s, not just appear.
+	var l = _layer()
+	l.ingest({"players": [], "mobs": [_marrow(_dirge(1.5))]}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	var frac := (l.cast_bar_for("mob_4004").get_node("cast_fill").mesh as QuadMesh).size.x / 1.0
+	assert_almost_eq(frac, 0.5, 0.05, "half the interrupt window spent -> half-filled bar")
+
+
+func test_dirge_end_clears_the_telegraph() -> void:
+	# dirge_end (interrupted by Pummel/Counterspell/24 damage, OR completed) drops the mob out of
+	# CHANNELING, so the next broadcast clears `cast` to {} and the bar must go away.
+	var l = _layer()
+	l.ingest({"players": [], "mobs": [_marrow(_dirge(1.0))]}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	assert_true(l.cast_bar_for("mob_4004").visible, "channelling")
+	l.ingest({"players": [], "mobs": [_marrow({})]}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	assert_false(l.cast_bar_for("mob_4004").visible, "dirge_end removes the telegraph")
+
+
+func test_a_neutral_mob_that_is_not_casting_still_shows_nothing() -> void:
+	# Widening the gate to neutral MOBS must not put bars on quiet townsfolk-adjacent critters.
+	var l = _layer()
+	l.ingest({"players": [], "mobs": [_marrow({})]}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	assert_false(l.cast_bar_for("mob_4004").visible, "no cast, no bar")
+
+
+func test_widened_gate_still_excludes_friendly_players() -> void:
+	# The rule T-266 actually cared about survives: a FRIENDLY player's cast stays off the plate.
+	var l = _layer()
+	var p := {"peer_id": 7, "x": 1, "y": 1, "z": 0, "cast": _dirge(1.0)}
+	l.ingest({"players": [p], "mobs": []}, 99, Time.get_ticks_msec())
+	await get_tree().process_frame
+	assert_false(l.cast_bar_for("player_7").visible, "friendly players are still excluded")
+
+
 # ---- T-286: nameplate colors by relationship + target highlight ----
 
 

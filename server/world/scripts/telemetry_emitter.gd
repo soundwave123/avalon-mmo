@@ -52,6 +52,22 @@ func record_once(
 	record(event_type, account, character, payload)
 
 
+# T-722 carve: the identity resolution + once-vs-plain routing main.gd used to inline in its `_tel`
+# helper. It belongs here — the class contract above is "main only calls record(...)", and the
+# routing decision now sits next to the once-per-session bookkeeping it depends on. `player` is a
+# main._connected_players row ({username, account?}); account falls back to the character name for
+# pre-T-507 rows. A missing row degrades to empty strings exactly as the inlined version did.
+func record_for(
+	peer_id: int, player: Dictionary, event_type: String, payload: Dictionary = {}, once_key := ""
+) -> void:
+	var character := str(player.get("username", ""))
+	var account := str(player.get("account", character))
+	if once_key == "":
+		record(event_type, account, character, payload)
+	else:
+		record_once(peer_id, event_type, account, character, payload, once_key)
+
+
 # Called from main's per-peer teardown so the once-per-session markers die with the session.
 func forget_peer(peer_id: int) -> void:
 	_once.erase(peer_id)

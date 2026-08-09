@@ -11,6 +11,7 @@ const _ML = preload("res://scripts/combat/mob_loader.gd")
 const _TS = preload("res://scripts/combat/trial_scaling.gd")
 const _SC = preload("res://scripts/server_config.gd")
 const _CR = preload("res://scripts/content/content_registry.gd")
+const _ED = preload("res://scripts/event_dispatch.gd")
 const _PL = preload("res://scripts/party_logic.gd")
 const PlayerSessions = preload("res://scripts/player_sessions.gd")
 
@@ -284,22 +285,36 @@ func test_a_trio_seeds_the_scaled_pool_but_the_authored_swing() -> void:
 # ---- Never punish during learning ----
 
 
-func test_a_death_in_the_trial_costs_no_durability() -> void:
+# T-724: the waiver decision is ALSO the only honest source for the client's "Your gear was
+# damaged." line, so the hook reports its verdict and event_dispatch carries it on the broadcast.
+# A trial death must say wear_applied=false; nothing else about the broadcast changes.
+func test_a_death_in_the_trial_costs_no_durability_and_says_so() -> void:
 	var master := FakeMaster.new()
 	var svc = _service({1: 2})
 	svc.enter(1)
-	svc.on_player_died(master, 1, "learner")
+	var payload: Dictionary = _ED.player_death(
+		1, "learner", 105, svc.on_player_died(master, 1, "learner")
+	)
 	assert_eq(master.calls.size(), 0, "no apply_death_wear for a death inside the capstone")
+	assert_eq(str(payload["type"]), "player_death", "still the same broadcast, one key richer")
+	assert_false(bool(payload["wear_applied"]), "and it admits the death cost nothing")
+	# A death that never reached the master wore nothing either: the flag records what HAPPENED,
+	# not what the rules would normally do.
+	assert_false(svc.on_player_died(null, 1, "learner"), "no master reached = nothing worn")
+	assert_false(svc.on_player_died(master, 1, ""), "no character = nothing worn")
 
 
 func test_a_death_anywhere_else_still_wears_gear() -> void:
 	var master := FakeMaster.new()
 	var svc = _service({1: 12})
-	svc.on_player_died(master, 1, "veteran")  # open world
+	var payload: Dictionary = _ED.player_death(
+		1, "veteran", 220, svc.on_player_died(master, 1, "veteran")  # open world
+	)
 	svc.enter(1)
-	svc.on_player_died(master, 1, "veteran")  # inside the L12 crypt
+	assert_true(svc.on_player_died(master, 1, "veteran"), "so does the L12 crypt")
 	assert_eq(master.calls.size(), 2, "the T-364 penalty is untouched outside the trial")
 	assert_eq(str(master.calls[0]["action"]), "apply_death_wear")
+	assert_true(bool(payload["wear_applied"]), "T-724: an open-world death reports the real cost")
 
 
 # ---- The quest: chains off graduation, resolves, and pays an arrival ----

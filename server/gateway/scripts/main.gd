@@ -17,9 +17,9 @@ const BuildGate = preload("res://scripts/build_gate.gd")  # T-514: outdated-clie
 const CharacterRoster = preload("res://scripts/character_roster.gd")  # T-507: multi-character
 
 # Hardcoded world address for v1. Future tickets pull this from
-# master based on player landing zone.
+# master based on player landing zone. (T-742: the announced world PORT now follows
+# the AVALON_PORT env var the world server itself listens on — see server_config.gd.)
 const WORLD_HOST := "127.0.0.1"
-const WORLD_PORT := 9200
 
 var _tcp: TCPServer
 var _peers: Dictionary = {}  # peer_id -> WebSocketPeer
@@ -53,18 +53,18 @@ func _ready() -> void:
 		return
 
 	_tcp = TCPServer.new()
-	var err := _tcp.listen(ServerConfig.LISTEN_PORT_WS)
+	var err := _tcp.listen(ServerConfig.get_listen_port_ws())
 	if err != OK:
 		printerr(
 			(
 				"[gateway] FATAL: failed to bind ws://0.0.0.0:%d (err=%d)"
-				% [ServerConfig.LISTEN_PORT_WS, err]
+				% [ServerConfig.get_listen_port_ws(), err]
 			)
 		)
 		get_tree().quit.bind(1).call_deferred()
 		return
 
-	print("[gateway] listening on ws://0.0.0.0:%d" % ServerConfig.LISTEN_PORT_WS)
+	print("[gateway] listening on ws://0.0.0.0:%d" % ServerConfig.get_listen_port_ws())
 	set_process(true)
 
 
@@ -180,7 +180,7 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 		"world":
 		{
 			"host": WORLD_HOST,
-			"port": WORLD_PORT,
+			"port": ServerConfig.get_world_announce_port(),
 		},
 	}
 	_send_text(ws, response)

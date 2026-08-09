@@ -37,6 +37,16 @@ func test_set_autoattack_false_shows_off_state() -> void:
 	assert_eq(_hud.autoattack_indicator.get_theme_color("font_color"), State.OFF_COLOR)
 
 
+func test_set_autoattack_idle_renders_the_armed_but_waiting_state() -> void:
+	# T-729: sticky mode stays ON between fights — the readout says so without pretending we are
+	# mid-swing (no target / a corpse / a friendly).
+	_hud.set_autoattack(true, false)
+	assert_eq(_hud.autoattack_indicator.text, State.IDLE_TEXT)
+	assert_eq(_hud.autoattack_indicator.get_theme_color("font_color"), State.IDLE_COLOR)
+	_hud.set_autoattack(true, true)
+	assert_eq(_hud.autoattack_indicator.text, State.ON_TEXT, "re-engaging swaps back to ON")
+
+
 func test_set_autoattack_is_safe_before_ready_indicator_missing() -> void:
 	# A HUD never added to the tree (some tests construct main.gd standalone) has no indicator yet
 	# — set_autoattack must no-op instead of crashing.

@@ -703,13 +703,20 @@ func _exit_anchor(kind: String) -> Vector3:
 # durability wear through here and it is SKIPPED for a trial death. Every other death (open world,
 # crypt, Vault, rift) wears gear exactly as before. Kept as a death HOOK rather than a predicate so
 # main.gd, which sits at the 1000-line cap, changes one existing line instead of gaining a branch.
-func on_player_died(master, peer_id: int, username: String) -> void:
+#
+# T-724: RETURNS whether wear was actually applied. This function is the single place the waiver is
+# decided, so it is also the only honest source for the client's "Your gear was damaged." line — the
+# death payload carries this verdict outward (event_dispatch.player_death) instead of the client
+# re-deriving a rule it cannot see. A waived trial death, a missing master and a nameless peer all
+# return false: nothing was worn, so nothing may be claimed.
+func on_player_died(master, peer_id: int, username: String) -> bool:
 	if master == null or username == "":
-		return
+		return false
 	if str(_instance_kind.get(_IM.instance_of(_store, peer_id), "")) == KIND_TRIAL:
 		print("[instance] peer %d died in a trial instance — durability wear waived" % peer_id)
-		return
+		return false
 	master.call_master("apply_death_wear", {"username": username})
+	return true
 
 
 # Disconnect / duplicate-login teardown — same membership drop as leave() but never repositions a

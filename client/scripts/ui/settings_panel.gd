@@ -14,10 +14,14 @@ extends Control
 const CONFIG_PATH := "user://settings.cfg"
 
 # Read-only list of the core keybinds (T-078 Controls display; remapping is deferred). One label
-# per row so the parchment theme colours them; kept in sync by hand with main.gd's _input map.
+# per row so the parchment theme colours them; kept in sync by hand with main.gd's _input map —
+# EXCEPT the action-bar range, which T-723 DERIVES from AbilityKeybinds (the same map main._input
+# dispatches through and the bar prints on its pips). That row is the one that actually rotted: it
+# still advertised "1 - 4" while the bar drew nine slots. _keybind_rows() resolves the token.
+const ABILITY_KEYS_TOKEN := "{ability_keys}"
 const KEYBINDS := [
 	["Move", "W A S D"],
-	["Action bar", "1 - 4"],
+	["Action bar", ABILITY_KEYS_TOKEN],
 	["Auto-attack", "` (backtick)"],
 	["Quest log", "L"],
 	["Bags", "I"],
@@ -530,8 +534,19 @@ func _add_header(box: VBoxContainer, text: String) -> void:
 	box.add_child(lbl)
 
 
-func _add_keybind_list(box: VBoxContainer) -> void:
+# T-723: the rows as RENDERED — KEYBINDS with the derived tokens resolved against the live map.
+func _keybind_rows() -> Array:
+	var out: Array = []
 	for bind: Array in KEYBINDS:
+		var keys := str(bind[1])
+		if keys == ABILITY_KEYS_TOKEN:
+			keys = AbilityKeybinds.range_label()
+		out.append([str(bind[0]), keys])
+	return out
+
+
+func _add_keybind_list(box: VBoxContainer) -> void:
+	for bind: Array in _keybind_rows():
 		var row := HBoxContainer.new()
 		var action := Label.new()
 		action.text = bind[0]

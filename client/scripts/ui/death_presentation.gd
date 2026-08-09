@@ -46,6 +46,7 @@ var _fade: ColorRect = null
 var _death_label: Label = null
 var _toast: Label = null
 var _respawn_cue: Label = null  # T-554: the "Respawning…" release affordance during the dead hold
+var _gear_damaged: bool = false  # T-724: the server's wear verdict for the CURRENT death
 
 
 func _ready() -> void:
@@ -124,11 +125,20 @@ func setup(combat_log) -> void:
 	_combat_log = combat_log
 
 
-func begin_death() -> void:
+# T-724: `gear_damaged` comes from the player_death payload's `wear_applied` — the server's own
+# record of whether the T-364 wear step ran. The trial capstone waives it, so claiming damage there
+# was a lie told at the tutorial's first death. The client NEVER re-derives the rule: no flag means
+# nothing was proven, and an unproven cost is not announced.
+func begin_death(gear_damaged: bool) -> void:
 	var was_alive := int(_state.get("phase", DeathState.Phase.ALIVE)) == DeathState.Phase.ALIVE
 	_state = DeathState.begin_death(_state)
-	if was_alive and _combat_log != null:
-		_combat_log.add_entry(_DURABILITY_LINE, Color(0.72, 0.69, 0.64))
+	if was_alive:
+		# Both durability surfaces (log line AND toast) are gated here, in the one place that owns
+		# the consequence — the DeathState timeline stays purely about timing and knows nothing
+		# about wear. A silent toast is still a visible claim, so a waived death raises neither.
+		_gear_damaged = gear_damaged
+		if gear_damaged and _combat_log != null:
+			_combat_log.add_entry(_DURABILITY_LINE, Color(0.72, 0.69, 0.64))
 	set_process(true)
 	_render()
 
@@ -150,7 +160,11 @@ func toast_text() -> String:
 	return _toast.text if _toast != null else _DURABILITY_TOAST
 
 
+# T-724: the EFFECTIVE toast opacity — zero for a death that cost no durability, whatever the
+# timeline says. This is what _render() writes to the label, so the test seam and the pixels agree.
 func toast_alpha() -> float:
+	if not _gear_damaged:
+		return 0.0
 	return float(_state.get("toast_alpha", 0.0))
 
 
@@ -169,7 +183,7 @@ func _render() -> void:
 	_grayscale_material.set_shader_parameter("amount", grayscale)
 	_fade.color.a = float(_state.get("fade", 0.0))
 	_death_label.modulate.a = float(_state.get("death_text_alpha", 0.0))
-	_toast.modulate.a = float(_state.get("toast_alpha", 0.0))
+	_toast.modulate.a = toast_alpha()  # T-724: zero unless the server says wear was applied
 	if _respawn_cue != null:  # T-554: the release cue rides the headline (holds through the dead hold)
 		_respawn_cue.modulate.a = float(_state.get("death_text_alpha", 0.0))
 

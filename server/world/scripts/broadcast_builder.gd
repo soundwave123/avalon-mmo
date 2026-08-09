@@ -73,8 +73,15 @@ static func _visual_token(
 
 # T-264 (pure): the cast dict a client needs to render a cast bar — {} when not casting.
 # Seconds, not ticks: the server owns tick math so clients never need TICK_RATE_HZ.
+# T-722: a CHANNEL counts as a cast for rendering purposes. A boss wind-up (the crypt dirge and the
+# tutorial `training_dirge`) parks the mob in CHANNELING and stamps the very same
+# cast_start/cast_end/cast_ability_id fields, so one payload serves both and the 3 s dirge window
+# telegraphs through the existing T-266 nameplate bar — no new message type, no client tick math.
 static func cast_payload(combat_state, now_tick: int, tick_hz: int) -> Dictionary:
-	if combat_state == null or int(combat_state.state) != 2:  # CombatStateEnum.CASTING
+	if combat_state == null:
+		return {}
+	var st: int = int(combat_state.state)
+	if st != 2 and st != 3:  # CombatStateEnum.CASTING / CHANNELING
 		return {}
 	var total_ticks: int = combat_state.cast_end - combat_state.cast_start
 	var remain_ticks: int = combat_state.cast_end - now_tick
@@ -245,10 +252,16 @@ static func npcs_in_region(npcs: Array, region: int) -> Array:
 	return out
 
 
-static func mobs_array(mobs: Dictionary) -> Array:
+# T-722: `now_tick`/`tick_hz` are what let a channeling mob ship a `cast` dict (the boss wind-up
+# telegraph). now_tick < 0 means "no clock supplied" and omits it entirely, so the many callers that
+# only care about identity/position keep their one-argument call and their existing payload shape.
+static func mobs_array(mobs: Dictionary, now_tick: int = -1, tick_hz: int = 20) -> Array:
 	var out: Array = []
 	for mob_id in mobs:
 		var mob = mobs[mob_id]
+		var mob_cast: Dictionary = (
+			cast_payload(mob.combat_state, now_tick, tick_hz) if now_tick >= 0 else {}
+		)
 		(
 			out
 			. append(
@@ -273,6 +286,12 @@ static func mobs_array(mobs: Dictionary) -> Array:
 				}
 			)
 		)
+		# T-722: the mob's cast/channel, in the SAME shape a player's rides — this is the whole
+		# boss-telegraph payload. Dropped when empty (the players_array idiom) so an idle mob costs
+		# nothing on the wire AND the T-699 delta clears a finished wind-up via _empty_like: on
+		# dirge_end the key vanishes, the delta emits `cast: {}`, and the client's bar goes away.
+		if not mob_cast.is_empty():
+			out[-1]["cast"] = mob_cast
 	return out
 
 
@@ -333,7 +352,9 @@ static func positions_frames_aoi(
 	radius: float,
 	max_peers: int,
 	titles: Dictionary = {},
-	genders: Dictionary = {}
+	genders: Dictionary = {},
+	now_tick: int = -1,  # T-722: the broadcast clock, so a channeling mob can ship its cast dict
+	tick_hz: int = 20
 ) -> Array:
 	var frames: Array = []
 	for iid in instances_present(positions):
@@ -342,7 +363,9 @@ static func positions_frames_aoi(
 		var inst_mobs: Dictionary = mobs_in_instance(mobs, iid)
 		for region in regions_present(scoped):
 			var region_pos: Dictionary = positions_in_region(scoped, region)
-			var mobs_payload: Array = mobs_array(mobs_in_region(inst_mobs, region))
+			var mobs_payload: Array = mobs_array(
+				mobs_in_region(inst_mobs, region), now_tick, tick_hz
+			)
 			var npcs_payload: Array = npcs_in_region(npcs, region) if iid == 0 else []
 			for pid in region_pos:
 				var neighbours: Dictionary = peers_in_range(region_pos, pid, radius, max_peers)

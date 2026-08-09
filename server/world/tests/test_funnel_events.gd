@@ -152,6 +152,41 @@ func test_record_once_ships_one_event_per_peer_per_key() -> void:
 	assert_eq(e.queue().pending_count(), 2, "a DIFFERENT peer re-arms the marker")
 
 
+# ---- T-722: record_for — the identity resolution carved out of main._tel ----
+
+
+func test_record_for_resolves_account_and_character_from_the_session_row() -> void:
+	var e := _emitter()
+	e.record_for(11, {"username": "hero", "account": "acct"}, "death", {"zone": "crypt"})
+	var batch: Array = e.queue().flush()
+	assert_eq(str(batch[0]["account"]), "acct", "account comes from the login account (T-507)")
+	assert_eq(str(batch[0]["character"]), "hero", "character is the character name")
+	assert_eq(str(batch[0]["payload"]["zone"]), "crypt", "payload rides along untouched")
+
+
+func test_record_for_falls_back_to_the_character_name_without_an_account() -> void:
+	# Pre-T-507 session rows carry no `account`; the old inlined _tel defaulted it to the username
+	# and the funnel depends on that — a fallback to "" would orphan the rows.
+	var e := _emitter()
+	e.record_for(11, {"username": "hero"}, "session_start")
+	assert_eq(str(e.queue().flush()[0]["account"]), "hero", "account falls back to the name")
+
+
+func test_record_for_routes_a_once_key_through_the_de_dupe() -> void:
+	var e := _emitter()
+	for i in range(5):
+		e.record_for(11, {"username": "hero"}, "loot", {}, "loot")
+	assert_eq(e.queue().pending_count(), 1, "a once_key still costs exactly one row")
+	e.record_for(11, {"username": "hero"}, "loot", {})
+	assert_eq(e.queue().pending_count(), 2, "no once_key -> the plain record path, every time")
+
+
+func test_record_for_survives_a_missing_session_row() -> void:
+	var e := _emitter()
+	e.record_for(99, {}, "disconnect")
+	assert_eq(e.queue().pending_count(), 1, "an unknown peer still records (empty identity)")
+
+
 func test_record_once_narrows_on_the_key_when_one_is_given() -> void:
 	var e := _emitter()
 	e.record_once(11, "intent_rejected", "a", "h", {}, "reject:too_far")

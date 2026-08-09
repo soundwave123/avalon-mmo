@@ -149,7 +149,7 @@ func test_respawn_cue_shows_during_death_and_clears_on_respawn() -> void:
 	await get_tree().process_frame
 	var cue := presentation.get_node("RespawnCue") as Label
 	assert_eq(cue.text, "Respawning…", "the death screen names the pending auto-respawn")
-	presentation.begin_death()
+	presentation.begin_death(true)
 	presentation._process(DeathState.DEATH_RAMP_SECONDS)
 	assert_gt(cue.modulate.a, 0.9, "the respawn cue is legible through the dead hold")
 	presentation.begin_respawn()
@@ -189,7 +189,7 @@ func test_target_frame_clears_on_death_and_again_on_respawn() -> void:
 
 	hud.target_frame.bind_target("Gray Wolf", 80, 80, Color.RED, 3)
 	assert_true(hud.target_frame.is_bound(), "precondition: a live target frame")
-	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99})
+	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99, "wear_applied": true})
 	assert_eq(main._target_id, -1, "death clears the selected target id")
 	assert_false(hud.target_frame.is_bound(), "death hides the target frame")
 
@@ -238,8 +238,8 @@ func test_durability_cost_logs_and_toasts_once_per_death() -> void:
 	var presentation = DeathPresentation.new()
 	add_child_autofree(presentation)
 	presentation.setup(log)
-	presentation.begin_death()
-	presentation.begin_death()  # duplicate network delivery must not nag or double-log
+	presentation.begin_death(true)
+	presentation.begin_death(true)  # duplicate network delivery must not nag or double-log
 	assert_eq(
 		log.get_lines().count("Your gear was damaged."),
 		1,
@@ -270,7 +270,7 @@ func test_server_shaped_death_respawn_round_trip_gates_abilities_and_logs_cost()
 	main._target_id = 1001
 	main._kit = [0]
 
-	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99})
+	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99, "wear_applied": true})
 	assert_true(presentation.is_input_disabled(), "authoritative local death starts the input lock")
 	assert_true(
 		"Your gear was damaged." in feedback.get_combat_log().get_lines(),
@@ -286,4 +286,78 @@ func test_server_shaped_death_respawn_round_trip_gates_abilities_and_logs_cost()
 	presentation._process(DeathState.RESPAWN_FADE_SECONDS)
 	assert_false(presentation.is_input_disabled(), "respawn event releases after the fade")
 	attack_timer.free()
+	main.free()
+
+
+# ---- T-724: the gear-damage line tells the truth about what the death actually cost ----
+
+
+# The trial capstone (KIND_TRIAL) waives durability wear server-side, so the death payload arrives
+# with wear_applied=false. Claiming damage there was a false statement at the tutorial's engineered
+# first death. No line, and no toast either — a silent toast is still a visible consequence.
+func test_a_waived_trial_death_claims_no_gear_damage() -> void:
+	var log = CombatLog.new()
+	add_child_autofree(log)
+	var presentation = DeathPresentation.new()
+	add_child_autofree(presentation)
+	presentation.setup(log)
+	presentation.begin_death(false)
+	assert_eq(
+		log.get_lines().count("Your gear was damaged."),
+		0,
+		"a death that cost no durability never claims it did"
+	)
+	assert_almost_eq(presentation.toast_alpha(), 0.0, 0.001, "and the toast never raises either")
+	assert_true(presentation.is_input_disabled(), "everything else about death is unchanged")
+
+
+# Both directions through the SAME server-shaped payload seam the real client uses, on one fully
+# wired main: wear_applied=false suppresses the line, wear_applied=true still prints it. Each death
+# gets its own presentation so both are an alive→dead edge (the duplicate-delivery guard would
+# otherwise swallow the second).
+func test_server_payload_gates_the_gear_damage_line_both_ways() -> void:
+	var main = MainScene.new()
+	var remotes = RemoteEntitiesScene.new()
+	add_child_autofree(remotes)
+	var hud = PlayerHudScene.new()
+	add_child_autofree(hud)
+	var attack_timer := Timer.new()
+	add_child_autofree(attack_timer)
+	var trial_feedback = CombatFeedbackScene.new()
+	add_child_autofree(trial_feedback)
+	var world_feedback = CombatFeedbackScene.new()
+	add_child_autofree(world_feedback)
+	await get_tree().process_frame  # builds the combat logs + the target frame child
+	var trial_presentation = DeathPresentation.new()
+	add_child_autofree(trial_presentation)
+	trial_presentation.setup(trial_feedback.get_combat_log())
+	var world_presentation = DeathPresentation.new()
+	add_child_autofree(world_presentation)
+	world_presentation.setup(world_feedback.get_combat_log())
+	main.remote_entities = remotes
+	main.player_hud = hud
+	main._attack_timer = attack_timer
+	main._net = NetSpy.new()
+	main._my_peer_id = 99
+	main._kit = [0]
+
+	# The tutorial capstone: the server waived wear, so neither surface may claim a cost.
+	main.combat_feedback = trial_feedback
+	main.death_presentation = trial_presentation
+	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99, "wear_applied": false})
+	assert_false(
+		"Your gear was damaged." in trial_feedback.get_combat_log().get_lines(),
+		"the trial death payload suppresses the line end-to-end through _on_combat"
+	)
+	assert_almost_eq(trial_presentation.toast_alpha(), 0.0, 0.001, "and the toast stays down")
+
+	# The same client, one real death later: the consequence happened, so it is reported.
+	main.combat_feedback = world_feedback
+	main.death_presentation = world_presentation
+	main._on_combat({"type": "player_death", "peer_id": 99, "player_id": 99, "wear_applied": true})
+	assert_true(
+		"Your gear was damaged." in world_feedback.get_combat_log().get_lines(),
+		"a real death still reports the T-364 cost"
+	)
+	assert_gt(world_presentation.toast_alpha(), 0.0, "and its toast raises as before")
 	main.free()

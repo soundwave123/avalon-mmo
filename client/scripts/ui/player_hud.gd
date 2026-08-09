@@ -213,10 +213,10 @@ func clear_target() -> void:
 
 # T-571 (#26): main.gd is the one owner of the `_autoattack` bool — this only renders whatever
 # state it's told, via the pure AutoAttackIndicatorState mapping (unit-testable independently).
-func set_autoattack(active: bool) -> void:
+func set_autoattack(active: bool, engaged: bool = true) -> void:
 	if autoattack_indicator == null:
 		return
-	autoattack_indicator.text = AutoAttackIndicatorState.label_text(active)
+	autoattack_indicator.text = AutoAttackIndicatorState.label_text(active, engaged)
 	autoattack_indicator.add_theme_color_override(
-		"font_color", AutoAttackIndicatorState.color(active)
+		"font_color", AutoAttackIndicatorState.color(active, engaged)
 	)

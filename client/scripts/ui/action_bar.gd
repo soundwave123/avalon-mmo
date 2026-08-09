@@ -24,7 +24,7 @@ extends Control
 signal layout_changed(ordered_ids: Array)
 
 const GCD_SECONDS := 1.5  # server global cooldown estimate (server_config.gd: 30 ticks @ 20 Hz)
-const MAX_SLOTS := 9  # hotkeys 1-9
+const MAX_SLOTS := 9  # T-723: AbilityKeybinds owns the slot -> key map and keeps its range equal
 # T-464: always show at least this many slots so future/empty slots are DISCOVERABLE — any slot past
 # the current kit renders as a dim locked placeholder (a "+" glyph) so the bar never reads as "this
 # is all you get". As the player learns abilities the locked count shrinks toward zero.
@@ -231,7 +231,9 @@ func _sweep_stylebox() -> StyleBoxFlat:
 func _make_pip(index: int, color: Color) -> Label:
 	var pip := Label.new()
 	pip.name = "Pip"
-	pip.text = str(index + 1)
+	# T-723: the pip prints the key that ACTUALLY casts this slot (AbilityKeybinds), never a bare
+	# slot number — a pip is a promise, and slots 5-9 spent T-731 advertising keys that did nothing.
+	pip.text = AbilityKeybinds.slot_label(index)
 	pip.add_theme_color_override("font_color", color)
 	pip.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.95))
 	pip.add_theme_constant_override("outline_size", 4)
@@ -274,12 +276,12 @@ func _build_locked_slot(index: int) -> Panel:
 func _on_slot_hover(slot: int) -> void:
 	if _tooltip == null or slot < 0 or slot >= _kit.size():
 		return
-	_tooltip.show_ability(_kit[slot], _resource_kind, str(slot + 1))
+	_tooltip.show_ability(_kit[slot], _resource_kind, AbilityKeybinds.slot_label(slot))
 
 
 func _on_locked_hover(index: int) -> void:
 	if _tooltip != null:
-		_tooltip.show_locked(str(index + 1))
+		_tooltip.show_locked(AbilityKeybinds.slot_label(index))
 
 
 func _on_slot_unhover() -> void:
@@ -478,7 +480,7 @@ func sweep_fraction(slot: int) -> float:
 func slot_tooltip_text(slot: int) -> String:
 	if slot < 0 or slot >= _kit.size():
 		return ""
-	return AbilityTooltip.build_text(_kit[slot], _resource_kind, str(slot + 1))
+	return AbilityTooltip.build_text(_kit[slot], _resource_kind, AbilityKeybinds.slot_label(slot))
 
 
 # T-731: how the slot art is actually being painted right now — {desaturation, dim} straight off the

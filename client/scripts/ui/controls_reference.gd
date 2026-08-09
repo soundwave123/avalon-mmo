@@ -17,7 +17,9 @@ const _ROWS: Array = [
 	{"action": "Zoom", "mouse": "Mouse wheel"},
 	{"action": "Target / talk", "mouse": "Left-click a foe or townsfolk"},
 	{"action": "Auto-attack", "keys": [KEY_QUOTELEFT]},
-	{"action": "Abilities", "keys": [KEY_1, KEY_2, KEY_3, KEY_4]},
+	# T-723: no key literals here — the ability row renders the LIVE slot->key map (AbilityKeybinds),
+	# so the handbook grew from "1 - 4" to the whole keyed bar the moment the bindings did.
+	{"action": "Abilities", "ability_keys": true},
 	{"action": "Inventory", "keys": [KEY_I]},
 	{"action": "Quest log", "keys": [KEY_L]},
 	{"action": "Character", "keys": [KEY_C]},
@@ -38,7 +40,7 @@ const HELP_KEYCODE := KEY_F1
 const GLOSSARY: Array = [
 	{"term": "Move", "tip": "W A S D walks; hold Right-Mouse and drag to steer your view."},
 	{"term": "Target", "tip": "Left-click a foe to target it; Tab cycles nearby foes; Esc clears."},
-	{"term": "Abilities", "tip": "Keys 1-4 fire your class abilities at your current target."},
+	{"term": "Abilities", "tip": "Keys {keys} fire your class abilities at your current target."},
 	{
 		"term": "GCD",
 		"tip": "The global cooldown — a short beat between abilities (the slot sweep)."
@@ -76,8 +78,9 @@ const _ESSENTIAL_ACTIONS: Array = ["Move", "Look around", "Target / talk"]
 # The glossary rows the card renders: [{term, tip}] (a stable copy, same shape as GLOSSARY).
 static func glossary_rows() -> Array:
 	var out: Array = []
+	var keys := AbilityKeybinds.range_label()  # T-723: {keys} = the live ability-key range
 	for g: Dictionary in GLOSSARY:
-		out.append({"term": str(g["term"]), "tip": str(g["tip"])})
+		out.append({"term": str(g["term"]), "tip": str(g["tip"]).replace("{keys}", keys)})
 	return out
 
 
@@ -101,11 +104,12 @@ static func essential_rows() -> Array:
 
 
 # Render one row's key/mouse label. Keycodes go through OS.get_keycode_string (the engine's own
-# printable name), joined with a thin space; a contiguous run (1-4) collapses to "1 – 4".
+# printable name), joined with a thin space; a contiguous run (1-9) collapses to "1 – 9".
 static func _label_for(row: Dictionary) -> String:
 	if row.has("mouse"):
 		return str(row["mouse"])
-	var keys: Array = row["keys"]
+	# T-723: the ability row carries no keycodes of its own — it asks AbilityKeybinds.
+	var keys: Array = AbilityKeybinds.keycodes() if row.has("ability_keys") else row["keys"]
 	if _is_contiguous(keys):
 		return "%s – %s" % [_key_name(keys[0]), _key_name(keys[keys.size() - 1])]
 	var names: Array = []
