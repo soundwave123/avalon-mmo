@@ -60,6 +60,8 @@ static func release_local_state(m, peer_id: int) -> void:
 	m._char_gender.erase(peer_id)  # T-597: persisted-gender cache
 	m._move_limiter.forget(peer_id)  # T-074
 	m._intent_limiter.forget(peer_id)  # T-382
+	if m._world_rpc != null:
+		m._world_rpc._forget_peer(peer_id)  # T-698: reach-throttle checkpoint dies with the session
 	if m._telemetry != null:
 		m._telemetry.forget_peer(peer_id)  # T-705: once-per-session markers die with the session
 	# T-051: a disconnected player must not keep mob aggro or be credited a kill via threat.

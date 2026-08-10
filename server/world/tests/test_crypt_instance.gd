@@ -42,7 +42,7 @@ func _record_reply(_peer: int, data: Dictionary) -> void:
 # same unit-test bypass test_raid_instance.gd relies on). char_level defaults to {} (every peer
 # reads as CRYPT_MIN_LEVEL — routing picks the crypt) unless a test wires one explicitly.
 # party_store defaults to empty, so _crypt_kind_for falls back to the entrant's own level.
-func _service(char_level: Dictionary = {}, party_store: Dictionary = {}) -> Object:
+func _service(char_level: Dictionary = {}, party_store: Dictionary = {}) -> _ISVC:
 	var svc = _ISVC.new()
 	var party_of: Dictionary = party_store.get("party_of", _PL.new_store()["party_of"])
 	svc.setup(
@@ -57,7 +57,7 @@ func _service(char_level: Dictionary = {}, party_store: Dictionary = {}) -> Obje
 	return svc
 
 
-func _kind_of(svc: Object, iid: int) -> String:
+func _kind_of(svc: _ISVC, iid: int) -> String:
 	return str(svc._instance_kind.get(iid, ""))
 
 

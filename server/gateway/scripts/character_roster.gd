@@ -50,10 +50,16 @@ static func valid_name(name: String) -> bool:
 static func list_characters(username: String) -> Array:
 	if _test_enabled:
 		var out: Array = []
-		for id in _test_rows:
+		for id: Variant in _test_rows:
 			if str(_test_rows[id]["username"]) == username:
-				out.append((_test_rows[id] as Dictionary).duplicate())
-		out.sort_custom(func(a, b): return int(a["slot"]) < int(b["slot"]))
+				var row: Dictionary = _test_rows[id]
+				out.append(row.duplicate())
+		out.sort_custom(
+			func(a: Dictionary, b: Dictionary) -> bool:
+				var slot_a: int = a["slot"]
+				var slot_b: int = b["slot"]
+				return slot_a < slot_b
+		)
 		return out
 	return _query(
 		(
@@ -147,7 +153,8 @@ static func delete_character(username: String, character_id: int) -> Dictionary:
 static func _lowest_free_slot(roster: Array) -> int:
 	var used: Dictionary = {}
 	for row: Dictionary in roster:
-		used[int(row.get("slot", 0))] = true
+		var slot: int = row.get("slot", 0)
+		used[slot] = true
 	for slot in range(MAX_SLOTS):
 		if not used.has(slot):
 			return slot
@@ -157,7 +164,7 @@ static func _lowest_free_slot(roster: Array) -> int:
 # A name is reserved when it is live in chars.characters or is ANOTHER account's username.
 static func _name_reserved(username: String, name: String) -> bool:
 	if _test_enabled:
-		for id in _test_rows:
+		for id: Variant in _test_rows:
 			if str(_test_rows[id]["name"]) == name:
 				return true
 		return _test_reserved.has(name) and name != username
@@ -172,7 +179,7 @@ static func _name_reserved(username: String, name: String) -> bool:
 
 
 static func _execute(sql: String, parameters: Array) -> bool:
-	var db := _get_db()
+	var db: Database = _get_db()
 	if db == null:
 		return false
 	var err: int = db.execute_query(sql, parameters)
@@ -181,7 +188,7 @@ static func _execute(sql: String, parameters: Array) -> bool:
 
 
 static func _query(sql: String, parameters: Array) -> Array:
-	var db := _get_db()
+	var db: Database = _get_db()
 	if db == null:
 		return []
 	if db.execute_query(sql, parameters) != OK:
@@ -192,11 +199,13 @@ static func _query(sql: String, parameters: Array) -> Array:
 	return result if result is Array else []
 
 
-static func _get_db() -> Object:
-	var database_script := load("res://addons/database/database.gd")
+static func _get_db() -> Database:
+	# T-757: typed via the addon's class_name; load() kept so a broken addon script
+	# degrades to null at runtime instead of failing this file's parse.
+	var database_script: GDScript = load("res://addons/database/database.gd")
 	if database_script == null:
 		return null
-	var db: Object = database_script.new()
+	var db: Database = database_script.new()
 	if db.open_db("") != OK:
 		return null
 	return db

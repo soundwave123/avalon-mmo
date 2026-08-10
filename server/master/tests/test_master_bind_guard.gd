@@ -7,7 +7,7 @@ extends "res://addons/gut/test.gd"
 
 const Main = preload("res://scripts/main.gd")
 
-var _main: Node
+var _main: Main
 
 
 func before_each() -> void:

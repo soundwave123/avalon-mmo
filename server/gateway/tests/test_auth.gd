@@ -9,7 +9,7 @@ const JwtUtilScript = preload("res://scripts/jwt.gd")
 # A valid 32-byte signing secret (raw string, >= 32 chars)
 const VALID_SECRET := "this_is_a_valid_secret_key_32chars!"
 
-var jwt: Object
+var jwt: JwtUtilScript
 
 
 func before_each() -> void:
@@ -42,8 +42,9 @@ func test_issue_token_returns_valid_jwt() -> void:
 
 	# Verify the token
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_true(result.get("valid", false), "issued token must verify")
-	assert_eq(str(result["payload"].get("sub", "")), "alice", "sub claim must match username")
+	assert_true(_b(result.get("valid", false)), "issued token must verify")
+	var payload: Dictionary = result["payload"]
+	assert_eq(str(payload.get("sub", "")), "alice", "sub claim must match username")
 
 
 func test_issue_token_returns_empty_without_secret() -> void:
@@ -57,7 +58,7 @@ func test_verify_token_accepts_valid() -> void:
 
 	var token: String = Auth.issue_token("bob")
 	var result: Dictionary = Auth.verify_token(token)
-	assert_true(result.get("valid", false), "valid token must be accepted")
+	assert_true(_b(result.get("valid", false)), "valid token must be accepted")
 
 
 func test_verify_token_rejects_wrong_secret() -> void:
@@ -67,7 +68,7 @@ func test_verify_token_rejects_wrong_secret() -> void:
 	# Change secret to simulate wrong key
 	Auth.set_test_secret("different_secret_that_is_32_chars!")
 	var result: Dictionary = Auth.verify_token(token)
-	assert_false(result.get("valid", true), "token with wrong secret must be rejected")
+	assert_false(_b(result.get("valid", true)), "token with wrong secret must be rejected")
 
 
 # ---- T-007: Refresh token tests ----
@@ -104,7 +105,7 @@ func test_rotate_refresh_token_valid() -> void:
 
 	# Rotate should succeed
 	var result: Dictionary = Auth.rotate_refresh_token(refresh_token)
-	assert_true(result.get("success", false), "valid rotation must succeed")
+	assert_true(_b(result.get("success", false)), "valid rotation must succeed")
 	assert_true(result.has("access_token"), "must return new access_token")
 	assert_true(result.has("refresh_token"), "must return new refresh_token")
 
@@ -118,11 +119,11 @@ func test_rotate_refresh_token_reused_rejected() -> void:
 
 	# First rotation succeeds
 	var first: Dictionary = Auth.rotate_refresh_token(refresh_token)
-	assert_true(first.get("success", false), "first rotation must succeed")
+	assert_true(_b(first.get("success", false)), "first rotation must succeed")
 
 	# Second rotation with SAME token must FAIL (401)
 	var second: Dictionary = Auth.rotate_refresh_token(refresh_token)
-	assert_false(second.get("success", true), "reused refresh token must be REJECTED")
+	assert_false(_b(second.get("success", true)), "reused refresh token must be REJECTED")
 	assert_eq(
 		str(second.get("reason", "")),
 		"refresh_token_consumed",
@@ -135,7 +136,7 @@ func test_rotate_refresh_token_expired() -> void:
 	Auth.set_test_refresh_secret(VALID_SECRET)
 
 	# Issue a refresh token that's already expired
-	var jwt = Auth.JwtUtil.new()
+	var jwt := Auth.JwtUtil.new()
 	var expired_refresh: String = jwt.sign(
 		{"sub": "expired_user", "jti": "expired_jti_1234567890abcdef"},
 		VALID_SECRET,
@@ -144,7 +145,7 @@ func test_rotate_refresh_token_expired() -> void:
 	)
 
 	var result: Dictionary = Auth.rotate_refresh_token(expired_refresh)
-	assert_false(result.get("success", true), "expired refresh token must be rejected")
+	assert_false(_b(result.get("success", true)), "expired refresh token must be rejected")
 	assert_eq(str(result.get("reason", "")), "expired", "reason must be expired")
 
 
@@ -152,7 +153,7 @@ func test_rotate_refresh_token_wrong_secret() -> void:
 	Auth.set_test_secret(VALID_SECRET)
 	Auth.set_test_refresh_secret(VALID_SECRET)
 
-	var jwt = Auth.JwtUtil.new()
+	var jwt := Auth.JwtUtil.new()
 	# Sign with wrong secret
 	var wrong_token: String = jwt.sign(
 		{"sub": "alice", "jti": "wrong_secret_jti_12345678"},
@@ -162,7 +163,7 @@ func test_rotate_refresh_token_wrong_secret() -> void:
 	)
 
 	var result: Dictionary = Auth.rotate_refresh_token(wrong_token)
-	assert_false(result.get("success", true), "wrong secret must be rejected")
+	assert_false(_b(result.get("success", true)), "wrong secret must be rejected")
 	assert_eq(
 		str(result.get("reason", "")), "invalid_signature", "reason must be invalid_signature"
 	)
@@ -172,12 +173,12 @@ func test_rotate_refresh_token_wrong_type() -> void:
 	Auth.set_test_secret(VALID_SECRET)
 	Auth.set_test_refresh_secret(VALID_SECRET)
 
-	var jwt = Auth.JwtUtil.new()
+	var jwt := Auth.JwtUtil.new()
 	# Present an access token to the refresh endpoint
 	var access_token: String = jwt.sign({"sub": "alice"}, VALID_SECRET, 900, "access")
 
 	var result: Dictionary = Auth.rotate_refresh_token(access_token)
-	assert_false(result.get("success", true), "access token must be rejected as refresh")
+	assert_false(_b(result.get("success", true)), "access token must be rejected as refresh")
 	assert_eq(str(result.get("reason", "")), "wrong_token_type", "reason must be wrong_token_type")
 
 
@@ -206,10 +207,12 @@ func test_rotate_refresh_concurrent_race() -> void:
 	assert_eq(success_count, 1, "concurrent race must resolve to exactly ONE winner")
 
 	# The loser must have a hard rejection reason
-	if not result1.get("success", false):
-		assert_false(result1.get("reason", "").is_empty(), "loser must have a rejection reason")
-	if not result2.get("success", false):
-		assert_false(result2.get("reason", "").is_empty(), "loser must have a rejection reason")
+	if not _b(result1.get("success", false)):
+		var reason_1 := str(result1.get("reason", ""))
+		assert_false(reason_1.is_empty(), "loser must have a rejection reason")
+	if not _b(result2.get("success", false)):
+		var reason_2 := str(result2.get("reason", ""))
+		assert_false(reason_2.is_empty(), "loser must have a rejection reason")
 
 
 func test_is_secret_valid_requires_both_secrets() -> void:
@@ -234,7 +237,7 @@ func test_is_secret_valid_requires_both_secrets() -> void:
 
 
 func test_valid_username_accepts_allowlisted_charset() -> void:
-	for u in ["abc", "player1", "kit_warrior", "a-b_c9", "abcdefghij0123456789"]:
+	for u: String in ["abc", "player1", "kit_warrior", "a-b_c9", "abcdefghij0123456789"]:
 		assert_true(Auth.valid_username(u), "'%s' must pass the allowlist" % u)
 
 
@@ -244,7 +247,7 @@ func test_valid_username_rejects_injection_surfaces() -> void:
 	var bad := [
 		'evil"name', "tab\tname", "uniçode", "UPPER", "ab", "abcdefghij01234567890", "a b", ""
 	]
-	for u in bad:
+	for u: String in bad:
 		assert_false(Auth.valid_username(str(u)), "'%s' must be rejected" % str(u))
 
 
@@ -252,3 +255,12 @@ func test_validate_login_uses_allowlist() -> void:
 	Auth.set_test_auth_mode("dev")
 	assert_false(Auth.validate_login('evil"name', "dev"), "allowlist must gate login")
 	assert_true(Auth.validate_login("player1", "dev"))
+
+
+# T-757: typed pass-throughs. bool()/int() constructor calls and GUT's untyped assert
+# parameters both flag hard-Variant arguments under the unsafe_call_argument=2 gate;
+# a typed assignment through an explicit Variant parameter is the warning-clean
+# equivalent (and now also asserts the value's runtime type).
+static func _b(v: Variant) -> bool:
+	var typed: bool = v
+	return typed

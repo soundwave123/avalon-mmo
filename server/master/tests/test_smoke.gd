@@ -6,18 +6,19 @@ extends "res://addons/gut/test.gd"
 # must come from environment, never from config (per D-008).
 
 const CONFIG_PATH := "res://scripts/server_config.gd"
+const ServerConfigScript = preload(CONFIG_PATH)
 
 
 func test_master_config_constants() -> void:
 	var cfg: GDScript = load(CONFIG_PATH)
 	assert_not_null(cfg, "server_config.gd must load")
 
-	assert_eq(cfg.SERVER_NAME, "master", "SERVER_NAME must be 'master'")
-	assert_eq(cfg.RPC_LISTEN_PORT, 9100, "RPC listen port must be 9100")
-	assert_eq(cfg.PG_HOST, "127.0.0.1", "PG_HOST must be loopback")
-	assert_eq(cfg.PG_PORT, 5432, "PG_PORT must be 5432")
-	assert_eq(cfg.PG_DB, "avalon", "PG_DB must be 'avalon'")
-	assert_eq(cfg.PG_USER, "avalon", "PG_USER must be 'avalon'")
+	assert_eq(ServerConfigScript.SERVER_NAME, "master", "SERVER_NAME must be 'master'")
+	assert_eq(ServerConfigScript.RPC_LISTEN_PORT, 9100, "RPC listen port must be 9100")
+	assert_eq(ServerConfigScript.PG_HOST, "127.0.0.1", "PG_HOST must be loopback")
+	assert_eq(ServerConfigScript.PG_PORT, 5432, "PG_PORT must be 5432")
+	assert_eq(ServerConfigScript.PG_DB, "avalon", "PG_DB must be 'avalon'")
+	assert_eq(ServerConfigScript.PG_USER, "avalon", "PG_USER must be 'avalon'")
 
 
 func test_master_config_has_no_password_constant() -> void:

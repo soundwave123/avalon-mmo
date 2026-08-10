@@ -18,7 +18,7 @@ class FakeMaster:
 
 	func call_master(method: String, params: Dictionary) -> Dictionary:
 		calls.append({"method": method, "params": params})
-		await Engine.get_main_loop().process_frame
+		await (Engine.get_main_loop() as SceneTree).process_frame
 		if responses.has(method):
 			return responses[method]
 		return {"available": [], "turn_in_ready": [], "credited": [], "talk_text": ""}

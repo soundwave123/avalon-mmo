@@ -4,7 +4,7 @@ extends "res://addons/gut/test.gd"
 
 const JwtUtilScript = preload("res://scripts/jwt.gd")
 
-var jwt: Object
+var jwt: JwtUtilScript
 
 
 func before_each() -> void:

@@ -22,7 +22,7 @@ class FakeMaster:
 
 	# A coroutine, so reach_service's `await _master.call_master(...)` resolves like the real one.
 	func call_master(method: String, params: Dictionary) -> Dictionary:
-		await Engine.get_main_loop().process_frame
+		await (Engine.get_main_loop() as SceneTree).process_frame
 		if method == "credit_reach":
 			credited.append(str(params.get("target", "")))
 			return {"credited": []}  # no live quest state — we only assert WHICH targets were tried

@@ -76,6 +76,9 @@ var _world_regions = _WR.load_default()  # T-594: sleeping-zone region table (ne
 var _qa_probe = _QAPROBE.boot()  # T-561: anomaly sentinel; null unless AVALON_QA_SENTINEL=1 (OFF)
 var _resource_ticker = _RT.new()  # T-071: resource dynamics run per server TICK (tick-edge driver)
 var _asm = _ASM.new()  # T-698: stateless FSM helper, hoisted (was an _ASM.new() per frame)
+var _mob_regions: Dictionary = {}  # T-698: entity_id -> spawn region (load-time sleeping-gate map)
+var _awake_regions = null  # T-698: this tick's awake set, shared with the NPC/gather-node gate
+var _scoped_cache: Dictionary = {}  # T-698: this tick's instance_id -> player filter (memo)
 var _move_limiter = _MRL.new()  # T-074: per-peer movement budget (units/sec across messages)
 var _intent_limiter = _IRL.new()  # T-382: per-peer budget for master-round-trip intents
 var _move_collision = _MCOL.new()  # T-379: anti-noclip — reject moves crossing barrier data
@@ -194,6 +197,7 @@ func _boot_services() -> void:
 	_rng.randomize()
 	_threat_table = _TT.new()  # T-025: threat table + mob spawn
 	_load_mobs()
+	_wire_regions()  # T-762: static region maps for the sleeping-zone gates (mobs + NPCs + nodes)
 
 	_instance_svc.setup(
 		_mobs,
@@ -207,6 +211,20 @@ func _boot_services() -> void:
 	_instance_svc.setup_rift(_party_store, Callable(_mentor_svc, "_notify_members"), _combat_states)
 	_instance_svc.setup_discovery(Callable(_world_rpc, "on_player_moved"))
 	_spawn_dispersion = _SPAWN.boot(_move_collision)  # T-373: validated login hubs
+
+
+# T-762: inject the region table into every sleeping-zone consumer, ONCE at boot — run AFTER
+# _load_mobs + world_rpc.setup, which seed the mob table and the NPC posts. T-699 clobbered this
+# call site (see the ticket); each gate is a dict probe instead of an O(regions) scan because of it.
+func _wire_regions() -> void:
+	_mob_regions = _SZ.mob_regions(_mobs, _world_regions)
+	_world_rpc.set_regions(_world_regions)
+
+
+# T-698: the same-instance player view. _run_mob_ai_tick memoises it per tick in _scoped_cache; an
+# instance method (T-749 _now_tick precedent) so the test can COUNT builds — once per instance/tick.
+func _players_in_instance(players: Dictionary, instance_id: int) -> Dictionary:
+	return _BB.positions_in_instance(players, instance_id)
 
 
 # T-749: the ONE server-clock read here (~10 sites used to inline the same integer division, which
@@ -302,7 +320,7 @@ func _broadcast_positions() -> void:
 		_BB.casts_map(_combat_states, bnow, ServerConfig.TICK_RATE_HZ),
 		_party_store["party_of"],
 		_mobs,
-		_world_rpc.tick_npcs(bnow, ServerConfig.BROADCAST_RATE_HZ, _rng),  # T-311
+		_world_rpc.tick_npcs(bnow, ServerConfig.BROADCAST_RATE_HZ, _rng, _awake_regions),  # T-311
 		ServerConfig.get_aoi_radius(),
 		ServerConfig.get_aoi_max_peers(),
 		_titles,  # T-401: worn titles ride the per-peer frame (nameplate)
@@ -878,9 +896,11 @@ func _run_mob_ai_tick(now: int) -> void:
 		_SZ.player_grounds(players), _world_regions, ServerConfig.get_zone_wake_margin()
 	)
 	var ai_results: Array = []  # collect before applying (don't mutate _mobs while iterating)
+	_awake_regions = awake  # T-698: the NPC/gather-node gate reads it at broadcast cadence
+	_scoped_cache.clear()  # T-698: per-INSTANCE player filter, rebuilt once per tick (not per mob)
 	for mob_id in _mobs:
 		var mob = _mobs[mob_id]
-		if not _SZ.is_mob_awake(mob, awake, _world_regions):
+		if not _SZ.is_mob_awake_cached(mob, awake, _mob_regions):
 			continue  # T-594: sleeping zone — no player present, this mob does not tick
 		var old_state = mob.combat_state
 		mob.combat_state = _asm.advance_timers(mob.combat_state, now)
@@ -890,11 +910,12 @@ func _run_mob_ai_tick(now: int) -> void:
 		):
 			_handle_mob_respawn(mob_id)
 			mob = _mobs[mob_id]  # re-read after respawn handler
-		# T-330-tune: a mob only sees same-instance players (global snapshot = cross-instance pulls)
-		var scoped: Dictionary = _BB.positions_in_instance(players, int(mob.instance_id))
-		ai_results.append(
-			{"mob_id": mob_id, "result": _MAI.ai_tick(mob, scoped, _threat_table, now, _rng)}
-		)
+		# T-330-tune: mob sees same-instance players only; T-698: filtered per-INSTANCE, not per mob.
+		var iid: int = int(mob.instance_id)
+		if not _scoped_cache.has(iid):
+			_scoped_cache[iid] = _players_in_instance(players, iid)
+		var res = _MAI.ai_tick(mob, _scoped_cache[iid], _threat_table, now, _rng)
+		ai_results.append({"mob_id": mob_id, "result": res})
 	for entry in ai_results:
 		var mob_id: int = entry["mob_id"]
 		_mobs[mob_id] = entry["result"].new_mob

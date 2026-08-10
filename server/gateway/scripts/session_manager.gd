@@ -59,7 +59,7 @@ static func _validate_secret_guard() -> void:
 	if _secret_validated:
 		return
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	if not jwt_util.validate_secret(_jwt_secret):
 		push_error(
 			(
@@ -76,7 +76,7 @@ static func _validate_secret_guard() -> void:
 
 static func is_secret_valid() -> bool:
 	"""Check if the JWT secret passes validation."""
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	return jwt_util.validate_secret(_jwt_secret)
 
 
@@ -179,11 +179,13 @@ static func rotate_refresh(username: String, old_jti: String) -> Dictionary:
 	var result: Variant = db.query_result()
 	db.close_db()
 
-	if result == null or result.is_empty():
+	var rows: Array = result if result is Array else []
+	if rows.is_empty():
 		# Zero rows returned — token already consumed, revoked, or doesn't exist
 		return {"success": false, "reason": "refresh_token_consumed"}
 
-	var returned_username: String = str(result[0].get("username", ""))
+	var first_row: Dictionary = rows[0]
+	var returned_username: String = str(first_row.get("username", ""))
 	return {"success": true, "username": returned_username}
 
 
@@ -196,7 +198,7 @@ static func validate_session(token: String) -> Dictionary:
 	servers. Returns {"success": false, "reason": String} on invalid.
 	"""
 	# Step 1: JWT signature + expiry check
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	var jwt_result: Dictionary = jwt_util.verify(token, _jwt_secret)
 	if not jwt_result.get("valid", false):
 		return {"success": false, "reason": jwt_result.get("reason", "invalid_token")}
@@ -211,7 +213,8 @@ static func validate_session(token: String) -> Dictionary:
 	if _is_token_revoked(token):
 		return {"success": false, "reason": "revoked"}
 
-	return {"success": true, "username": username, "cid": int(payload.get("cid", 0))}
+	var cid: int = payload.get("cid", 0)
+	return {"success": true, "username": username, "cid": cid}
 
 
 static func revoke_session(token: String) -> bool:
@@ -257,19 +260,21 @@ static func _is_token_revoked(token: String) -> bool:
 		return true
 
 	var result: Variant = db.query_result()
-	if result == null or result.is_empty():
+	var rows: Array = result if result is Array else []
+	if rows.is_empty():
 		# Token not in revocation list — it's fine
 		db.close_db()
 		return false
 
-	var raw_revoked: Variant = result[0].get("revoked", false)
+	var first_row: Dictionary = rows[0]
+	var raw_revoked: Variant = first_row.get("revoked", false)
 	# psql -A returns booleans as strings "t"/"f". Convert explicitly.
 	var revoked: bool = str(raw_revoked) == "t"
 	db.close_db()
 	return revoked
 
 
-static func _get_db() -> Object:
+static func _get_db() -> Database:
 	"""Create and connect to Postgres. Returns null on failure."""
 	var db := _create_db()
 	if db == null:
@@ -297,27 +302,29 @@ static func _get_db() -> Object:
 	return db
 
 
-static func _create_db() -> Object:
-	"""Instantiate the GDAL DB plugin (class_name Database).
+static func _create_db() -> Database:
+	"""Instantiate the DB plugin (class_name Database).
 
-	Uses load() instead of preload() since the addon path may not
-	exist in all project configurations. Returns null if unavailable.
+	T-757: the return is statically typed via the addon's class_name (the addon is
+	sync-guaranteed in every project that carries this file — see
+	scripts/check_shared_files_sync.sh); load() stays so a broken addon script
+	still degrades to null at runtime instead of failing this file's parse.
 	"""
-	var Database := load("res://addons/database/database.gd")
-	return Database.new() if Database != null else null
+	var database_script: GDScript = load("res://addons/database/database.gd")
+	return database_script.new() if database_script != null else null
 
 
 static func set_test_secret(secret: String) -> void:
 	"""Set JWT secret for testing purposes."""
 	_jwt_secret = secret
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	_secret_validated = jwt_util.validate_secret(secret)
 
 
 static func set_test_refresh_secret(secret: String) -> void:
 	"""T-007: Set refresh token secret for testing purposes."""
 	_refresh_secret = secret
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	_refresh_secret_validated = jwt_util.validate_secret(secret)
 
 

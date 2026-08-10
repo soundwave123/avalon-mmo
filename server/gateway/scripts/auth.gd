@@ -84,7 +84,7 @@ static func _validate_secret_guard() -> void:
 	if _secret_validated:
 		return
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	if not jwt_util.validate_secret(_jwt_secret):
 		push_warning(
 			(
@@ -108,7 +108,7 @@ static func _validate_refresh_secret_guard() -> void:
 	if _refresh_secret_validated:
 		return
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	if not jwt_util.validate_secret(_refresh_secret):
 		push_warning(
 			(
@@ -125,9 +125,9 @@ static func _validate_refresh_secret_guard() -> void:
 
 static func is_secret_valid() -> bool:
 	"""Check if BOTH JWT secrets pass validation. Returns false if either is missing/short."""
-	var jwt_util = JwtUtil.new()
-	var access_ok = jwt_util.validate_secret(_jwt_secret)
-	var refresh_ok = jwt_util.validate_secret(_refresh_secret)
+	var jwt_util := JwtUtil.new()
+	var access_ok := jwt_util.validate_secret(_jwt_secret)
+	var refresh_ok := jwt_util.validate_secret(_refresh_secret)
 	return access_ok and refresh_ok
 
 
@@ -139,7 +139,8 @@ static func valid_username(username: String) -> bool:
 
 static func validate_login(username: String, password: String) -> bool:
 	"""Validate dev credentials or an owner-provisioned active account. Always fail closed."""
-	return bool(check_login(username, password).get("ok", false))
+	var login_ok: bool = check_login(username, password).get("ok", false)
+	return login_ok
 
 
 static func check_login(username: String, password: String) -> Dictionary:
@@ -178,9 +179,11 @@ static func set_password(
 	Returns {"ok": true, "reason": ""} or {"ok": false, "reason": String}.
 	"""
 	var check := check_login(username, one_time_password)
-	if not bool(check.get("ok", false)):
+	var check_ok: bool = check.get("ok", false)
+	if not check_ok:
 		return _password_error("invalid_credentials")
-	if not bool(check.get("password_is_otp", false)):
+	var check_is_otp: bool = check.get("password_is_otp", false)
+	if not check_is_otp:
 		return _password_error("not_required")
 	if new_password.length() < MIN_PASSWORD_LENGTH:
 		return _password_error("password_too_short")
@@ -218,14 +221,16 @@ static func _store_password(username: String, password_hash: String) -> bool:
 		+ "WHERE username = $1 AND password_is_otp = true RETURNING username"
 	)
 	var err: int = db.execute_query(sql, [username, password_hash])
-	var rows: Variant = db.query_result() if err == OK else null
+	var result: Variant = db.query_result() if err == OK else null
 	db.close_db()
-	return err == OK and rows != null and not rows.is_empty()
+	var rows: Array = result if result is Array else []
+	return err == OK and not rows.is_empty()
 
 
 static func _lookup_account(username: String) -> Dictionary:
 	if _test_accounts_enabled:
-		return (_test_accounts.get(username, {}) as Dictionary).duplicate()
+		var test_row: Dictionary = _test_accounts.get(username, {})
+		return test_row.duplicate()
 	var db := _open_database()
 	if db == null:
 		return {}
@@ -236,19 +241,23 @@ static func _lookup_account(username: String) -> Dictionary:
 	if db.execute_query(sql, [username]) != OK:
 		db.close_db()
 		return {}
-	var rows: Variant = db.query_result()
+	var result: Variant = db.query_result()
 	db.close_db()
-	if rows == null or rows.is_empty():
+	var rows: Array = result if result is Array else []
+	if rows.is_empty():
 		return {}
-	return (rows[0] as Dictionary).duplicate()
+	var row: Dictionary = rows[0]
+	return row.duplicate()
 
 
-static func _open_database() -> Object:
-	"""The single load site for the database addon. Returns null when it cannot be opened."""
-	var Database := load("res://addons/database/database.gd")
-	if Database == null:
+static func _open_database() -> Database:
+	"""The single load site for the database addon. Returns null when it cannot be opened.
+	T-757: return typed via the addon's class_name; load() kept so a broken addon script
+	degrades to null at runtime instead of failing this file's parse."""
+	var database_script: GDScript = load("res://addons/database/database.gd")
+	if database_script == null:
 		return null
-	var db: Object = Database.new()
+	var db: Database = database_script.new()
 	if db.open_db("") != OK:
 		return null
 	return db
@@ -271,7 +280,7 @@ static func issue_token(username: String) -> String:
 		if not _secret_validated:
 			return ""
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	var token: String = jwt_util.sign({"sub": username}, _jwt_secret, _jwt_ttl, "access")
 	return token
 
@@ -294,7 +303,7 @@ static func issue_tokens(
 		if not _secret_validated or not _refresh_secret_validated:
 			return {"error": "secret_validation_failed"}
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 
 	# Generate unique JTI for this refresh token
 	var jti: String = JwtUtil.generate_jti()
@@ -342,7 +351,7 @@ static func rotate_refresh_token(refresh_token: String) -> Dictionary:
 		if not _secret_validated or not _refresh_secret_validated:
 			return {"success": false, "reason": "secret_validation_failed"}
 
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 
 	# Verify refresh token signature + expiry + type
 	var result: Dictionary = jwt_util.verify_type(refresh_token, _refresh_secret, "refresh")
@@ -374,11 +383,13 @@ static func rotate_refresh_token(refresh_token: String) -> Dictionary:
 	# carry into the new pair, so a mid-session refresh never silently drops the selection.
 	var new_access_claims: Dictionary = {"sub": username}
 	var new_refresh_claims: Dictionary = {"sub": username, "jti": new_jti}
-	if int(payload.get("cid", 0)) > 0 and str(payload.get("cname", "")) != "":
-		new_access_claims["cid"] = int(payload["cid"])
-		new_access_claims["cname"] = str(payload["cname"])
-		new_refresh_claims["cid"] = int(payload["cid"])
-		new_refresh_claims["cname"] = str(payload["cname"])
+	var carried_cid: int = payload.get("cid", 0)
+	var carried_cname := str(payload.get("cname", ""))
+	if carried_cid > 0 and carried_cname != "":
+		new_access_claims["cid"] = carried_cid
+		new_access_claims["cname"] = carried_cname
+		new_refresh_claims["cid"] = carried_cid
+		new_refresh_claims["cname"] = carried_cname
 
 	var new_access: String = jwt_util.sign(new_access_claims, _jwt_secret, _jwt_ttl, "access")
 	var new_refresh: String = jwt_util.sign(
@@ -400,7 +411,7 @@ static func verify_token(token: String) -> Dictionary:
 	Verify a JWT token and return the payload if valid.
 	Returns {"valid": false, "reason": String} on failure.
 	"""
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	var result: Dictionary = jwt_util.verify(token, _jwt_secret)
 	return result
 
@@ -411,14 +422,14 @@ static func verify_token(token: String) -> Dictionary:
 static func set_test_secret(secret: String) -> void:
 	"""Set JWT secret for testing purposes."""
 	_jwt_secret = secret
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	_secret_validated = jwt_util.validate_secret(secret)
 
 
 static func set_test_refresh_secret(secret: String) -> void:
 	"""T-007: Set refresh token secret for testing purposes."""
 	_refresh_secret = secret
-	var jwt_util = JwtUtil.new()
+	var jwt_util := JwtUtil.new()
 	_refresh_secret_validated = jwt_util.validate_secret(secret)
 
 
@@ -454,4 +465,5 @@ static func set_test_account(
 
 static func test_account_row(username: String) -> Dictionary:
 	"""T-740: read back the stored row so a test can prove the flag/hash actually changed."""
-	return (_test_accounts.get(username, {}) as Dictionary).duplicate()
+	var test_row: Dictionary = _test_accounts.get(username, {})
+	return test_row.duplicate()

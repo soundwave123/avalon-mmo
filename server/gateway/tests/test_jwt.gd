@@ -10,7 +10,7 @@ const JwtUtilScript = preload("res://scripts/jwt.gd")
 # A valid 32-byte signing secret (raw string, >= 32 chars)
 const VALID_SECRET := "this_is_a_valid_secret_key_32chars!"
 
-var jwt: Object
+var jwt: JwtUtilScript
 
 
 func before_each() -> void:
@@ -36,7 +36,7 @@ func test_sign_produces_valid_jwt_format() -> void:
 func test_sign_includes_standard_claims() -> void:
 	var token: String = jwt.sign({"sub": "bob"}, VALID_SECRET, 3600)
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_true(result.get("valid", false), "signed token must verify")
+	assert_true(_b(result.get("valid", false)), "signed token must verify")
 	var payload: Dictionary = result["payload"]
 	assert_eq(str(payload.get("sub", "")), "bob", "payload must include sub claim")
 	assert_true(payload.has("iat"), "payload must include iat claim")
@@ -46,7 +46,7 @@ func test_sign_includes_standard_claims() -> void:
 func test_sign_includes_correct_ttl() -> void:
 	var token: String = jwt.sign({"sub": "charlie"}, VALID_SECRET, 1800)
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_true(result.get("valid", false), "signed token must verify")
+	assert_true(_b(result.get("valid", false)), "signed token must verify")
 	var payload: Dictionary = result["payload"]
 	var iat: float = payload.get("iat", 0)
 	var exp: float = payload.get("exp", 0)
@@ -62,14 +62,15 @@ func test_sign_includes_correct_ttl() -> void:
 func test_verify_accepts_valid_token() -> void:
 	var token: String = jwt.sign({"sub": "alice"}, VALID_SECRET, 3600)
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_true(result.get("valid", false), "valid token must be accepted")
-	assert_eq(str(result["payload"].get("sub", "")), "alice", "sub claim must match")
+	assert_true(_b(result.get("valid", false)), "valid token must be accepted")
+	var payload: Dictionary = result["payload"]
+	assert_eq(str(payload.get("sub", "")), "alice", "sub claim must match")
 
 
 func test_verify_rejects_wrong_secret() -> void:
 	var token: String = jwt.sign({"sub": "alice"}, VALID_SECRET, 3600)
 	var result: Dictionary = jwt.verify(token, "different_secret_that_is_32_chars!")
-	assert_false(result.get("valid", true), "token with wrong secret must be rejected")
+	assert_false(_b(result.get("valid", true)), "token with wrong secret must be rejected")
 	assert_eq(
 		str(result.get("reason", "")), "invalid_signature", "reason must be invalid_signature"
 	)
@@ -87,7 +88,7 @@ func test_verify_rejects_tampered_token() -> void:
 			tampered_payload += payload[i]
 	var tampered_token: String = parts[0] + "." + tampered_payload + "." + parts[2]
 	var result: Dictionary = jwt.verify(tampered_token, VALID_SECRET)
-	assert_false(result.get("valid", true), "tampered token must be rejected")
+	assert_false(_b(result.get("valid", true)), "tampered token must be rejected")
 	assert_eq(
 		str(result.get("reason", "")), "invalid_signature", "reason must be invalid_signature"
 	)
@@ -102,29 +103,29 @@ func test_verify_rejects_expired_token() -> void:
 	# past_time + 100 > past_time + 30, so token is expired.
 	jwt.set_mock_time(past_time + 100)
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_false(result.get("valid", true), "expired token must be rejected")
+	assert_false(_b(result.get("valid", true)), "expired token must be rejected")
 	assert_eq(str(result.get("reason", "")), "expired", "reason must be expired")
 
 
 func test_verify_rejects_malformed_token() -> void:
 	var result: Dictionary = jwt.verify("not.a.valid.jwt.token", VALID_SECRET)
-	assert_false(result.get("valid", true), "malformed token must be rejected")
+	assert_false(_b(result.get("valid", true)), "malformed token must be rejected")
 	assert_eq(str(result.get("reason", "")), "invalid_format", "reason must be invalid_format")
 
 
 func test_verify_rejects_empty_token() -> void:
 	var result: Dictionary = jwt.verify("", VALID_SECRET)
-	assert_false(result.get("valid", true), "empty token must be rejected")
+	assert_false(_b(result.get("valid", true)), "empty token must be rejected")
 
 
 func test_verify_rejects_single_part_token() -> void:
 	var result: Dictionary = jwt.verify("eyJhbG...NiJ9", VALID_SECRET)
-	assert_false(result.get("valid", true), "single-part token must be rejected")
+	assert_false(_b(result.get("valid", true)), "single-part token must be rejected")
 
 
 func test_verify_rejects_two_part_token() -> void:
 	var result: Dictionary = jwt.verify("part1.part2", VALID_SECRET)
-	assert_false(result.get("valid", true), "two-part token must be rejected")
+	assert_false(_b(result.get("valid", true)), "two-part token must be rejected")
 
 
 # ---- Secret validation tests (fail-fast guard) ----
@@ -215,9 +216,15 @@ func test_sign_escapes_backslash_and_quote_correctly() -> void:
 	# into an escaped backslash + RAW quote — broken JSON that fails round-trip.
 	var token: String = jwt.sign({"sub": 'a"b\\c'}, VALID_SECRET, 3600)
 	var result: Dictionary = jwt.verify(token, VALID_SECRET)
-	assert_true(bool(result.get("valid", false)), "token with quote+backslash must verify")
-	assert_eq(
-		str(result.get("payload", {}).get("sub", "")),
-		'a"b\\c',
-		"payload must round-trip the original string"
-	)
+	assert_true(_b(result.get("valid", false)), "token with quote+backslash must verify")
+	var payload: Dictionary = result.get("payload", {})
+	assert_eq(str(payload.get("sub", "")), 'a"b\\c', "payload must round-trip the original string")
+
+
+# T-757: typed pass-throughs. bool()/int() constructor calls and GUT's untyped assert
+# parameters both flag hard-Variant arguments under the unsafe_call_argument=2 gate;
+# a typed assignment through an explicit Variant parameter is the warning-clean
+# equivalent (and now also asserts the value's runtime type).
+static func _b(v: Variant) -> bool:
+	var typed: bool = v
+	return typed

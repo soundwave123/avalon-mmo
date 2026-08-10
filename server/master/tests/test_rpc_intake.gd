@@ -17,7 +17,7 @@ const DiscoveryStore = preload("res://scripts/discovery_store.gd")
 const TelemetryStore = preload("res://scripts/telemetry_store.gd")
 const QuestStateMachine = preload("res://scripts/quest_state_machine.gd")
 
-var _main: Node
+var _main: Main
 
 
 func before_each() -> void:

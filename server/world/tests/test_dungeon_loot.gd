@@ -22,7 +22,7 @@ class FakeMaster:
 
 	func call_master(method: String, params: Dictionary) -> Dictionary:
 		calls.append({"method": method, "params": params})
-		await Engine.get_main_loop().process_frame
+		await (Engine.get_main_loop() as SceneTree).process_frame
 		return {"ok": true, "credited": []}
 
 

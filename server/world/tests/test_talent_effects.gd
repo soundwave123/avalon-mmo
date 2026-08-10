@@ -43,7 +43,7 @@ func test_effective_cost_reduction_and_floor() -> void:
 	assert_eq(_TEF.effective_cost(10, {}, 1), 10, "no mods = base")
 
 
-func _snap(pos: Vector3, mods: Dictionary = {}) -> Object:
+func _snap(pos: Vector3, mods: Dictionary = {}) -> _ES:
 	var s = _ES.new()
 	s.peer_id = 1
 	s.position = pos

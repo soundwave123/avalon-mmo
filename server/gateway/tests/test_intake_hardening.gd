@@ -22,6 +22,9 @@ const Main = preload("res://scripts/main.gd")
 
 func test_malformed_frames_decode_to_null_without_engine_errors() -> void:
 	for raw: String in ["not json", "", "{", "}{", "\t", '{"a":}', "[1,", '{"a":1']:
+		# T-757 @warning_ignore reason: decode_frame returns Variant BY DESIGN (null means
+		# rejected frame) and assert_null's parameter is untyped — no typed form exists.
+		@warning_ignore("unsafe_call_argument")
 		assert_null(Main.decode_frame(raw), "garbage frame must decode to null: %s" % raw)
 	assert_engine_error_count(0, "a malformed frame must not raise an engine error")
 
@@ -29,6 +32,8 @@ func test_malformed_frames_decode_to_null_without_engine_errors() -> void:
 func test_valid_json_with_a_non_object_root_is_rejected() -> void:
 	# These parse fine but are not frames. The guard catches them; the point is silence.
 	for raw: String in ["[1,2]", "42", '"a string"', "null", "true", "[]", "[[1]]", "-1.5"]:
+		# T-757 @warning_ignore reason: same by-design-Variant assert_null pairing as above.
+		@warning_ignore("unsafe_call_argument")
 		assert_null(Main.decode_frame(raw), "non-object root must decode to null: %s" % raw)
 	assert_engine_error_count(0, "a non-object root must not raise an engine error")
 
@@ -37,7 +42,8 @@ func test_a_well_formed_frame_still_decodes() -> void:
 	var decoded: Variant = Main.decode_frame('{"type":"login","username":"alice"}')
 	assert_true(decoded is Dictionary, "a valid frame must decode to a Dictionary")
 	if decoded is Dictionary:
-		assert_eq(str((decoded as Dictionary).get("type", "")), "login")
+		var decoded_dict: Dictionary = decoded
+		assert_eq(str(decoded_dict.get("type", "")), "login")
 	assert_engine_error_count(0, "the happy path must not raise an engine error")
 
 
@@ -51,7 +57,10 @@ func test_numeric_overflow_is_a_known_engine_warning_not_an_abort() -> void:
 	# inf), nothing aborts, and decode_frame still rejects the bare number for not being an
 	# object. Deliberately kept out of the fuzz corpus above so that test's zero-error
 	# assertion stays meaningful.
+	# T-757 @warning_ignore reason: by-design-Variant assert_null pairing (see above).
+	@warning_ignore("unsafe_call_argument")
 	assert_null(Main.decode_frame("1e999"), "an overflowing bare number is still not a frame")
+	@warning_ignore("unsafe_call_argument")
 	assert_null(Main.decode_frame("-1e999"), "same for the negative case")
 	# Declare the two engine warnings so they are accounted for, not silently tolerated.
 	assert_engine_error_count(2, "exactly two 'Exponent too high' warnings, one per input")

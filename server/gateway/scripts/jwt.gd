@@ -43,7 +43,7 @@ func _dict_to_json_compact(d: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	var keys: Array = d.keys()
 	keys.sort()
-	for key in keys:
+	for key: Variant in keys:
 		parts.append('"%s":%s' % [key, _json_value(d[key])])
 	return "{" + ",".join(parts) + "}"
 
@@ -53,16 +53,19 @@ func _json_value(val: Variant) -> String:
 		TYPE_STRING:
 			# T-074: backslash must be escaped FIRST — the old quote-then-backslash order
 			# turned a quote's escape (\") into an escaped backslash + RAW quote (\\").
-			return '"%s"' % val.replace("\\", "\\\\").replace('"', '\\"')
+			var string_val: String = val
+			return '"%s"' % string_val.replace("\\", "\\\\").replace('"', '\\"')
 		TYPE_FLOAT, TYPE_INT:
 			return str(val)
 		TYPE_BOOL:
 			return "true" if val else "false"
 		TYPE_DICTIONARY:
-			return _dict_to_json_compact(val as Dictionary)
+			var dict_val: Dictionary = val
+			return _dict_to_json_compact(dict_val)
 		TYPE_ARRAY:
 			var items: PackedStringArray = []
-			for item in val as Array:
+			var array_val: Array = val
+			for item: Variant in array_val:
 				items.append(_json_value(item))
 			return "[" + ",".join(items) + "]"
 		_:
@@ -147,7 +150,7 @@ func verify(token: String, secret: String, clock_skew: int = 30) -> Dictionary:
 	var header: Variant = JSON.parse_string(header_json)
 	if typeof(header) != TYPE_DICTIONARY:
 		return {"valid": false, "reason": "invalid_header"}
-	var h: Dictionary = header as Dictionary
+	var h: Dictionary = header
 	if h.get("alg", "") != "HS256":
 		return {"valid": false, "reason": "unsupported_alg"}
 
@@ -157,7 +160,7 @@ func verify(token: String, secret: String, clock_skew: int = 30) -> Dictionary:
 	var payload: Variant = JSON.parse_string(payload_json)
 	if typeof(payload) != TYPE_DICTIONARY:
 		return {"valid": false, "reason": "invalid_payload"}
-	var p: Dictionary = payload as Dictionary
+	var p: Dictionary = payload
 
 	# Check expiry with clock skew
 	var exp: float = p.get("exp", 0)

@@ -157,7 +157,7 @@ func test_bosses_reuse_shipped_silhouettes_and_keep_decoupled_aliases() -> void:
 
 # One ENCOUNTER = one pull. The husk pair is deliberately a single pull (a 2 m pack), so spacing is
 # measured between encounters — the pack's own centroid, each boss, and the respawn anchor.
-func _encounter_points(svc: Object) -> Array:
+func _encounter_points(svc: _ISVC) -> Array:
 	var points: Array = [svc.TRIAL_ENTRANCE]
 	var pack := Vector3.ZERO
 	var pack_n := 0

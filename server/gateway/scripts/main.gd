@@ -87,7 +87,7 @@ func _process(_delta: float) -> void:
 		print("[gateway] client connected: peer_id=%d" % peer_id)
 
 	# Service existing peers
-	for peer_id in _peers.keys():
+	for peer_id: int in _peers.keys():
 		var ws: WebSocketPeer = _peers[peer_id]
 		ws.poll()
 		var state := ws.get_ready_state()
@@ -172,7 +172,8 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 		return
 
 	var check: Dictionary = Auth.check_login(username, password)
-	if not bool(check.get("ok", false)):
+	var login_ok: bool = check.get("ok", false)
+	if not login_ok:
 		_login_limiter.record_failure(source, now_ms)
 		_send_err_and_close(peer_id, ws, "invalid_credentials")
 		return
@@ -181,7 +182,8 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 	# socket stays OPEN for the set_password that follows, so choosing a password and getting into
 	# the world is one round trip with nothing re-typed. Not a credential failure — the player did
 	# everything right — so it costs nothing against the rate limiter.
-	if bool(check.get("password_is_otp", false)):
+	var password_is_otp: bool = check.get("password_is_otp", false)
+	if password_is_otp:
 		_send_text(
 			ws,
 			{"type": "password_change_required", "min_length": Auth.MIN_PASSWORD_LENGTH},
@@ -189,7 +191,8 @@ func _process_login_request(peer_id: int, ws: WebSocketPeer, request: Dictionary
 		print("[gateway] password_change_required for %s (one-time password)" % username)
 		return
 
-	_issue_login_ok(peer_id, ws, username, bool(request.get("manage", false)))
+	var manage_login: bool = request.get("manage", false)
+	_issue_login_ok(peer_id, ws, username, manage_login)
 
 
 # T-740: spend the one-time password, install the player's own, and log them in — same socket,
@@ -208,7 +211,8 @@ func _process_set_password(peer_id: int, ws: WebSocketPeer, request: Dictionary)
 	var result: Dictionary = Auth.set_password(
 		username, str(request.get("password", "")), str(request.get("new_password", ""))
 	)
-	if not bool(result.get("ok", false)):
+	var set_password_ok: bool = result.get("ok", false)
+	if not set_password_ok:
 		var reason := str(result.get("reason", "invalid_credentials"))
 		if reason == "invalid_credentials":
 			_login_limiter.record_failure(source, now_ms)
@@ -216,7 +220,8 @@ func _process_set_password(peer_id: int, ws: WebSocketPeer, request: Dictionary)
 		return
 
 	print("[gateway] password set for %s (one-time password consumed)" % username)
-	_issue_login_ok(peer_id, ws, username, bool(request.get("manage", false)))
+	var manage_set: bool = request.get("manage", false)
+	_issue_login_ok(peer_id, ws, username, manage_set)
 
 
 func _send_set_password_err(peer_id: int, ws: WebSocketPeer, reason: String) -> void:
@@ -275,20 +280,20 @@ func _process_char_request(
 			var created := CharacterRoster.create_character(
 				username, str(request.get("name", "")).strip_edges().to_lower()
 			)
-			if not bool(created.get("ok", false)):
+			var created_ok: bool = created.get("ok", false)
+			if not created_ok:
 				_send_text(
 					ws, {"type": "char_create_err", "reason": str(created.get("reason", ""))}
 				)
 				return
-			_send_text(ws, {"type": "char_create_ok", "character": created.get("character", {})})
-			print(
-				"[gateway] char_create %s -> %s" % [username, created["character"].get("name", "")]
-			)
+			var created_character: Dictionary = created.get("character", {})
+			_send_text(ws, {"type": "char_create_ok", "character": created_character})
+			print("[gateway] char_create %s -> %s" % [username, created_character.get("name", "")])
 		"char_delete":
-			var deleted := CharacterRoster.delete_character(
-				username, int(request.get("character_id", 0))
-			)
-			if not bool(deleted.get("ok", false)):
+			var delete_id: int = request.get("character_id", 0)
+			var deleted := CharacterRoster.delete_character(username, delete_id)
+			var deleted_ok: bool = deleted.get("ok", false)
+			if not deleted_ok:
 				_send_text(
 					ws, {"type": "char_delete_err", "reason": str(deleted.get("reason", ""))}
 				)
@@ -297,12 +302,13 @@ func _process_char_request(
 				ws,
 				{
 					"type": "char_delete_ok",
-					"character_id": int(request.get("character_id", 0)),
+					"character_id": delete_id,
 					"characters": CharacterRoster.list_characters(username),
 				}
 			)
 		"char_select":
-			_process_char_select(ws, username, int(request.get("character_id", 0)))
+			var select_id: int = request.get("character_id", 0)
+			_process_char_select(ws, username, select_id)
 
 
 func _process_char_select(ws: WebSocketPeer, username: String, character_id: int) -> void:
@@ -311,8 +317,9 @@ func _process_char_select(ws: WebSocketPeer, username: String, character_id: int
 	if character.is_empty():
 		_send_text(ws, {"type": "char_select_err", "reason": "not_owned"})
 		return
+	var selected_id: int = character.get("id", 0)
 	var tokens: Dictionary = Auth.issue_tokens(
-		username, int(character.get("id", 0)), str(character.get("name", ""))
+		username, selected_id, str(character.get("name", ""))
 	)
 	if tokens.has("error"):
 		_send_text(ws, {"type": "char_select_err", "reason": "token_issuance_failed"})
@@ -371,7 +378,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		print("[gateway] shutting down")
 		_shutting_down = true
-		for peer_id in _peers.keys():
+		for peer_id: int in _peers.keys():
 			var ws: WebSocketPeer = _peers[peer_id]
 			ws.close(1001, "server shutdown")
 		if _tcp != null:
