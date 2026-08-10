@@ -207,5 +207,45 @@ func test_target_death_detaches_the_ring_instead_of_freeing_it() -> void:
 	assert_false(l.has_target(20), "the dead target is gone")
 
 
+# T-751: the failure the ==null guard could not survive. The ring rides the target body, so ANY
+# path that frees that body without detaching first takes the ring down with it — and the freed
+# reference left in `_target_ring` is NOT null, so the old `if _target_ring == null: return` guard
+# read false, fell through, and dereferenced a corpse at the 10 Hz broadcast rate for the rest of
+# the session (one missed detach = a permanently dead ring). is_instance_valid() sees the corpse,
+# and because the ring is cheap stateless geometry, seeing it means rebuilding it.
+func test_a_missed_detach_self_heals_instead_of_killing_the_ring_for_the_session() -> void:
+	var l = _layer()
+	_ingest_mixed(l)
+	l.set_target(20)
+	var body = l.target_node(20)
+	assert_eq(l._target_ring.get_parent(), body, "precondition: the ring is riding the body")
+	# Simulate the missed detach: the entity is dropped and its body freed with the ring aboard.
+	l._entities.erase("mob_20")
+	body.free()
+	assert_false(is_instance_valid(l._target_ring), "precondition: the ring really was freed")
+	# The next selection must recover rather than error. Pre-fix this deref killed the ring path.
+	l.set_target(10)
+	assert_true(is_instance_valid(l._target_ring), "the layer rebuilt the ring instead of dying")
+	assert_eq(l._target_ring.get_parent(), l.target_node(10), "and it rides the new target")
+	assert_true(l._target_ring.visible, "a self-healed ring is a VISIBLE ring")
+	assert_almost_eq(l._target_ring.radius(), 0.5, 0.001, "fully re-fitted, not a bare stub")
+
+
+# T-751: the same recovery through the OTHER guard — deselecting after a missed detach parks a
+# rebuilt ring on the layer instead of walking a freed reference.
+func test_deselect_after_a_missed_detach_parks_a_rebuilt_ring() -> void:
+	var l = _layer()
+	_ingest_mixed(l)
+	l.set_target(20)
+	var stale = l._target_ring.get_parent()
+	l._entities.erase("mob_20")
+	stale.free()
+	assert_false(is_instance_valid(l._target_ring), "precondition: freed with its parent")
+	l.set_target(-1)
+	assert_true(is_instance_valid(l._target_ring), "a fresh ring exists")
+	assert_eq(l._target_ring.get_parent(), l, "parked back on the layer")
+	assert_false(l._target_ring.visible, "and hidden — nothing is selected")
+
+
 func _ring_color(l) -> Color:
 	return (l._target_ring.material_override as StandardMaterial3D).emission

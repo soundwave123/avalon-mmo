@@ -208,6 +208,7 @@ func test_mentor_controls_send_desire_without_level_role_or_identity() -> void:
 func _escape_key() -> InputEventKey:
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_ESCAPE
+	ev.physical_keycode = KEY_ESCAPE  # T-761: the panel dispatches on the PHYSICAL code
 	ev.pressed = true
 	return ev
 
@@ -299,3 +300,139 @@ func test_mentor_and_discover_row_buttons_keep_their_full_label_width_at_1280p()
 	# test in this file) doesn't race root's add_child_autofree cascade-free of the same node.
 	root.remove_child(_panel)
 	add_child(_panel)
+
+
+# ---- T-755: BBCode injection through player-controlled guild text ----------------
+#
+# This panel is the sharpest instance of the T-599 class: it is bbcode_enabled AND its meta_clicked
+# is wired to guild_kick/guild_promote/guild_demote/party_invite. Free-text fields (guild name,
+# recruitment blurb, seek/mentor note) are the live vector — a name cannot carry "[" today because
+# character_name.gd restricts it to [a-z0-9_-], but a blurb had NO charset rule at all.
+#
+# The assertion that actually proves the fix is get_parsed_text() on a real bbcode_enabled label:
+# if the payload were still live markup, the "[url=" spelling would be CONSUMED as a tag and absent
+# from the parsed output (leaving only its clickable label behind). Seeing it verbatim in the
+# parsed text is exactly the "renders as literal text" claim.
+func _parsed(body: String) -> String:
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = body
+	return rtl.get_parsed_text()
+
+
+func test_hostile_recruitment_blurb_renders_literally_not_as_a_kick_link() -> void:
+	# The attack: a guild advertises itself with a blurb that paints a fake management link. Any
+	# leader browsing open guilds sees a clickable "[x]" that would really kick Bob on click.
+	(
+		_panel
+		. receive(
+			{
+				"type": "guild_discovery",
+				"guilds":
+				[
+					{
+						"name": "Knights",
+						"blurb": "[url=kick|Bob]\\[x\\][/url] free loot",
+						"members": 4
+					}
+				],
+			}
+		)
+	)
+	var body := _panel.body_text()
+	assert_false(
+		body.contains("[url=kick|Bob]"), "a blurb must never reach the label as a live url tag"
+	)
+	assert_string_contains(body, "[lb]url=kick|Bob]", "the payload is escaped, not dropped")
+	var parsed := _parsed(body)
+	assert_string_contains(parsed, "[url=kick|Bob]", "the hostile blurb renders as literal text")
+	assert_string_contains(parsed, "free loot", "the tail of the blurb is not swallowed")
+
+
+func test_hostile_seek_note_cannot_paint_markup_or_swallow_later_rows() -> void:
+	# An unclosed tag is the quieter half of the bug: it makes the label eat every character after
+	# it, so a crafted note can ERASE the roster rows rendered below it.
+	(
+		_panel
+		. receive(
+			{
+				"type": "guild_seek_board",
+				"players":
+				[
+					{"name": "mallory", "level": 12, "role": "tank", "note": "[color=red]pick me"},
+					{"name": "victim", "level": 9, "role": "heal", "note": "quiet"},
+				],
+			}
+		)
+	)
+	var parsed := _parsed(_panel.body_text())
+	assert_string_contains(parsed, "[color=red]pick me", "the note renders as inert literal text")
+	assert_string_contains(parsed, "victim", "an unclosed tag must not swallow the next row")
+	assert_string_contains(parsed, "quiet", "...nor the rest of the board")
+
+
+func test_hostile_guild_name_and_invite_render_literally() -> void:
+	_panel.receive({"type": "guild_invite", "from": "mallory", "guild_name": "[b]Fake[/b]"})
+	assert_string_contains(_parsed(_panel.body_text()), "[b]Fake[/b]", "invite name stays literal")
+	var roster := _roster()
+	roster["guild_name"] = "[color=#ff0000]Blood"
+	_panel.receive(roster)
+	var parsed := _parsed(_panel.body_text())
+	assert_string_contains(parsed, "[color=#ff0000]Blood", "roster guild name stays literal")
+	assert_string_contains(parsed, "Bob", "a hostile guild name must not swallow the roster")
+
+
+func test_bracket_bearing_member_name_cannot_forge_a_meta_payload() -> void:
+	# Defence in depth for the day the name charset loosens. A name carrying "]" would otherwise
+	# terminate the [url=kick|...] tag early, and one carrying "|" would shift the argument
+	# positions _on_meta reads — so both are stripped from the payload rather than escaped.
+	var roster := _roster()
+	roster["members"][1] = {
+		"name": "bo]b|kick|alice",
+		"rank": 2,
+		"rank_name": "Member",
+		"is_leader": false,
+		"online": false,
+	}
+	_panel.receive(roster)
+	var body := _panel.body_text()
+	assert_string_contains(
+		body, "[url=kick|bobkickalice]", "the meta payload carries no separators"
+	)
+	assert_false(
+		body.contains("[url=kick|bo]"), "a ']' in a name must not terminate the url tag early"
+	)
+	# The DISPLAY copy of the same name is escaped rather than stripped, so the player still reads
+	# the real name — it is only the clickable payload that is narrowed.
+	assert_string_contains(_parsed(body), "bo]b|kick|alice", "the name still displays in full")
+
+
+func test_mentor_board_note_is_escaped_before_the_party_invite_link() -> void:
+	(
+		_panel
+		. receive(
+			{
+				"type": "mentor_board",
+				"players":
+				[
+					{
+						"name": "mallory",
+						"kind": "mentor",
+						"level": 30,
+						"role": "tank",
+						"zone": "Ashmoor",
+						"note": "[url=party|victim]free gold[/url]",
+					}
+				],
+			}
+		)
+	)
+	var body := _panel.body_text()
+	assert_false(body.contains("[url=party|victim]"), "a note cannot paint a second party link")
+	assert_string_contains(
+		_parsed(body), "[url=party|victim]free gold[/url]", "the note renders literally"
+	)
+	# The panel's OWN link for this row still works — escaping must not break the real feature.
+	_panel._on_meta("party|mallory")
+	assert_eq(_sent[0], {"type": "party_invite", "target": "mallory"})

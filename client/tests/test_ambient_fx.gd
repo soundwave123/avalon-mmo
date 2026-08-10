@@ -12,6 +12,15 @@ func _fx():
 	return fx
 
 
+# T-756: AmbientFxLayer._day_factor() reads `_day_t` off its PARENT (normally WorldView). A bare
+# Node has no such property and the reader falls back to 1.0 — permanent daylight — which is
+# why the night gate below could never be observed from a test that parented the layer to the
+# test node. This stand-in is the day clock, drivable to any hour.
+class FakeDayClock:
+	extends Node
+	var _day_t: float = 0.25  # T-415 convention: noon = 0.25
+
+
 func test_builds_all_particle_systems() -> void:
 	var fx = _fx()
 	# campfire embers only at _ready — chimney smoke is socket-driven now (T-209; see
@@ -104,15 +113,39 @@ func test_positional_emitters_built() -> void:
 
 
 func test_night_gate_quiets_daytime_beds() -> void:
-	# T-305: with no world day-clock parent the beds default to daylight; forcing night in _process
-	# math drops the day-tagged emitters well below their base level.
-	var fx = _fx()
-	var day_emitter: Dictionary = {}
+	# T-305: forcing night in the _process math drops the day-tagged emitters well below base.
+	#
+	# T-756: the old body asserted only that a day-tagged emitter EXISTED in the list. It never
+	# ran _process, never moved the clock, and never read a volume — so the night gate this
+	# function is named for, and which its own comment describes, was entirely untested.
+	# Deleting the `vol += (1.0 - day) * DAY_GATE_ATTEN_DB` branch from production left it green.
+	var clock := FakeDayClock.new()
+	add_child_autofree(clock)
+	var fx = AmbientFxLayer.new()
+	clock.add_child(fx)  # parented to the clock, so _day_factor() has something to read
+
+	var day_node: AudioStreamPlayer3D = null
 	for e in fx._emitters:
-		if e["day"]:
-			day_emitter = e
+		if e["day"] and not e["night"]:
+			day_node = e["node"]
 			break
-	assert_false(day_emitter.is_empty(), "at least one daytime-gated bed exists (market/birdsong)")
+	assert_not_null(day_node, "at least one daytime-gated bed exists (market/birdsong)")
+
+	clock._day_t = 0.25  # noon — sun fully up
+	fx._process(1.0)
+	var noon_db: float = day_node.volume_db
+
+	clock._day_t = 0.75  # midnight — sun fully down
+	fx._process(1.0)
+	var night_db: float = day_node.volume_db
+
+	assert_lt(night_db, noon_db, "a daytime bed is quieter at midnight than at noon")
+	assert_almost_eq(
+		night_db,
+		noon_db + AmbientFxLayer.DAY_GATE_ATTEN_DB,
+		0.001,
+		"at full night it sits exactly one full day-gate below its noon level"
+	)
 
 
 func test_birds_flock_built_at_ready() -> void:

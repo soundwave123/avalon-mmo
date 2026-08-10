@@ -143,8 +143,11 @@ func recover(owner: Node, notice: Dictionary) -> void:
 		if tree == null:
 			return
 		await tree.create_timer(float(plan["delay"])).timeout
-		if owner.get_tree() == null or _blocked:  # cancelled by a terminal verdict mid-backoff
-			return
+		# T-751: is_instance_valid FIRST. The backoff runs up to 16 s; a quit or a scene swap in
+		# that window frees `owner`, and `owner.get_tree()` is itself a call ON the freed instance —
+		# the very error this line was written to prevent, raised by the check that prevents it.
+		if not is_instance_valid(owner) or owner.get_tree() == null or _blocked:
+			return  # freed, detached, or cancelled by a terminal verdict mid-backoff
 	owner.call("_setup_networking")  # terminal/give_up/login: token blocked or absent → login form
 
 

@@ -276,23 +276,81 @@ func test_7b_other_rejection_reasons_stay_silent() -> void:
 	)
 
 
-# ---- Assertion 7c: floating text throttle (T-644) -------------------------
-# Floating text for out_of_range MUST respect the same throttle as the log line.
+# ---- Assertion 7c: floating text throttle (T-644 / T-750) -----------------
+# The out_of_range log line and the floating text share ONE throttle verdict: a rejection that
+# passes the throttle must produce BOTH, and an immediate repeat must produce NEITHER.
+#
+# The old 7c only asserted has_method() + a first call returning true, which is why T-750 shipped:
+# CombatFeedback carried two byte-identical throttles that both re-armed _last_reject_log_ms, so
+# once process_event() spent the budget on the log line, main.gd's follow-up call ALWAYS returned
+# false and the floating text at main.gd's ability_rejected branch could never render. These tests
+# drive the exact call ORDER main.gd._on_combat() uses — process_event() first, then the query —
+# because that ordering is the whole bug.
 
 
-func test_7c_floating_text_throttle_method_exists() -> void:
-	# T-644: Verify that the should_show_reject_feedback() method exists and is callable.
-	# This method ensures that floating text respects the same throttle as the combat log.
-	var fresh_feedback := CombatFeedback.new()
-	add_child(fresh_feedback)
+func _reject_event() -> Dictionary:
+	return {
+		"type": "ability_rejected",
+		"ability_id": 99,
+		"reason": "out_of_range",
+		"detail": {"dist_m": 12.4, "range_m": 2.5},
+	}
+
+
+func test_7c_one_rejection_yields_both_the_log_line_and_the_floating_text() -> void:
+	var fb := CombatFeedback.new()
+	add_child(fb)
 	await get_tree().process_frame
 
-	# First call should return true (allow through)
+	var log_before: int = fb.get_combat_log().get_count()
+	fb.process_event(_reject_event())  # main.gd:_on_combat step 1
+
+	assert_eq(fb.get_combat_log().get_count(), log_before + 1, "the log line renders")
 	assert_true(
-		fresh_feedback.should_show_reject_feedback(), "should_show_reject_feedback() should work"
+		fb.should_show_reject_feedback(),  # main.gd:_on_combat step 2 — gates the floating text
+		"the floating text must ALSO be allowed for the same rejection the log line reported"
+	)
+	# The verdict is a READ, not a second consume: asking twice cannot flip it.
+	assert_true(
+		fb.should_show_reject_feedback(), "querying the verdict must not spend the throttle budget"
 	)
 
-	# Verify it's a callable method with the right behavior
-	assert_true(fresh_feedback.has_method("should_show_reject_feedback"), "method should exist")
+	fb.queue_free()
 
-	fresh_feedback.queue_free()
+
+func test_7c_immediate_repeat_suppresses_both_surfaces_together() -> void:
+	var fb := CombatFeedback.new()
+	add_child(fb)
+	await get_tree().process_frame
+
+	fb.process_event(_reject_event())
+	var log_after_first: int = fb.get_combat_log().get_count()
+	assert_true(fb.should_show_reject_feedback(), "first rejection always shows")
+
+	fb.process_event(_reject_event())  # mashed key, well inside REJECT_LOG_THROTTLE_MS
+	assert_eq(
+		fb.get_combat_log().get_count(), log_after_first, "no second log line inside the window"
+	)
+	assert_false(
+		fb.should_show_reject_feedback(),
+		"the floating text must be throttled in lockstep with the log line (no text blob)"
+	)
+
+	fb.queue_free()
+
+
+func test_7c_a_non_range_rejection_does_not_authorize_floating_text() -> void:
+	var fb := CombatFeedback.new()
+	add_child(fb)
+	await get_tree().process_frame
+
+	fb.process_event(_reject_event())
+	assert_true(fb.should_show_reject_feedback(), "the out_of_range verdict stands")
+	# T-402: only out_of_range surfaces. A later silent rejection must clear the stale verdict, or
+	# main.gd would spawn "out of range" text for an on_gcd/insufficient_resource press.
+	fb.process_event({"type": "ability_rejected", "ability_id": 99, "reason": "on_gcd"})
+	assert_false(
+		fb.should_show_reject_feedback(), "a silent rejection must not inherit the previous verdict"
+	)
+
+	fb.queue_free()

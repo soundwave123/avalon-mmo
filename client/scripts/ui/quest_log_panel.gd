@@ -57,7 +57,9 @@ func _ready() -> void:
 	# y=116 incl. the auto-attack pip) — the "Rage 0/100" bar bled through the panel's top corner.
 	# HudSafeZone is the shared constant now (see hud_safe_zone.gd for the full rationale).
 	offset_top = HudSafeZone.PANEL_SAFE_TOP
-	offset_bottom = -56.0
+	# T-759: finish the migration — the bottom was still a raw -56 (34px INTO the hotbar band).
+	# LEFT-anchored, so PANEL_SAFE_TOP (not MINIMAP_SAFE_TOP) is correct for the top edge.
+	offset_bottom = HudSafeZone.PANEL_SAFE_BOTTOM
 	visible = false  # toggled open with L
 	theme = UiTheme.build()  # T-400: SolidWindow variation resolves off the shared theme
 	var frame := PanelContainer.new()

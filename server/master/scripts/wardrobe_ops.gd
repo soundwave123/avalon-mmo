@@ -1,5 +1,6 @@
 class_name WardrobeOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-428: master-side wardrobe authority. Cosmetic state is persisted PER EQUIP SLOT, separately
 # from character_items, so stat-gear swaps cannot erase a chosen look. Only decorated copies cross
@@ -170,7 +171,7 @@ static func op(params: Dictionary) -> Dictionary:
 			# wardrobe.json (server-authoritative) — never client data. On success the granted look
 			# joins the unlock set, so return the refreshed wardrobe state alongside the balance.
 			var bought := _CS.purchase(
-				cid, params.get("appearance", {}), str(params.get("username", ""))
+				cid, _RI.shaped(params, "appearance", {}), str(params.get("username", ""))
 			)
 			if not bool(bought.get("ok", false)):
 				return {
@@ -186,8 +187,8 @@ static func op(params: Dictionary) -> Dictionary:
 			var built := _CO.build_wardrobe_look(
 				_CM.get_inventory(cid),
 				str(params.get("slot", "")),
-				params.get("appearance", {}),
-				params.get("dye", {}),
+				_RI.shaped(params, "appearance", {}),
+				_RI.shaped(params, "dye", {}),
 				unlocks_for(cid)
 			)
 			if not bool(built.get("ok", false)):

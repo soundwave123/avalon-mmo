@@ -51,7 +51,7 @@ func setup(send_fn: Callable, is_typing_fn: Callable = Callable()) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_Y:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_Y:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return

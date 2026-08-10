@@ -69,3 +69,27 @@ func test_bake_rows_is_incremental_and_deterministic() -> void:
 	assert_eq(whole.get_data(), chunked.get_data())
 	# And a second full bake matches too (no hidden state).
 	assert_eq((baker.bake(rect, 32) as Image).get_data(), whole.get_data())
+
+
+# T-758 (item 6): MapUi retained the CPU Image per zone forever and walked _bakes every frame even
+# after all bakes finished. Once a zone is fully baked its Image must be dropped (GPU texture is the
+# only remaining copy), and once every zone is baked processing must stop until a new zone re-arms.
+func test_map_ui_drops_baked_images_and_stops_processing() -> void:
+	var ui: MapUi = autofree(MapUi.new())
+	var zone := {"id": "zt", "rect": Rect2(-40.0, -40.0, 80.0, 80.0)}
+	var tex := ui.texture_for(zone)
+	assert_not_null(tex, "texture_for starts the incremental bake")
+	assert_true(ui.is_processing(), "a fresh bake arms per-frame processing")
+	assert_not_null(ui._bakes["zt"]["img"], "the CPU image exists while baking")
+	# Drive the incremental bake to completion (512/8 = 64 frames; loop with generous slack).
+	for _i in range(100):
+		if ui.bake_progress("zt") >= 1.0:
+			break
+		ui._process(0.0)
+	assert_almost_eq(ui.bake_progress("zt"), 1.0, 0.001, "the zone finished baking")
+	assert_null(ui._bakes["zt"]["img"], "the CPU image is freed once the zone is fully baked")
+	ui._process(0.0)  # the all-done sweep
+	assert_false(ui.is_processing(), "processing stops once every zone is baked")
+	# A newly requested zone re-arms processing (a later-loaded zone still bakes).
+	ui.texture_for({"id": "zt2", "rect": Rect2(0.0, 0.0, 40.0, 40.0)})
+	assert_true(ui.is_processing(), "a new zone re-arms the incremental bake")

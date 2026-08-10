@@ -2,8 +2,10 @@ extends "res://addons/gut/test.gd"
 
 # T-695: login load-order optimisations — the CPU half of the T-691 login (~8s measured). Proves,
 # headlessly:
-#   * MERGE CACHE — the ~3.4s of cold-boot SurfaceTool merges (load_manifest's dominant cost) drops
-#     >= 4x when a user:// merged-mesh cache is warm vs the cold merge (AVALON_MESH_CACHE A/B);
+#   * MERGE CACHE — a warm user:// merged-mesh cache SHORT-CIRCUITS the ~3.4s of cold-boot
+#     SurfaceTool merges (load_manifest's dominant cost) rather than repeating them. Asserted on
+#     the mechanism (_extract_pure's `_fresh` flag), never on wall-clock: T-756 removed the old
+#     ">= 4x faster" ratio, which measured the machine's load more than it measured the cache;
 #   * CACHE ROUND-TRIP — a saved merge reloads to an identical mesh; the key is GLB-mtime + version
 #     keyed, so a changed asset (or a format bump) keys a different file and regenerates on miss;
 #   * QUEUED FIRST POPULATE — behind the loading screen the first populate defers into the T-688
@@ -39,38 +41,60 @@ func _clear_cache(scenes: Array) -> void:
 			DirAccess.remove_absolute(p)
 
 
-func _extract_all_usec(cache_enabled: bool) -> int:
-	# Fresh PropChunks (empty _lib) so every scene is genuinely (re)extracted; warm_library is the
-	# exact extraction/merge work load_manifest front-loads. Sync under headless regardless of the
-	# `threaded` arg, so this measures MAIN-THREAD cost — a fair A/B of the cache alone.
-	var pc = PropChunks.new()
-	pc._mesh_cache_enabled = cache_enabled
-	var t0 := Time.get_ticks_usec()
-	pc.warm_library(HEAVY, false)
-	return Time.get_ticks_usec() - t0
+# (T-756 removed _extract_all_usec: its only caller was the wall-clock merge-cache ratio, now
+# replaced by a mechanism assert on _extract_pure's `_fresh` flag.)
+
+# ---- headline: a warm merge cache short-circuits the login merge ----
 
 
-# ---- headline: the merge cache cuts the login merge cost >= 4x ----
-
-
-func test_merge_cache_cuts_login_merge_cost_at_least_4x() -> void:
+# T-756: this was a wall-clock ratio — `cold_us >= 4 * warm_us` across five heavy GLB merges.
+# Two problems. It is not a test of the cache, it is a test of the machine: on a loaded box
+# (another lane running its own suite, which is routine here) the cold pass drifts slow enough to
+# clear 4x with a cache that never engages, and on a fast quiet box a genuinely broken cache can
+# still land under it. And it silently set up the file's order-dependence, because the pass it
+# times as "cold" warms Godot's own resource cache for every test after it.
+#
+# The cache has an exact, observable mechanism, so assert that instead: _extract_pure() reports
+# `_fresh` = true when it actually merged and false when it short-circuited on a cache hit. That
+# distinction IS the feature, it is deterministic, and it goes red the moment the cache stops
+# being written or stops being consulted — which the timing ratio could not reliably do.
+func test_merge_cache_short_circuits_the_merge_instead_of_redoing_it() -> void:
 	_clear_cache(HEAVY)
-	# Cold: cache OFF — the full SurfaceTool merges (the pre-T-695 synchronous login path).
-	var cold_us := _extract_all_usec(false)
-	# Populate the cache once (cache ON, cold _lib -> merges + ResourceSaver.save).
+	var scene: String = BRAMBLE
+
+	# Cold, cache ON: nothing on disk yet, so this must be a real merge, marked for persisting.
+	var cold_pc = PropChunks.new()
+	cold_pc._mesh_cache_enabled = true
+	var cold: Dictionary = cold_pc._extract_pure(scene)
+	assert_true(bool(cold["ok"]), "the cold extract produced a usable merged mesh")
+	assert_true(bool(cold["_fresh"]), "a cold extract really merges (nothing on disk to load)")
+	assert_ne(str(cold["_cache_path"]), "", "and it knows where that merge belongs on disk")
+
+	# Persist it — the main-thread half of the T-695 split.
+	cold_pc._persist_fresh_merge(cold)
+	assert_true(
+		FileAccess.file_exists(str(cold["_cache_path"])),
+		"the fresh merge was written to the mesh cache"
+	)
+
+	# Warm, cache ON, brand-new PropChunks (empty _lib): must take the cache branch, which
+	# returns before load()/instantiate()/SurfaceTool are ever reached.
 	var warm_pc = PropChunks.new()
 	warm_pc._mesh_cache_enabled = true
-	warm_pc.warm_library(HEAVY, false)
-	# Warm: a brand-new PropChunks with the cache present -> loads the merged meshes off disk.
-	var warm_us := _extract_all_usec(true)
-	assert_gt(cold_us, 0, "cold merge path did real work")
-	assert_true(
-		cold_us >= 4 * warm_us,
-		(
-			"warm merge cache >= 4x faster than the cold merge: cold=%d us warm=%d us (%.1fx)"
-			% [cold_us, warm_us, float(cold_us) / maxf(float(warm_us), 1.0)]
-		)
-	)
+	var warm: Dictionary = warm_pc._extract_pure(scene)
+	assert_true(bool(warm["ok"]), "the warm extract produced a usable mesh")
+	assert_false(bool(warm["_fresh"]), "a cache HIT skips the merge entirely — this is the win")
+	assert_not_null(warm["mesh"], "and it came back holding the cached ArrayMesh")
+
+	# Kill-switch (T-702): with the cache off, the same warm disk state must still re-merge.
+	var off_pc = PropChunks.new()
+	off_pc._mesh_cache_enabled = false
+	var off: Dictionary = off_pc._extract_pure(scene)
+	assert_true(bool(off["_fresh"]), "AVALON_MESH_CACHE=0 ignores the cache and merges every time")
+
+	# T-756: leave nothing behind in the developer's real user:// mesh cache. The old test
+	# populated it and never cleaned up, so every later run started from different disk state.
+	_clear_cache(HEAVY)
 
 
 # ---- cache round-trip + mtime/version invalidation ----
@@ -252,28 +276,27 @@ func test_mesh_cache_defaults_on_and_is_independent_of_threaded_load() -> void:
 # `load()` per placed prop re-decodes the WHOLE GLB every time. Measured over the 187-scene
 # manifest: 4,665 ms to load them all, repeatable to the millisecond on passes 2 and 3 (no
 # retention) vs 0.3 ms with references held. This asserts the mechanism, not a wall-clock budget.
+#
+# T-756: the line above claimed "This asserts the mechanism, not a wall-clock budget" — and the
+# body then timed two load() passes and asserted `warm_us * 10 < cold_us`. It was precisely the
+# wall-clock budget it disclaimed. Worse, its "unpinned" pass is only genuinely cold on the first
+# run in a fresh process: any earlier test in this file that loaded these GLBs (the merge-cache
+# test above does) leaves them in Godot's resource cache, at which point both passes measure the
+# same retained object and the 10x ratio turns on scheduler noise alone. Assert the mechanism.
 func test_scene_pin_makes_repeat_loads_free() -> void:
 	var scenes := HEAVY
-	# Unpinned: each load() is a fresh decode because nothing holds the previous one.
-	var cold_us := 0
-	for s in scenes:
-		var t := Time.get_ticks_usec()
-		var _p = load(s)
-		cold_us += Time.get_ticks_usec() - t
-	# Pinned via the layer: the second pass must be dramatically cheaper.
 	var layer = autofree(WorldPropsLayer.new())
 	for s in scenes:
-		assert_not_null(layer.pinned_scene(s), "pin resolves %s" % s)
-	var warm_us := 0
-	for s in scenes:
-		var t := Time.get_ticks_usec()
-		var _p = load(s)
-		warm_us += Time.get_ticks_usec() - t
-	assert_gt(cold_us, 0, "the unpinned pass did real decode work")
-	assert_true(
-		warm_us * 10 < cold_us,
-		"pinned repeat-load is >10x cheaper: unpinned=%d us pinned=%d us" % [cold_us, warm_us]
-	)
+		var pinned: PackedScene = layer.pinned_scene(s)
+		assert_not_null(pinned, "pin resolves %s" % s)
+		# The pin IS the mechanism: while the layer holds a reference, the decoded scene cannot
+		# fall to refcount zero, so it stays in Godot's resource cache and load() hands back that
+		# very object instead of re-decoding the whole GLB.
+		assert_true(ResourceLoader.has_cached(s), "%s is retained in the resource cache" % s)
+		assert_true(is_same(load(s), pinned), "load() returns the pinned scene, not a re-decode")
+	assert_eq(layer._scene_pin.size(), scenes.size(), "one pin held per distinct scene")
+	layer._teardown_all()
+	assert_eq(layer._scene_pin.size(), 0, "the region seam releases them again")
 
 
 func test_scene_pin_returns_the_same_instance_and_clears_on_region_teardown() -> void:

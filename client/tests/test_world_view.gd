@@ -77,6 +77,24 @@ func test_clutter_stays_out_of_the_city() -> void:
 	assert_eq(violations, 0, "no clutter inside the city circuit")
 
 
+# T-758 (items 3+4): the ~13.7k boot-scatter clutter instances shipped with NO visibility_range and
+# no custom_aabb — the whole meadow drew from every zone and the engine recomputed each MultiMesh's
+# bounds at build. Every scatter pool (8 grass/rock/flower MultiMeshes) must now carry BOTH a
+# positive LodPolicy cull distance and a non-degenerate custom_aabb. (add_child gives the shared
+# "Clutter" name to only the first pool, so identify pools by the LOD treatment itself.)
+func test_boot_clutter_has_lod_range_and_custom_aabb() -> void:
+	var wv = _world()
+	var pools := 0
+	for inst in wv.get_children():
+		if not (inst is MultiMeshInstance3D):
+			continue
+		var aabb: AABB = (inst.multimesh as MultiMesh).custom_aabb
+		if inst.visibility_range_end > 0.0 and aabb.size != Vector3.ZERO:
+			pools += 1
+	# 8 scatter pools carry both; AshmoorLitter (its own build) stays uncapped and is not counted.
+	assert_gte(pools, 8, "every grass/rock/flower scatter pool got a cull range + custom_aabb")
+
+
 # T-490: the ambient meadow tuft must read as UPRIGHT temperate grass, not a splayed agave/aloe
 # rosette. The mesh is clearly taller than wide (a fleshy outward-arcing dome is roughly as wide as
 # it is tall), and the blades are narrow.

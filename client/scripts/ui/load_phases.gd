@@ -94,6 +94,12 @@ static func boot_screen(hud: Node) -> void:
 	screen.name = "LoadingScreen"
 	hud.add_child(screen)
 	await hud.get_tree().process_frame
+	# T-751: `hud` is a plain parameter, not `self` — nothing keeps it alive across the yield. A
+	# quit or a scene swap between the two paint frames freed it, and the second
+	# `hud.get_tree()` was then a call ON a freed instance. The tree itself outlives the node, so
+	# the coroutine really does resume here; it just has nothing valid left to talk to.
+	if not is_instance_valid(hud) or not hud.is_inside_tree():
+		return
 	await hud.get_tree().process_frame
 
 

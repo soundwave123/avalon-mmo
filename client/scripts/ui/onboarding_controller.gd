@@ -455,7 +455,7 @@ func _build_help_button() -> Button:
 	return b
 
 
-# F1 (ControlsReference.HELP_KEYCODE) re-opens/closes the handbook any time. Own _input so main.gd
+# F1 (ControlsReference.help_keycode()) re-opens/closes the handbook any time. Own _input so main.gd
 # stays lean; chat-typing focus is handled upstream (main eats keys while the chat line is active).
 # T-714 defense: if an onboarding surface ever DOES overlap a creation modal (the bug class this
 # ticket fixes at the gate), Esc closes the topmost surface here — deeper in the tree than main's
@@ -465,11 +465,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return
-	var key := event as InputEventKey
-	if key.keycode == ControlsReference.HELP_KEYCODE and card != null:
+	var code := KeyRegistry.event_code(event as InputEventKey)  # T-761: physical position
+	if code == ControlsReference.help_keycode() and card != null:
 		card.toggle()
 		get_viewport().set_input_as_handled()
-	elif key.keycode == KEY_ESCAPE:
+	elif code == KEY_ESCAPE:
 		match escape_closes(
 			creation_modal_open(_gender_panel, _class_panel),
 			card != null and card.visible,

@@ -1,5 +1,6 @@
 class_name AuctionOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 # T-426 (carve): the auction-house RPC handlers, extracted verbatim from master/main.gd to keep that
 # dispatcher under the 1000-line cap. Pure dispatch over the global stores (ServicesStore /
 # AuctionLogic / CharacterManager / ServerConfig); no per-request state. main._dispatch routes the
@@ -72,7 +73,7 @@ static func op(params: Dictionary) -> Dictionary:
 	if character.is_empty():
 		return {"error": "unknown_character"}
 	var cid := int(character["id"])
-	sweep_expired(params.get("item_registry", {}))
+	sweep_expired(_RI.shaped(params, "item_registry", {}))
 	match str(params.get("action", "browse")):
 		"list":
 			return list_item(cid, params)
@@ -163,7 +164,7 @@ static func buyout(cid: int, params: Dictionary) -> Dictionary:
 	var granted := CharacterManager.try_add_items(
 		cid,
 		[{"item": str(auction["item_id"]), "count": int(auction["item_count"])}],
-		params.get("item_registry", {})
+		_RI.shaped(params, "item_registry", {})
 	)
 	if not bool(granted.get("ok", false)):
 		return {"error": str(granted.get("reason", "bag_full"))}

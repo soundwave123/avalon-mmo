@@ -1,5 +1,6 @@
 class_name GuildStore
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-362: persisted player guilds (chars.guilds + chars.guild_members, migration 014). Same test-mode
 # discipline as SocialStore/ServicesStore — CharacterManager.reset_for_test() chains into
@@ -73,7 +74,7 @@ static func op(params: Dictionary) -> Dictionary:
 		"demote":
 			return _rank_change(cid, str(params.get("target_name", "")), false)
 		"disband":
-			return _disband(cid, params.get("item_registry", {}))
+			return _disband(cid, _RI.shaped(params, "item_registry", {}))
 		"set_recruitment":
 			return _set_recruitment(
 				cid, bool(params.get("open", false)), str(params.get("blurb", ""))
@@ -108,7 +109,7 @@ static func _bank_op(cid: int, action: String, params: Dictionary) -> Dictionary
 		return {"error": "not_in_guild"}
 	var gid := int(m["guild_id"])
 	var rank := int(m["rank"])
-	var registry: Dictionary = params.get("item_registry", {})
+	var registry: Dictionary = _RI.shaped(params, "item_registry", {})
 	match action:
 		"bank_view":
 			return GuildBank.view(gid)

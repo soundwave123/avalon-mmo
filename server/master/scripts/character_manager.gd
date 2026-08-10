@@ -26,8 +26,11 @@ const _ID = preload("res://scripts/inventory_direct.gd")
 const _CRE = preload("res://scripts/creation_choice.gd")
 
 const _QXP = preload("res://scripts/quest_xp.gd")  # T-621: over-level quest-XP decay
+# T-754: shape guards for wire-supplied quest/def payloads (see rpc_intake.gd for the why).
+const _RI = preload("res://scripts/rpc_intake.gd")
 # T-701 carve: connection consts + driver plumbing live in db_bridge.gd (this file was AT the cap).
 const _DB = preload("res://scripts/db_bridge.gd")
+const _CT = preload("res://scripts/character_talents.gd")  # T-763: talent persistence carve
 
 static var _test_skip_db: bool = false
 static var _test_characters: Dictionary = {}
@@ -274,7 +277,9 @@ static func try_add_items(
 	character_id: int, reward_items: Array, item_registry: Dictionary
 ) -> Dictionary:
 	var additions: Array = []
-	for entry: Dictionary in reward_items:
+	for entry: Variant in reward_items:  # T-754: wire-supplied array; entries may be anything
+		if not entry is Dictionary:
+			continue
 		(
 			additions
 			. append(
@@ -538,9 +543,14 @@ static func try_turn_in_with_rewards(
 	if not guard.ok:
 		return {"ok": false, "reason": guard.reason}
 
-	var rewards: Dictionary = quest.get("rewards", {"xp": 0, "items": []})
+	# T-754: `quest` is wire-supplied. Being a Dictionary says nothing about its members, so
+	# "rewards" and "rewards.items" each need their own shape test — a typed assign or a
+	# typed for-iterator aborts the whole turn-in frame on a mismatch.
+	var rewards: Dictionary = _RI.shaped(quest, "rewards", {"xp": 0, "items": []})
 	var additions: Array = []
-	for it: Dictionary in rewards.get("items", []):
+	for it: Variant in _RI.shaped(rewards, "items", []):
+		if not it is Dictionary:
+			continue  # a non-Dictionary entry aborted the typed iterator pre-T-754
 		(
 			additions
 			. append(
@@ -554,7 +564,9 @@ static func try_turn_in_with_rewards(
 	# T-661 (#51): COLLECT-item consume BEFORE the bag-space check (opt out via "no_consume_items").
 	var pre_slots: Array = get_inventory(character_id)
 	if not bool(quest.get("no_consume_items", false)):
-		pre_slots = _IL.remove_collect_objective_items(pre_slots, quest.get("objectives", []))
+		pre_slots = _IL.remove_collect_objective_items(
+			pre_slots, _RI.shaped(quest, "objectives", [])
+		)
 	# Bag-space pre-check (no persist): the reward must fit or the turn-in is rejected wholesale.
 	var add_result := _IL.add_items(pre_slots, additions, item_registry)
 	if not add_result["ok"]:
@@ -583,14 +595,14 @@ static func try_turn_in_with_rewards(
 static func grant_provided_items(
 	character_id: int, quest: Dictionary, item_registry: Dictionary
 ) -> Dictionary:
-	var provided: Array = quest.get("provided_items", [])
+	var provided: Array = _RI.shaped(quest, "provided_items", [])  # T-754: wire-supplied shape
 	if provided.is_empty():
 		return {"ok": true}
 	return try_add_items(character_id, provided, item_registry)
 
 
 static func remove_provided_items(character_id: int, quest: Dictionary) -> void:
-	var provided: Array = quest.get("provided_items", [])
+	var provided: Array = _RI.shaped(quest, "provided_items", [])  # T-754: wire-supplied shape
 	if provided.is_empty():
 		return
 	_persist_inventory(character_id, _IL.remove_item_ids(get_inventory(character_id), provided))
@@ -612,7 +624,7 @@ static func try_abandon(character_id: int, quest_id: String) -> _QSM.QuestResult
 
 static func init_quest_objectives(character_id: int, quest: Dictionary) -> void:
 	_persist_objectives(
-		character_id, str(quest.get("id", "")), _OT.zeros(quest.get("objectives", []))
+		character_id, str(quest.get("id", "")), _OT.zeros(_RI.shaped(quest, "objectives", []))
 	)
 
 
@@ -637,7 +649,7 @@ static func credit_objective(
 	character_id: int, quest: Dictionary, kind: String, target: String
 ) -> void:
 	var quest_id: String = str(quest.get("id", ""))
-	var objectives: Array = quest.get("objectives", [])
+	var objectives: Array = _RI.shaped(quest, "objectives", [])
 	var current: Array = get_objective_progress(character_id, quest_id)
 	if current.is_empty():
 		current = _OT.zeros(objectives)
@@ -646,7 +658,7 @@ static func credit_objective(
 
 static func refresh_collect(character_id: int, quest: Dictionary, item_counts: Dictionary) -> void:
 	var quest_id: String = str(quest.get("id", ""))
-	var objectives: Array = quest.get("objectives", [])
+	var objectives: Array = _RI.shaped(quest, "objectives", [])
 	var current: Array = get_objective_progress(character_id, quest_id)
 	if current.is_empty():
 		current = _OT.zeros(objectives)
@@ -674,7 +686,7 @@ static func refresh_collect_for_character(character_id: int, quest_defs: Diction
 		var quest_id := str(entry.get("quest_id", ""))
 		if not quest_defs.has(quest_id):
 			continue
-		var quest: Dictionary = quest_defs[quest_id]
+		var quest: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754: wire-supplied defs
 		if _has_collect_objective(quest):
 			refresh_collect(character_id, quest, counts)
 			refreshed.append(quest_id)
@@ -682,15 +694,15 @@ static func refresh_collect_for_character(character_id: int, quest_defs: Diction
 
 
 static func _has_collect_objective(quest: Dictionary) -> bool:
-	for obj: Dictionary in quest.get("objectives", []):
-		if str(obj.get("type", "")) == "collect":
+	for obj: Variant in _RI.shaped(quest, "objectives", []):  # T-754: elements are wire-shaped
+		if obj is Dictionary and str(obj.get("type", "")) == "collect":
 			return true
 	return false
 
 
 static func objectives_complete(character_id: int, quest: Dictionary) -> bool:
 	var progress: Array = get_objective_progress(character_id, str(quest.get("id", "")))
-	return _OT.is_complete(quest.get("objectives", []), progress)
+	return _OT.is_complete(_RI.shaped(quest, "objectives", []), progress)
 
 
 # T-046: credit a server-observed event (kind/target) to every ACTIVE quest of the character whose
@@ -706,7 +718,7 @@ static func credit_event(
 		var quest_id := str(entry.get("quest_id", ""))
 		if not quest_defs.has(quest_id):
 			continue
-		var quest: Dictionary = quest_defs[quest_id]
+		var quest: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754: wire-supplied defs
 		if _has_objective(quest, kind, target):
 			credit_objective(character_id, quest, kind, target)
 			credited.append(quest_id)
@@ -724,8 +736,13 @@ static func credit_reach(character_id: int, target: String, quest_defs: Dictiona
 
 static func _has_objective(quest: Dictionary, kind: String, target: String) -> bool:
 	# T-426: _OT.target_matches lets a "*" objective target match any event target of this kind.
-	for obj: Dictionary in quest.get("objectives", []):
-		if str(obj.get("type", "")) == kind and _OT.target_matches(str(obj["target"]), target):
+	for obj: Variant in _RI.shaped(quest, "objectives", []):  # T-754: elements are wire-shaped
+		if not obj is Dictionary:
+			continue
+		if (
+			str(obj.get("type", "")) == kind
+			and _OT.target_matches(str(obj.get("target", "")), target)
+		):
 			return true
 	return false
 
@@ -734,7 +751,9 @@ static func _has_objective(quest: Dictionary, kind: String, target: String) -> b
 # an Array of {id, gives_quests, talk_text}; quest_defs the relevant defs → {npc_id: indicator}.
 static func npc_indicators(character_id: int, npcs: Array, quest_defs: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
-	for npc: Dictionary in npcs:
+	for npc: Variant in npcs:  # T-754: the npcs Array is wire-supplied; entries may be anything
+		if not npc is Dictionary:
+			continue
 		out[str(npc.get("id", ""))] = npc_state_for_character(character_id, npc, quest_defs)["indicator"]
 	return out
 
@@ -753,7 +772,7 @@ static func npc_state_for_character(
 	var level := int(get_character_by_id(character_id).get("level", 1))
 	var facts: Dictionary = {}
 	for quest_id: String in quest_defs:
-		var quest: Dictionary = quest_defs[quest_id]
+		var quest: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754: wire-supplied defs
 		var prereq := str(quest.get("prerequisite_quest", ""))
 		var prereq_complete := prereq == "" or _quest_state(character_id, prereq) == "complete"
 		facts[quest_id] = {
@@ -771,11 +790,14 @@ static func npc_state_for_character(
 static func npc_talk(character_id: int, npc: Dictionary, quest_defs: Dictionary) -> Dictionary:
 	var npc_id := str(npc.get("id", ""))
 	var before := npc_state_for_character(character_id, npc, quest_defs)
-	for quest_id: String in before["talk_targets"]:
-		credit_objective(character_id, quest_defs[quest_id], "talk", npc_id)
+	# T-754: read via .get — if the evaluator ever returns early the key is absent, and
+	# before["talk_targets"] would raise "Invalid access to key" on top of the first fault.
+	var targets: Array = _RI.shaped(before, "talk_targets", [])
+	for quest_id: String in targets:
+		credit_objective(character_id, _RI.shaped(quest_defs, quest_id, {}), "talk", npc_id)
 	var after := npc_state_for_character(character_id, npc, quest_defs)
 	after["talk_text"] = str(npc.get("talk_text", ""))
-	after["credited"] = before["talk_targets"]
+	after["credited"] = targets
 	return after
 
 
@@ -861,71 +883,20 @@ static func ensure_starting_weapon(character_id: int) -> Dictionary:
 	return {"granted": true, "slots": updated}
 
 
-# ---- T-064: talents (spend validation is pure in talent_logic; this persists) ----
-
-
+# T-064 talents: persistence carved to character_talents.gd (T-763); these stay the public seam.
 static func get_talents(character_id: int) -> Dictionary:
-	if _test_skip_db:
-		return _test_talents.get(character_id, {})
-	var out: Dictionary = {}
-	var rows := _query(
-		"SELECT talent_id, ranks FROM chars.character_talents WHERE character_id = $1",
-		[character_id]
-	)
-	for row: Dictionary in rows:
-		out[str(row.get("talent_id", ""))] = int(row.get("ranks", 0))
-	return out
+	return _CT.get_talents(character_id, _test_skip_db, _test_talents)
 
 
-# Spend ONE point in `talent` (def supplied by the world, the content authority).
-# Returns {ok, reason, ranks, points_left}.
 static func spend_talent(
 	character_id: int, talent: Dictionary, talent_defs: Dictionary
 ) -> Dictionary:
 	var character: Dictionary = get_character_by_id(character_id)
-	if character.is_empty():
-		return {"ok": false, "reason": "unknown_character", "ranks": 0, "points_left": 0}
-	var spent: Dictionary = get_talents(character_id)
-	var level: int = int(character.get("level", 1))
-	var verdict: Dictionary = _TL.validate_spend(
-		talent, spent, talent_defs, str(character.get("class", "")), level
-	)
-	var talent_id: String = str(talent.get("id", ""))
-	if not verdict["ok"]:
-		return {
-			"ok": false,
-			"reason": verdict["reason"],
-			"ranks": int(spent.get(talent_id, 0)),
-			"points_left": _TL.points_available(level) - _TL.points_spent(spent),
-		}
-	var new_ranks: int = int(spent.get(talent_id, 0)) + 1
-	if _test_skip_db:
-		spent[talent_id] = new_ranks
-		_test_talents[character_id] = spent
-	else:
-		_execute(
-			(
-				"INSERT INTO chars.character_talents (character_id, talent_id, ranks) "
-				+ "VALUES ($1,$2,1) ON CONFLICT (character_id, talent_id) "
-				+ "DO UPDATE SET ranks = chars.character_talents.ranks + 1"
-			),
-			[character_id, talent_id]
-		)
-		spent[talent_id] = new_ranks
-	return {
-		"ok": true,
-		"reason": "",
-		"ranks": new_ranks,
-		"points_left": _TL.points_available(level) - _TL.points_spent(spent),
-	}
+	return _CT.spend(character_id, talent, talent_defs, character, _test_skip_db, _test_talents)
 
 
-# T-064: reroll path — talents die with the old build (no respec; delete wholesale).
 static func clear_talents(character_id: int) -> bool:
-	if _test_skip_db:
-		_test_talents.erase(character_id)
-		return true
-	return _execute("DELETE FROM chars.character_talents WHERE character_id = $1", [character_id])
+	return _CT.clear(character_id, _test_skip_db, _test_talents)
 
 
 # T-567: DB path added so the reward-grant reopen shares one state writer; completed_at is stamped
@@ -970,8 +941,7 @@ static func apply_vault_move(character_id: int, plan: Dictionary) -> bool:
 	return _ID.vault_move(character_id, plan, _test_skip_db, _test_inventory, _execute)
 
 
-# T-208: public DB bridge for ServicesStore (split out for the file-size budget; one
-# connection idiom, one place to swap the driver).
+# T-208: public DB bridge for ServicesStore (one connection idiom, one driver swap point).
 static func db_execute(sql: String, parameters: Array) -> bool:
 	return _execute(sql, parameters)
 

@@ -25,6 +25,18 @@ const VOICE_NODE_NAME := "VoiceLine"  # the reused AudioStreamPlayer3D child und
 const SOURCE_GROUP := "voice_line_source"  # panels emitting line_shown(npc_id, text) join this
 const VOICE_UNIT_DB := 0.0  # per-line level; a dedicated bus/user slider is a scaling follow-up
 
+# T-752: NPC-speech spatialization, set EXPLICITLY. AudioStreamPlayer3D's engine defaults are wrong
+# for a voice in three separate ways — unit_size 10 holds full level out to ~10 m, max_db +3 boosts
+# it above every other source at close range, and max_distance 0 means "never culled", i.e. audible
+# clean across the zone. Because the T-573 silent contract keeps this wire live and mute until the
+# first Ogg ships, the defaults were dormant: the day a voice line landed, Farmer Geld would have
+# been the loudest thing in the game at 100 m. These are near-field speech values, cribbed from
+# LocomotionAudio's in-world-verified block (T-737) and pulled in a little: a voice carries less
+# far than a footfall's crack, so it culls sooner than locomotion's 26 m.
+const VOICE_UNIT_SIZE := 4.0  # ~full level inside a conversational radius, then rolloff
+const VOICE_MAX_DISTANCE := 22.0  # culled past the range you could still make out words
+const VOICE_MAX_DB := 0.0  # never boosted when you are standing on top of the speaker
+
 var _lines: Dictionary = {}  # line_id -> {sha1, file, ...}
 var _audio_base: String = AUDIO_BASE
 var _npc_world: Node = null  # NpcWorldLayer (has body_for); defaults to get_parent()
@@ -102,6 +114,11 @@ func play_line(npc_id: String, text: String) -> AudioStreamPlayer3D:
 		player = AudioStreamPlayer3D.new()
 		player.name = VOICE_NODE_NAME
 		player.volume_db = VOICE_UNIT_DB
+		# T-752: near-field speech, never the engine's infinite-range +3 dB defaults.
+		player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+		player.unit_size = VOICE_UNIT_SIZE
+		player.max_distance = VOICE_MAX_DISTANCE
+		player.max_db = VOICE_MAX_DB
 		body.add_child(player)
 	player.stream = stream
 	player.play()

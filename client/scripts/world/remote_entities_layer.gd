@@ -72,9 +72,7 @@ func _ready() -> void:
 	# T-697 fix 8: warm the creature/character GLB cache off-thread — the first sight of a new
 	# kind used to synchronous-load() its GLB on the main thread (a 13-30 ms hitch mid-combat).
 	VisualPreload.request_kinds(EntityVisuals.GLB_MODELS)
-	# T-735: flat ground ring, sized per target and relationship-colored (see target_ring.gd).
-	_target_ring = TargetRing.new()
-	add_child(_target_ring)
+	_ensure_target_ring()  # T-735: flat ground ring, sized + relationship-colored (target_ring.gd)
 
 
 func set_target(target_id: int) -> void:
@@ -85,42 +83,46 @@ func set_target(target_id: int) -> void:
 		_apply_label_visibility(_entities[id])
 
 
-# T-735: the ring RIDES the selected body (a child of it), so it tracks the target for free — no
-# per-frame global_position write, no orphan ring left on a body we stopped targeting. Radius comes
-# from that unit's collision shape, color from its T-286 relationship. Idempotent (cheap to recall).
+# T-735: the ring RIDES the selected body, so it tracks the target for free — no per-frame position
+# write, no orphan ring. Radius from that unit's collision shape, color from T-286. Idempotent.
 func _refit_target_ring() -> void:
-	if _target_ring == null:
-		return
+	_ensure_target_ring()
 	var e := _entity_for(_selected_target) if _selected_target != -1 else {}
 	if e.is_empty():
 		_detach_target_ring()
 		return
 	var body: Node3D = e["node"]
 	if _target_ring.get_parent() != body:
-		_target_ring.get_parent().remove_child(_target_ring)
-		body.add_child(_target_ring)
+		_target_ring.reparent(body, false)  # T-751: one atomic move (see _ensure_target_ring)
 	_target_ring.position = Vector3(0.0, TargetRing.GROUND_EPSILON, 0.0)
 	_target_ring.set_radius(_ring_radius_for(e))
 	_target_ring.set_relationship(int(e.get("rel", Relationship.Rel.HOSTILE)))
 	_target_ring.visible = true
 
 
-# T-735: park the ring back on the layer (hidden) — never leave it parented to a body that is about
-# to queue_free (that would free the ring with it and strand `_target_ring` as a freed reference).
+# T-735: park the ring on the layer (hidden) — never leave it on a body that is about to queue_free.
 func _detach_target_ring() -> void:
-	if _target_ring == null:
-		return
+	_ensure_target_ring()
 	_target_ring.visible = false
 	if _target_ring.get_parent() != self:
-		_target_ring.get_parent().remove_child(_target_ring)
-		add_child(_target_ring)
+		_target_ring.reparent(self, false)  # T-751: one atomic move (see _ensure_target_ring)
+
+
+# T-751: is_instance_valid, NEVER `== null` — the ring rides a body that can despawn and take it
+# down, and a freed instance is not null, so the old guard read false and one missed detach meant a
+# dead ring + errors at 10 Hz all session. Cheap stateless geometry, so this self-heals instead of
+# bailing. reparent() at both call sites: one transform-preserving move, no get_parent() deref.
+func _ensure_target_ring() -> void:
+	if is_instance_valid(_target_ring):
+		return
+	_target_ring = TargetRing.new()
+	add_child(_target_ring)
 
 
 # T-735: per-entity footprint -> ring radius, off the hitbox itself so the ring is honest about how
 # big the thing is (render_scale is baked into the shape by _make_collision — no second multiply).
 func _ring_radius_for(e: Dictionary) -> float:
-	var body: Node3D = e["node"]
-	for child in body.get_children():
+	for child in (e["node"] as Node3D).get_children():
 		if child is CollisionShape3D:
 			return TargetRing.radius_for_shape((child as CollisionShape3D).shape)
 	return TargetRing.MIN_RADIUS
@@ -179,9 +181,10 @@ func ingest(data: Dictionary, my_peer_id: int, now_ms: int) -> void:
 		if not seen.has(id):
 			# T-735: the ring rides the body — unparent it BEFORE the body is freed, or it dies
 			# with the despawning entity and `_target_ring` becomes a freed reference.
-			if _target_ring != null and _target_ring.get_parent() == _entities[id]["node"]:
+			var dying: Node3D = _entities[id]["node"]
+			if is_instance_valid(_target_ring) and _target_ring.get_parent() == dying:
 				_detach_target_ring()
-			_entities[id]["node"].queue_free()
+			dying.queue_free()
 			_entities.erase(id)
 	# T-735: a live selection re-fits every broadcast — a mob flipping hostile/neutral (T-665)
 	# recolors the ring, and a freshly-respawned body re-adopts it. Idempotent when nothing moved.

@@ -27,14 +27,43 @@ func test_region_map_is_era_consistent() -> void:
 func test_region_never_crosses_era() -> void:
 	# Every medieval region resolves outside the Ashmoor district; every Ashmoor region inside it —
 	# so region_at NEVER returns a cross-era bed (the score can't leak across the rift).
+	#
+	# T-756: the old body looped over REGIONS asserting only that each name was non-empty, then
+	# checked two hand-picked district-membership points. It never related a POSITION to the era
+	# of the region region_at picks for it — so the invariant this function is named for went
+	# untested, and region_at could have handed back "speakeasy" out in the meadow forever.
+	var era_by_name := {}
 	for r: Dictionary in MusicBedLayer.REGIONS:
-		var name := str(r["name"])
-		if int(r["era"]) == MusicBedLayer.ERA_ASHMOOR:
-			continue  # (checked via the district-membership of the sample points above)
-		assert_ne(name, "", "region has a name")
-	# a medieval sample point is never in the district; an Ashmoor one always is.
-	assert_false(WorldView.in_ashmoor_district(2.5, 8.0), "village is Era 1 (outside the district)")
-	assert_true(WorldView.in_ashmoor_district(-423.75, 8.0), "speakeasy is Era 2 (in the district)")
+		era_by_name[str(r["name"])] = int(r["era"])
+
+	var violations: Array = []
+	var seen_medieval := 0
+	var seen_ashmoor := 0
+	for xi in range(-600, 601, 25):
+		for zi in range(-600, 601, 25):
+			var x := float(xi)
+			var z := float(zi)
+			var region := MusicBedLayer.region_at(x, z)
+			var in_district := WorldView.in_ashmoor_district(x, z)
+			var expected: int = (
+				MusicBedLayer.ERA_ASHMOOR if in_district else MusicBedLayer.ERA_MEDIEVAL
+			)
+			if in_district:
+				seen_ashmoor += 1
+			else:
+				seen_medieval += 1
+			if int(era_by_name.get(region, -1)) != expected:
+				violations.append(
+					"(%.0f, %.0f) is era %d but region_at chose '%s'" % [x, z, expected, region]
+				)
+
+	assert_eq(
+		violations, [], "no point on the map gets a cross-era bed: %s" % [violations.slice(0, 5)]
+	)
+	# Both branches must really have been walked, or an always-false district test would make the
+	# sweep above vacuously true — the same hole in a different disguise.
+	assert_gt(seen_medieval, 0, "the sweep covered ground outside the Ashmoor district")
+	assert_gt(seen_ashmoor, 0, "the sweep covered ground inside the Ashmoor district")
 
 
 func test_one_player_per_region_on_music_bus() -> void:
@@ -58,8 +87,14 @@ func test_one_player_per_region_on_music_bus() -> void:
 
 func test_music_bus_created() -> void:
 	var m = _layer()
-	assert_ne(AudioServer.get_bus_index(MusicBedLayer.BUS_NAME), -1, "the Music bus exists")
-	assert_true(m != null)
+	var idx := AudioServer.get_bus_index(MusicBedLayer.BUS_NAME)
+	assert_ne(idx, -1, "the Music bus exists")
+	# T-756: the second assertion here was `assert_true(m != null)` — _layer() cannot return null,
+	# so it was a tautology inflating the assert count. Assert what the bus is FOR instead: its
+	# own send to Master is the whole reason it exists (it lets the settings slider trim the score
+	# without touching ambience or SFX).
+	assert_eq(str(AudioServer.get_bus_send(idx)), "Master", "the Music bus routes to Master")
+	assert_eq(m.player_count, MusicBedLayer.REGIONS.size(), "and carries one bed per region")
 
 
 func test_crossfade_raises_the_active_bed() -> void:

@@ -51,6 +51,11 @@ var _slot_style_pressed: StyleBoxFlat = null
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	# T-748: the root band is stamped a few px wider than the slot row (set_kit uses _SLOT + 6 per
+	# slot, the row packs _SLOT + 6 BETWEEN slots), and as a default-STOP Control it ate clicks in
+	# that dead margin. The slot Panels are the drag/click surfaces and are picked directly — the
+	# band behind them owns no input at all.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row = HBoxContainer.new()
 	_row.name = "SlotRow"
 	_row.add_theme_constant_override("separation", 6)

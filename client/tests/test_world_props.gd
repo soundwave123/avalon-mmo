@@ -393,6 +393,56 @@ func test_cathedral_nave_candle_chain_covers_door_to_dais() -> void:
 	)
 
 
+# T-758: the socket->light allow-list. The old `else` catch-all in _place lit EVERY unmatched
+# socket, so 67 non-light sockets glowed (55 of them shop signboards). socket_light_spec is now the
+# single classifier: only the fire/candle/lamp families resolve to a spec; everything else is {} (no
+# light). These assertions lock that an unknown/decorative socket gets NOTHING.
+func test_unrecognized_socket_gets_no_light() -> void:
+	for decorative in [
+		"socket_sign",  # 55 shop signboards — the loudest offender
+		"socket_sign_shop_left",
+		"socket_sigil",  # the Grey Gull chalk circle
+		"socket_service",  # the constabulary desk-sergeant NPC anchor
+		"socket_cellar_stair",  # the Gull Cellars descent
+		"socket_url",
+		"socket_totally_unknown_marker",
+	]:
+		assert_true(
+			WorldPropsLayer.socket_light_spec(decorative).is_empty(),
+			"%s must resolve to NO light (the else catch-all is gone)" % decorative
+		)
+
+
+func test_interior_light_sockets_are_always_on() -> void:
+	# Hearth + candle stay always-on (energy > 0, not dusk-gated) so interiors read by day and the
+	# T-632 cathedral nave chain keeps its load-bearing omni_range 8.
+	for interior in ["socket_hearth", "socket_hearth_c", "socket_candles", "socket_candles_nave"]:
+		var spec := WorldPropsLayer.socket_light_spec(interior)
+		assert_false(spec.is_empty(), "%s is a real interior light" % interior)
+		assert_gt(float(spec.get("energy", 0.0)), 0.0, "%s is always-on interior fill" % interior)
+		assert_false(bool(spec.get("night", false)), "%s is NOT dusk-gated" % interior)
+	assert_almost_eq(
+		float(WorldPropsLayer.socket_light_spec("socket_candles")["range"]),
+		8.0,
+		0.001,
+		"candle pool radius stays 8 (T-632 nave coverage)"
+	)
+
+
+func test_fire_and_lamp_sockets_are_dusk_gated() -> void:
+	# Gaslamp + brazier are EXTERIOR fire: dusk-gated (energy 0 by day, lit energy carried in the
+	# night_lights meta). Brazier used to be an always-on candle under the catch-all — a wall brazier
+	# blazing at noon; it now matches the standalone brazier prop.
+	for exterior in ["socket_gaslamp", "socket_brazier", "socket_brazier_gate_1"]:
+		var spec := WorldPropsLayer.socket_light_spec(exterior)
+		assert_false(spec.is_empty(), "%s is a real exterior light" % exterior)
+		assert_true(bool(spec.get("night", false)), "%s is dusk-gated" % exterior)
+		assert_almost_eq(float(spec.get("energy", 0.0)), 0.0, 0.001, "%s dark by day" % exterior)
+		assert_gt(
+			float(spec.get("base_energy", 0.0)), 0.0, "%s carries lit energy in meta" % exterior
+		)
+
+
 func _socket_lights(layer: WorldPropsLayer, socket_prefix: String) -> Array:
 	var out := []
 	for n in layer.get_children():

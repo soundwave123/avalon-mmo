@@ -26,6 +26,12 @@ func test_preset_zero_reproduces_baseline_exactly() -> void:
 	assert_almost_eq(float(p["cast"]["size"]), 0.16, 0.0001, "baseline cast quad size")
 
 
+# T-756: this test mutated the REAL process environment and never cleaned up, so every later
+# test in the suite ran with AVALON_VFX_PRESET set to whatever this left behind.
+func after_each() -> void:
+	OS.unset_environment("AVALON_VFX_PRESET")
+
+
 func test_active_index_env_clamps() -> void:
 	OS.set_environment("AVALON_VFX_PRESET", "3")
 	assert_eq(VfxPresets.active_index(), 3, "valid index read")
@@ -33,8 +39,15 @@ func test_active_index_env_clamps() -> void:
 	assert_eq(VfxPresets.active_index(), 0, "out-of-range clamps to baseline")
 	OS.set_environment("AVALON_VFX_PRESET", "junk")
 	assert_eq(VfxPresets.active_index(), 0, "non-int clamps to baseline")
+	# T-756: set_environment(k, "") sets the variable TO the empty string — it does not remove
+	# it. The old last line did that and called it "unset", so the genuine default path (the
+	# variable absent, which is how the game actually ships) was never exercised at all. Both
+	# branches are asserted now, each named for what it really is.
 	OS.set_environment("AVALON_VFX_PRESET", "")
-	assert_eq(VfxPresets.active_index(), 0, "unset -> baseline")
+	assert_eq(VfxPresets.active_index(), 0, "set-but-empty clamps to baseline")
+	OS.unset_environment("AVALON_VFX_PRESET")
+	assert_false(OS.has_environment("AVALON_VFX_PRESET"), "the var really is gone, not empty")
+	assert_eq(VfxPresets.active_index(), 0, "genuinely unset -> baseline (the shipped default)")
 
 
 func test_resolve_is_complete_for_every_preset() -> void:

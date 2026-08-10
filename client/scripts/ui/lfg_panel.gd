@@ -87,7 +87,7 @@ func setup(
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_U:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_U:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return
@@ -138,10 +138,16 @@ func _render() -> void:
 	lines.append("[b]Looking for Group[/b]")
 	for r: Dictionary in _board:
 		var rname := str(r.get("name", ""))
+		# T-755: bbcode_enabled + meta_clicked -> party_invite. Display is escaped, payload stripped.
 		lines.append(
 			(
 				"  [url=invite|%s]%s[/url]  L%d  %s"
-				% [rname, rname, int(r.get("level", 1)), str(r.get("role", ""))]
+				% [
+					BBCode.escape_meta(rname),
+					BBCode.escape(rname),
+					int(r.get("level", 1)),
+					BBCode.escape(str(r.get("role", "")))
+				]
 			)
 		)
 	if _board.is_empty():

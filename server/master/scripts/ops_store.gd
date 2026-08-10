@@ -4,6 +4,7 @@ extends RefCounted
 # Master-owned durable authority for T-511. Every accepted public verb inserts one append-only row.
 # Ban composes the T-501 account flag with that audit insert in ONE Postgres statement.
 const CharacterManager = preload("res://scripts/character_manager.gd")
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 const ACTIONS := ["who", "announce", "broadcast", "msg_group", "whisper", "kick", "ban"]
 
 
@@ -12,7 +13,7 @@ static func apply(params: Dictionary, query: Callable = Callable()) -> Dictionar
 	var action := str(params.get("action", ""))
 	var target := str(params.get("target", "")).strip_edges().left(128)
 	var reason := str(params.get("reason", "")).strip_edges().left(1000)
-	var details: Variant = params.get("details", {})
+	var details: Variant = _RI.shaped(params, "details", {})
 	if actor == "" or not ACTIONS.has(action) or not (details is Dictionary):
 		return {"ok": false, "error": "invalid_audit_action"}
 	var run := query if query.is_valid() else Callable(CharacterManager, "db_query")

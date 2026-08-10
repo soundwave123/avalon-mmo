@@ -1,6 +1,19 @@
 extends Node
 # Headless ENet test client for the world server.
 #
+# NAME (T-756): this was test_client.gd. It extends Node, not GutTest — it is an E2E
+# harness driven by scripts/test-*-loop.sh, never a unit-test script. But GUT collects
+# every res://tests/**/test_*.gd, found this one didn't extend GutTest, and logged
+#     WARNING: Ignoring script res://tests/test_client.gd because it does not extend GutTest
+# on every single world-project run. That warning was permanent, expected, and scrolled
+# past — which is exactly what made it useless as a signal, because "Ignoring script" is
+# also what GUT prints when a REAL test file fails to load and is silently dropped from the
+# run (it still reports "All tests passed!"). run-tests.sh now fails on that warning, so
+# this file had to stop emitting it. The harness_ prefix is outside GUT's collection glob.
+#
+# The SCENE is deliberately still tests/test_client.tscn: ~20 E2E shell/python drivers
+# launch it by that path and it is the stable external contract. Only the script moved.
+#
 # Reads configuration from environment variables (Flatpak arg-passing workaround):
 #   AVALON_HOST         - Server host (default: 127.0.0.1)
 #   AVALON_PORT         - Server port  (default: 9200)

@@ -1,5 +1,6 @@
 class_name PvpStore
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-390: persisted PvP ratings + season lifecycle (pvp.seasons + pvp.ratings, migration 017). Same
 # test-mode discipline as GuildStore/SocialStore — the in-memory fakes mirror the DB paths so the
@@ -186,7 +187,7 @@ static func matchmake(params: Dictionary) -> Dictionary:
 	if not BRACKETS.has(bracket):
 		return {"error": "bad_bracket"}
 	var now := int(params.get("now", 0))
-	var players: Array = params.get("players", [])
+	var players: Array = _RI.shaped(params, "players", [])
 	var entries: Array = []
 	for p: Variant in players:
 		if typeof(p) != TYPE_DICTIONARY:

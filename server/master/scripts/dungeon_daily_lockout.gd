@@ -5,6 +5,7 @@ const DailyAppointment = preload("res://scripts/daily_appointment.gd")
 const DailyAppointmentStore = preload("res://scripts/daily_appointment_store.gd")
 const AchievementStore = preload("res://scripts/achievement_store.gd")  # T-676: clear achievements
 const KillCreditOps = preload("res://scripts/kill_credit_ops.gd")  # T-679: shared credit_guild seam
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 static var _test_mode := false
 static var _test_claims: Dictionary = {}
@@ -68,7 +69,7 @@ static func grant(params: Dictionary) -> Dictionary:
 	if character.is_empty():
 		return {"ok": false, "reason": "unknown_character", "blue_granted": false}
 	var cid := int(character.get("id", -1))
-	var items: Array = params.get("guaranteed_items", []).duplicate(true)
+	var items: Array = _RI.shaped(params, "guaranteed_items", []).duplicate(true)
 	var blue_item := str(params.get("blue_item", ""))
 	var blue_granted := false
 	if blue_item != "":
@@ -81,10 +82,12 @@ static func grant(params: Dictionary) -> Dictionary:
 		blue_granted = _claim(cid, str(params.get("boss_id", "")), window)
 		if blue_granted:
 			items.append({"item": blue_item, "count": 1})
-	var result := CharacterManager.try_add_items(cid, items, params.get("item_registry", {}))
+	var result := CharacterManager.try_add_items(
+		cid, items, _RI.shaped(params, "item_registry", {})
+	)
 	if bool(result.get("ok", false)):
 		result["credited"] = CharacterManager.refresh_collect_for_character(
-			cid, params.get("quest_defs", {})
+			cid, _RI.shaped(params, "quest_defs", {})
 		)
 		var daily := DailyAppointmentStore.complete_content(
 			cid,

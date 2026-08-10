@@ -299,3 +299,29 @@ func test_mount_wires_hover_to_the_shared_tooltip() -> void:
 	panel.get_slot_cell("weapon").unhovered.emit()
 	assert_eq(tooltip.hidden, 1)
 	hud.queue_free()
+
+
+# ---- T-755: the header name is player text on a bbcode surface -----------------
+#
+# Lowest severity of the sweep — the name here is the VIEWER'S OWN, arriving on their own row of
+# the positions broadcast, so there is no attacker. It is escaped anyway: the point of a sweep is
+# to leave no bbcode site whose safety has to be re-derived from context by the next reader, and
+# an unclosed tag would swallow the whole stat block below the header regardless of who typed it.
+func test_header_name_is_escaped_and_cannot_swallow_the_stat_block() -> void:
+	_panel.update_preview({"username": "[color=#000000]ghost", "char_class": "warrior"})
+	_panel.update_stats(
+		_payload(
+			5,
+			{"str": 22, "stamina": 22, "dex": 14, "int": 10, "spirit": 10},
+			{"max_hp": 160, "max_mana": 150, "endurance": 104, "spell_power": 8, "mana_regen": 2}
+		)
+	)
+	var body := _panel.get_text()
+	assert_false(body.contains("[color=#000000]"), "the name never reaches the label as a live tag")
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = body
+	var parsed := rtl.get_parsed_text()
+	assert_string_contains(parsed, "[color=#000000]ghost", "the header name renders literally")
+	assert_string_contains(parsed, "160", "the stat block below the header is not swallowed")

@@ -133,6 +133,15 @@ package_stage() {
 
 engine_version="$($GODOT --version)"
 [[ "$engine_version" == "$EXPECTED_ENGINE" ]] || die "engine mismatch: expected $EXPECTED_ENGINE, got $engine_version"
+
+# T-746: Detect-3D only fires in a live editor render, so a headless-only pipeline silently
+# imports every 3D texture as Lossless — a ~1 GB pck and ~1.4 GB of texture VRAM. This is a
+# read-only guard: it fails the build rather than shipping that, and prints the fix. Cheap
+# (parses .import sidecars, no engine call), so it runs before the expensive template step.
+log "Verifying 3D texture import policy (T-746)..."
+python3 "$PROJECT_DIR/tools/texture_import_policy.py" --project "$CLIENT_DIR" --check --quiet \
+	|| die "3D textures are not VRAM-compressed; run tools/texture_import_policy.py --project client && $GODOT --headless --path client --import"
+
 install_templates
 
 log "Preparing isolated client snapshot (the source tree will not be imported or modified)..."

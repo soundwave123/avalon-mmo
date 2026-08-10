@@ -29,8 +29,10 @@ func _ready() -> void:
 	anchor_bottom = 0.5
 	offset_left = -300.0
 	offset_right = 300.0
-	offset_top = -220.0
-	offset_bottom = 220.0
+	# T-759: centered at 440px tall, the +220 bottom sat exactly on the hotbar top (y=580). Pin the
+	# bottom to the shared centered-panel ceiling and pull the top up the same amount to keep the size.
+	offset_top = HudSafeZone.PANEL_SAFE_BOTTOM_CENTERED - 440.0
+	offset_bottom = HudSafeZone.PANEL_SAFE_BOTTOM_CENTERED
 	theme = UiTheme.build()
 
 	var frame := PanelContainer.new()
@@ -108,7 +110,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return
-	var key := (event as InputEventKey).keycode
+	var key := KeyRegistry.event_code(event as InputEventKey)
 	# T-571 (report #28): Esc is NOT handled here — SettingsEscGate/main._handle_escape is the one
 	# owner of Esc precedence (_open_hud_panels includes this panel). A local Escape branch here
 	# raced main's central handler and could leave Options opening on top after this self-closed.

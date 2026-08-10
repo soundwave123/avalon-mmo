@@ -8,10 +8,15 @@ const PlayerCastBar = preload("res://scripts/ui/player_cast_bar.gd")
 const _CAST := {"ability_id": 5, "remaining_s": 2.0, "total_s": 2.0}
 
 
+# T-756: `.new()` with no autofree leaked one orphan PlayerCastBar per call — eight per run
+# from the state-machine tests below, which never add the bar to the tree. Orphans are exactly
+# the noise that trains people to ignore GUT's orphan counter, so the counter stops being able
+# to report a real leak. Registering here covers every caller; _tree_bar() therefore uses a
+# plain add_child, because registering the same node with GUT twice frees it twice.
 func _bar() -> PlayerCastBar:
 	var b: PlayerCastBar = PlayerCastBar.new()
 	b.set_ability_names({5: "Frostbolt"})
-	return b
+	return autofree(b)
 
 
 func test_starts_casting_from_empty() -> void:
@@ -80,3 +85,55 @@ func test_switching_ability_adopts_new_cast() -> void:
 	b.update_cast({"ability_id": 9, "remaining_s": 3.0, "total_s": 3.0}, 0.0)
 	assert_eq(b.ability_id(), 9, "a different ability replaces the current cast")
 	assert_almost_eq(b.remaining(), 3.0, 0.01)
+
+
+# ---- T-748: the 320x22 click blackhole ----------------------------------------------------------
+#
+# The root was already IGNORE, but `_bar` (ProgressBar, PRESET_FULL_RECT, default STOP) spans the
+# whole bar — so mid-cast, every click inside that band was eaten and never reached the world. The
+# exact bug xp_bar.gd:48-50 documents as fixed. Nothing on this bar is ever clickable.
+
+
+func _tree_bar() -> PlayerCastBar:
+	var b := _bar()  # already autofree-registered
+	add_child(b)
+	return b
+
+
+func test_every_child_ignores_the_mouse() -> void:
+	var b := _tree_bar()
+	assert_eq(b.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the root never eats a click")
+	var pending: Array = b.get_children()
+	assert_gt(pending.size(), 0, "the bar really did build its children")
+	while not pending.is_empty():
+		var node: Node = pending.pop_back()
+		if node is Control:
+			assert_eq(
+				(node as Control).mouse_filter,
+				Control.MOUSE_FILTER_IGNORE,
+				"%s inside an idle HUD bar must not eat a click" % node.name
+			)
+		pending.append_array(node.get_children())
+
+
+func test_click_in_the_cast_band_reaches_the_world_mid_cast() -> void:
+	var sv := SubViewport.new()
+	sv.size = Vector2i(1280, 720)
+	add_child_autofree(sv)
+	var world := Control.new()  # stands in for the world/HUD under the bar; added FIRST
+	world.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var got: Array = []
+	world.gui_input.connect(func(ev: InputEvent): got.append(ev))
+	sv.add_child(world)
+	var b := _bar()
+	sv.add_child(b)
+	b.update_cast(_CAST, 0.0)  # mid-cast: the bar is visible and covers its band
+	await get_tree().process_frame
+	assert_true(b.visible, "the bar is up — the blackhole only existed while casting")
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	ev.position = b.get_global_rect().get_center()
+	sv.push_input(ev)
+	await get_tree().process_frame
+	assert_eq(got.size(), 1, "a click inside the cast band passes straight through the bar")

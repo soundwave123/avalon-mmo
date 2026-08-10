@@ -115,3 +115,28 @@ func test_swap_is_monotonic_across_a_flyout() -> void:
 		active = nxt
 	assert_eq(switches, 2, "exactly one on and one off over the round trip")
 	assert_false(active, "back at the tree -> real mesh")
+
+
+# ---- clutter cull (T-758) ----
+
+
+func test_clutter_cull_distance_by_class() -> void:
+	# The boot-scatter ground clutter (WorldView) routes through here; each class has a positive
+	# cull comfortably beyond its scatter radius so the near field never clips.
+	assert_almost_eq(LodPolicy.clutter_cull_distance("grass"), 150.0, 0.01, "grass tufts cull")
+	assert_almost_eq(LodPolicy.clutter_cull_distance("rock"), 200.0, 0.01, "scatter rocks cull")
+	assert_almost_eq(LodPolicy.clutter_cull_distance("flower"), 160.0, 0.01, "meadow flowers cull")
+
+
+func test_clutter_cull_unknown_class_is_uncapped() -> void:
+	assert_eq(
+		LodPolicy.clutter_cull_distance("not_a_class"),
+		0.0,
+		"unknown class leaves the pool uncapped"
+	)
+
+
+func test_clutter_cull_scales_with_the_preset_multiplier() -> void:
+	assert_almost_eq(
+		LodPolicy.clutter_cull_distance("grass", 0.5), 75.0, 0.01, "Low preset halves the range"
+	)

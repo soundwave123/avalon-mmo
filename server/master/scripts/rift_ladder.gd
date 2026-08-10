@@ -1,4 +1,5 @@
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-393: the Rift Trials keystone ladder on master — per-character keystone tier persisted in
 # rift.keystone (migration 039), best-cleared-tier-per-season in rift.best_tier (the leaderboard
@@ -104,9 +105,9 @@ static func _record_result(params: Dictionary, sid: int) -> Dictionary:
 	_ledger(hid, sid, tier, new_tier, "clear" if cleared else "fail")
 	var rewards: Array = []
 	if cleared:
-		var reward: Dictionary = params.get("reward", {})
-		var registry: Dictionary = params.get("item_registry", {})
-		for uname in params.get("members", []):
+		var reward: Dictionary = _RI.shaped(params, "reward", {})
+		var registry: Dictionary = _RI.shaped(params, "item_registry", {})
+		for uname in _RI.shaped(params, "members", []):
 			var c := _CM.get_character(str(uname))
 			if c.is_empty():
 				continue

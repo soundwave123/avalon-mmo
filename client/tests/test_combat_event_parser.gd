@@ -3,17 +3,19 @@ extends "res://addons/gut/test.gd"
 var _parser: CombatEventParser = null
 
 
-func before_all() -> void:
-	_parser = CombatEventParser.new()
-
-
-func after_all() -> void:
-	_parser = null  # RefCounted, just drop reference
-
-
+# T-756: the parser used to be built ONCE in before_all and shared by every test in the file.
+# Two tests below connect a capturing lambda to its signals and never disconnect, so from the
+# moment they ran, every later test's parse() also appended into those closures' arrays — one
+# test's payloads silently landing in another test's captures. It also made get_events_parsed()
+# a running total across the whole file. CombatEventParser is a RefCounted with no setup cost;
+# there is no reason to share one. Each test now gets its own.
 func before_each() -> void:
-	if _parser:
-		watch_signals(_parser)
+	_parser = CombatEventParser.new()
+	watch_signals(_parser)
+
+
+func after_each() -> void:
+	_parser = null  # RefCounted, just drop the reference
 
 
 func test_valid_ability_hit_emits_event() -> void:
@@ -33,6 +35,10 @@ func test_valid_ability_hit_emits_event() -> void:
 	assert_signal_emitted(_parser, "ability_result_event")
 
 
+# T-756: named "has_correct_fields" but asserted only that the signal fired — byte-identical to
+# the test above it, so every field could have been dropped, swapped or mistyped by the parser
+# and this still passed. It is the ONLY test of the server→client field contract in the header,
+# so read the event out of the signal and check every field it claims to carry.
 func test_valid_ability_hit_has_correct_fields() -> void:
 	var payload := {
 		"type": "ability_result",
@@ -48,6 +54,16 @@ func test_valid_ability_hit_has_correct_fields() -> void:
 	}
 	_parser.parse(payload)
 	assert_signal_emitted(_parser, "ability_result_event")
+	var evt = get_signal_parameters(_parser, "ability_result_event", 0)[0]
+	assert_eq(evt.event_type, "ability_result", "tagged as an ability result")
+	assert_eq(evt.caster_id, 1, "caster_id carried")
+	assert_eq(evt.caster_name, "Hero", "caster_name carried")
+	assert_eq(evt.target_id, 2, "target_id carried")
+	assert_eq(evt.target_name, "Goblin", "target_name carried")
+	assert_eq(evt.damage, 15, "damage carried")
+	assert_eq(evt.outcome, "hit", "outcome carried")
+	assert_eq(evt.target_hp, 85, "target_hp carried")
+	assert_eq(evt.target_max_hp, 100, "target_max_hp carried")
 
 
 func test_heal_result_emits_heal_signal() -> void:
@@ -119,20 +135,37 @@ func test_unknown_type_emits_unknown_event() -> void:
 func test_empty_dict_does_not_crash() -> void:
 	var empty: Dictionary = {}
 	_parser.parse(empty)
-	assert_true(true, "empty dict should not crash")
+	# T-756: this ended on `assert_true(true)`, which is green even if parse() were removed.
+	# The real claim is that an empty payload is dropped SILENTLY — no signal, no counter bump,
+	# and in particular not routed to unknown_event, which would spam the feedback layer.
+	assert_signal_not_emitted(_parser, "unknown_event", "an empty dict is dropped, not 'unknown'")
+	assert_signal_not_emitted(_parser, "ability_result_event")
+	assert_eq(_parser.get_events_parsed(), 0, "an empty payload is not counted as an event")
 
 
+# T-756: "use_defaults" asserted only that the signal fired — it never looked at a single
+# default. The defaults are what stops a truncated packet rendering as "Unknown hits Unknown
+# for 0", so assert them.
 func test_missing_keys_use_defaults() -> void:
 	var payload := {
 		"type": "ability_result",
 	}
 	_parser.parse(payload)
 	assert_signal_emitted(_parser, "ability_result_event")
+	var evt = get_signal_parameters(_parser, "ability_result_event", 0)[0]
+	assert_eq(evt.caster_id, -1, "absent caster_id defaults to the sentinel, not 0")
+	assert_eq(evt.target_id, -1, "absent target_id defaults to the sentinel, not 0")
+	assert_eq(evt.caster_name, "Unknown", "absent names default to Unknown")
+	assert_eq(evt.target_name, "Unknown", "absent names default to Unknown")
+	assert_eq(evt.damage, 0, "absent damage is zero")
+	assert_eq(evt.outcome, "hit", "absent outcome defaults to hit")
+	assert_eq(evt.target_hp, -1, "absent target_hp stays unknown, not zero (which reads as dead)")
+	assert_eq(evt.tick, -1, "absent tick is the -1 sentinel")
 
 
 func test_events_parsed_counter_increments() -> void:
-	# Parser persists across tests so total count keeps growing.
-	# Just verify that after this call, count increased by 1.
+	# T-756: the parser is per-test now (see before_each), so `before` is 0 — the delta form is
+	# kept anyway because it is the honest way to state the claim.
 	var before := _parser.get_events_parsed()
 	var payload := {
 		"type": "ability_result",
@@ -142,6 +175,8 @@ func test_events_parsed_counter_increments() -> void:
 	assert_eq(_parser.get_events_parsed(), before + 1)
 
 
+# T-756: named for the message FORMAT, asserted only that a signal fired — the very field it
+# exists to pin (system_message) was never read, so the death line could have rendered empty.
 func test_death_system_message_format() -> void:
 	var payload := {
 		"type": "player_death",
@@ -150,8 +185,16 @@ func test_death_system_message_format() -> void:
 	}
 	_parser.parse(payload)
 	assert_signal_emitted(_parser, "player_death_event")
+	var evt = get_signal_parameters(_parser, "player_death_event", 0)[0]
+	assert_eq(evt.system_message, "Reine has died.", "the death line names the player")
+	assert_eq(evt.target_id, 3, "player_id lands on target_id")
+	assert_eq(evt.target_name, "Reine", "player_name lands on target_name")
+	assert_eq(evt.event_type, "player_death")
 
 
+# T-756: the whole point of this test is that a heal's size comes off the "amount" key rather
+# than "damage" — and it never read the amount. Swapping the two keys in the parser left it
+# green. Assert the number.
 func test_heal_damage_uses_amount_field() -> void:
 	var payload := {
 		"type": "heal_result",
@@ -161,6 +204,11 @@ func test_heal_damage_uses_amount_field() -> void:
 	}
 	_parser.parse(payload)
 	assert_signal_emitted(_parser, "heal_event")
+	var evt = get_signal_parameters(_parser, "heal_event", 0)[0]
+	assert_eq(evt.damage, 25, "the heal size is read from the 'amount' key")
+	assert_eq(evt.event_type, "heal", "and it is tagged as a heal, never as damage")
+	assert_eq(evt.caster_name, "Cleric")
+	assert_eq(evt.target_name, "Knight")
 
 
 # ---- T-027 §6: cast events ----------------------------------------------

@@ -51,7 +51,15 @@ func handle(_msg_type: String, peer_id: int, data: Dictionary) -> void:
 	var player: Dictionary = PlayerSessions.get_player(peer_id)
 	if player.is_empty():
 		return
-	var clean: Array = _BLO.sanitize(data.get("layout", []), _known.get(peer_id, []))
+	# T-754: "layout" comes straight off the ENet client frame and _BLO.sanitize takes a typed
+	# Array parameter — a non-Array here aborted this handler instead of replying, so the
+	# client hung waiting for a bar_layout_result. This is the one client-reachable typed
+	# coercion left on the world's intake surface; every sibling service coerces with str()/int().
+	var raw_layout: Variant = data.get("layout", [])
+	if not raw_layout is Array:
+		_reply.call(peer_id, {"type": "bar_layout_result", "ok": false, "reason": "invalid_layout"})
+		return
+	var clean: Array = _BLO.sanitize(raw_layout, _known.get(peer_id, []))
 	if clean.is_empty():
 		_reply.call(peer_id, {"type": "bar_layout_result", "ok": false, "reason": "invalid_layout"})
 		return

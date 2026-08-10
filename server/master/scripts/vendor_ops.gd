@@ -1,5 +1,6 @@
 class_name VendorOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-430: master-owned vendor coordinator. The world supplies SERVER content (this NPC's wares
 # and the item registry) after its proximity gate; the client supplies only a desire. This module
@@ -27,8 +28,8 @@ func op(params: Dictionary) -> Dictionary:
 	var cid := _char_id(str(params.get("username", "")))
 	if cid < 0:
 		return {"error": "unknown_character"}
-	var registry: Dictionary = params.get("item_registry", {})
-	var wares: Array = params.get("wares", [])
+	var registry: Dictionary = _RI.shaped(params, "item_registry", {})
+	var wares: Array = _RI.shaped(params, "wares", [])
 	match str(params.get("action", "browse")):
 		"browse":
 			return _view(cid, wares, registry)

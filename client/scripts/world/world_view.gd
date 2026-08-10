@@ -144,6 +144,7 @@ const PLOT_RADIUS := 6.2
 # the terrain splat paints carved-LOOKING wet banks (terrain_splat river_mask), and the stone bridge
 # (prop_bridge_stone, in props.json) gives the King's Road a dry crossing south of the gate.
 const MEADOW := preload("res://scripts/world/meadow_clutter.gd")  # T-490 tuft mesh + density field
+const LOD_POLICY := preload("res://scripts/world/lod_policy.gd")  # T-758 clutter cull distances
 const RIVER_VIEW := preload("res://scripts/world/river_view.gd")
 const WATER_VIEW := preload("res://scripts/world/water_view.gd")  # T-441 lake build + day tick
 const ERA_ATMOS := preload("res://scripts/world/era_atmosphere.gd")  # T-408 per-region atmosphere
@@ -506,17 +507,23 @@ func _build_clutter() -> void:
 	# disturbed ground by dwellings; thin-to-bare on the sheep-cropped commons and worn road margins.
 	# Instance count is preserved (one draw call); low-density candidates collapse to zero scale,
 	# which is what opens the genuine bare gaps a uniform carpet never had.
-	add_child(_scatter(g_mid, 7000, 60.0, rng, 0.8, 1.4, true))
-	add_child(_scatter(g_dark, 2600, 58.0, rng, 0.8, 1.45, true))
-	add_child(_scatter(g_tall, 1400, 66.0, rng, 0.75, 1.3, true))
-	add_child(_scatter(g_mid, 2600, 120.0, rng, 0.8, 1.5, true))
-	add_child(_scatter(_rock_mesh(), 90, 130.0, rng, 0.5, 1.8))
+	add_child(_scatter(g_mid, 7000, 60.0, rng, 0.8, 1.4, true, "grass"))
+	add_child(_scatter(g_dark, 2600, 58.0, rng, 0.8, 1.45, true, "grass"))
+	add_child(_scatter(g_tall, 1400, 66.0, rng, 0.75, 1.3, true, "grass"))
+	add_child(_scatter(g_mid, 2600, 120.0, rng, 0.8, 1.5, true, "grass"))
+	add_child(_scatter(_rock_mesh(), 90, 130.0, rng, 0.5, 1.8, false, "rock"))
 	# T-134/T-170 round 8b: meadow colour pops. The old dense wheat + max-saturation flower
 	# triangles read as gold "debug pennants" (judge flagged twice) — wheat removed, flowers cut
 	# to a sparse, muted, shaded sprinkle.
-	add_child(_scatter(_flower_mesh(Color(0.80, 0.74, 0.42)), 12, 105.0, rng, 0.5, 0.7))
-	add_child(_scatter(_flower_mesh(Color(0.66, 0.34, 0.34)), 12, 105.0, rng, 0.5, 0.7))
-	add_child(_scatter(_flower_mesh(Color(0.72, 0.72, 0.80)), 12, 110.0, rng, 0.6, 0.85))
+	add_child(
+		_scatter(_flower_mesh(Color(0.80, 0.74, 0.42)), 12, 105.0, rng, 0.5, 0.7, false, "flower")
+	)
+	add_child(
+		_scatter(_flower_mesh(Color(0.66, 0.34, 0.34)), 12, 105.0, rng, 0.5, 0.7, false, "flower")
+	)
+	add_child(
+		_scatter(_flower_mesh(Color(0.72, 0.72, 0.80)), 12, 110.0, rng, 0.6, 0.85, false, "flower")
+	)
 	# T-406: Ashmoor gutter litter — handbill/newspaper scraps, one MultiMesh (ashmoor_litter.gd)
 	add_child(AshmoorLitter.build())
 
@@ -528,12 +535,18 @@ func _scatter(
 	rng: RandomNumberGenerator,
 	s_min: float,
 	s_max: float,
-	density := false
+	density := false,
+	clutter_class := ""
 ) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = mesh
 	mm.instance_count = count
+	# T-758 (item 4): union the instance AABBs as we place them so the MultiMesh carries an explicit
+	# custom_aabb — the engine then skips recomputing bounds over every instance at build.
+	var mesh_aabb := mesh.get_aabb()
+	var bounds := AABB()
+	var have_bounds := false
 	for i in range(count):
 		var pos := Vector3.ZERO
 		var accepted := false
@@ -604,11 +617,22 @@ func _scatter(
 		var scl := 0.0 if (density and not accepted) else rng.randf_range(s_min, s_max)
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU))
 		basis = basis.scaled(Vector3.ONE * scl)
-		mm.set_instance_transform(i, Transform3D(basis, pos))
+		var xf := Transform3D(basis, pos)
+		mm.set_instance_transform(i, xf)
+		var inst_aabb := xf * mesh_aabb
+		bounds = bounds.merge(inst_aabb) if have_bounds else inst_aabb
+		have_bounds = true
+	if have_bounds:
+		mm.custom_aabb = bounds  # T-758 item 4: skip the engine's runtime AABB recompute
 	var inst := MultiMeshInstance3D.new()
 	inst.name = "Clutter"
 	inst.multimesh = mm
 	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# T-758 item 3: route boot clutter through LodPolicy so the ~13.7k grass/rock/flower instances
+	# cull past their class distance instead of drawing from every zone (they had no range before).
+	var cull := LOD_POLICY.clutter_cull_distance(clutter_class)
+	if cull > 0.0:
+		inst.visibility_range_end = cull
 	return inst
 
 

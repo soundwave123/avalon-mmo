@@ -68,7 +68,7 @@ func setup(send_fn: Callable, is_typing_fn: Callable = Callable()) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_O:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_O:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return
@@ -96,6 +96,9 @@ func _render() -> void:
 	lines.append("[b]Friends[/b]")
 	for f: Dictionary in _friends:
 		var fname := str(f.get("name", ""))
+		# T-755: this label is bbcode_enabled and its meta_clicked fires unfriend/trade, so a name
+		# is escaped for DISPLAY and stripped for the [url=...] payload (see BBCode).
+		var fmeta := BBCode.escape_meta(fname)
 		var online := bool(f.get("online", false))
 		(
 			lines
@@ -104,10 +107,10 @@ func _render() -> void:
 					"  [color=#%s]%s[/color] %s%s [url=unfriend|%s]\\[x\\][/url]"
 					% [
 						"7fff7f" if online else "808080",
-						fname,
+						BBCode.escape(fname),
 						"(online)" if online else "(offline)",
-						" [url=trade|%s]\\[trade\\][/url]" % fname if online else "",
-						fname,
+						" [url=trade|%s]\\[trade\\][/url]" % fmeta if online else "",
+						fmeta,
 					]
 				)
 			)
@@ -116,7 +119,12 @@ func _render() -> void:
 		lines.append("  [color=#808080](none)[/color]")
 	lines.append("[b]Ignored[/b]")
 	for iname in _ignored:
-		lines.append("  %s [url=unignore|%s]\\[x\\][/url]" % [str(iname), str(iname)])
+		lines.append(
+			(
+				"  %s [url=unignore|%s]\\[x\\][/url]"
+				% [BBCode.escape(str(iname)), BBCode.escape_meta(str(iname))]
+			)
+		)
 	if _ignored.is_empty():
 		lines.append("  [color=#808080](none)[/color]")
 	_body.text = "\n".join(lines)

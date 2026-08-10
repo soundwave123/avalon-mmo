@@ -24,6 +24,7 @@ const _COMPACT_SCROLL_H := 92.0  # T-717: three rows + breathing room
 const _SCROLL_MAX_H := 430.0  # keep the window inside 720p (the T-400 settings-panel lesson)
 
 var _rows_box: VBoxContainer = null
+var _body: PanelContainer = null  # T-748: the bounded card rect — the only click-blocking surface
 var _full_only: Array = []  # T-717: nodes shown only in the full (F1) handbook
 var _compact_footer: Label = null
 var _full_footer: Label = null
@@ -41,18 +42,32 @@ func _ready() -> void:
 	offset_bottom = -16.0
 	theme = UiTheme.build()
 	visible = false
+	# T-748: the handbook is a WINDOW, not a modal, but it was a full-screen default-STOP overlay
+	# added LAST to $HUD — and GUI picking goes by reverse child order and ignores z_index, so while
+	# it was up it won EVERY click on screen, over panels and over the z=200 creation modals alike
+	# (the s25 trap modal_input.gd documents). Recipe (c) in ui_theme.gd — the porous overlay: the
+	# full-rect CHROME (root, dim, centering) never takes a pick; only the bounded card BODY does.
+	# So the handbook blocks clicks over itself and nowhere else.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var dim := ColorRect.new()
+	dim.name = "Dim"
 	dim.color = Color(0.0, 0.0, 0.0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE  # a scrim you can see through AND click through
 	add_child(dim)
 
 	var center := CenterContainer.new()
+	center.name = "CardCenter"
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE  # full-rect centering chrome, not a surface
 	add_child(center)
 
 	var panel := PanelContainer.new()
+	panel.name = "CardBody"
 	panel.theme_type_variation = "SolidWindow"  # T-396: deliberate window = opaque opt-in
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP  # the ONE blocking rect: the card itself
+	_body = panel
 	center.add_child(panel)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(560.0, 0.0)
@@ -221,6 +236,12 @@ func toggle() -> void:
 
 
 # ---- headless-test accessors ----
+
+
+# T-748: the bounded card rect (the porous overlay's one blocking surface) — lets a test click
+# inside it and outside it and assert which control the viewport actually picked.
+func card_body() -> PanelContainer:
+	return _body
 
 
 func row_count() -> int:

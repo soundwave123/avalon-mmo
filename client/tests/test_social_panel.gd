@@ -113,3 +113,54 @@ func test_shared_gate_recognizes_multiline_text_edit_focus() -> void:
 		UiInputGate.is_text_input_focused(get_viewport()),
 		"TextEdit focus suppresses panel hotkeys through the same shared gate"
 	)
+
+
+# ---- T-755: BBCode injection through friend / ignore names ----------------------
+#
+# Same shape as the GuildPanel hole: bbcode_enabled label + meta_clicked wired to unfriend/trade.
+# character_name.gd keeps "[" out of names today, so this is the regression pin that will notice if
+# that charset ever loosens — the panel must not depend on a rule enforced three layers away.
+func test_hostile_friend_name_renders_literally_and_forges_no_link() -> void:
+	(
+		_panel
+		. receive(
+			{
+				"type": "social_list",
+				"friends": [{"name": "[url=unfriend|bob]x[/url]", "online": true}],
+				"ignored": [],
+			}
+		)
+	)
+	var body := _panel.body_text()
+	assert_false(body.contains("[url=unfriend|bob]"), "a name cannot paint a second unfriend link")
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = body
+	assert_string_contains(
+		rtl.get_parsed_text(), "[url=unfriend|bob]x[/url]", "the hostile name renders as text"
+	)
+	# Exactly ONE live unfriend link on the row — the panel's own. Counting is the assertion that
+	# actually states the threat: the bug was a name manufacturing extra clickable intents.
+	assert_eq(body.count("[url=unfriend|"), 1, "the name manufactured no extra unfriend link")
+	assert_eq(body.count("[url=trade|"), 1, "...nor an extra trade link")
+
+
+func test_ignored_name_with_brackets_does_not_swallow_the_list() -> void:
+	(
+		_panel
+		. receive(
+			{
+				"type": "social_list",
+				"friends": [],
+				"ignored": ["[color=red]troll", "second"],
+			}
+		)
+	)
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = _panel.body_text()
+	var parsed := rtl.get_parsed_text()
+	assert_string_contains(parsed, "[color=red]troll", "the ignored name renders inert")
+	assert_string_contains(parsed, "second", "an unclosed tag must not swallow the next row")

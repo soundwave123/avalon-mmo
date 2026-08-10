@@ -91,6 +91,13 @@ func _ready() -> void:
 	_abilities.name = "AbilityRows"
 	_abilities.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_abilities)
+	# T-748: unlike every other window in the sweep, the player never SUMMONS this one — it pops
+	# itself up dead-centre screen after a kill (#79's gate only holds it back while a hostile is
+	# still close). An unsummoned window must not take the player's clicks, so the whole 480x280
+	# box is click-through (nothing in it is clickable) except the ability-breakdown scroll, which
+	# keeps STOP so the wheel still scrolls the rows. R / Esc / respawn still dismiss it.
+	UiTheme.set_mouse_filter_deep(self)
+	scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	_render()
 
 
@@ -151,7 +158,7 @@ static func is_safe_to_autopop(remote_entities, local_player, death_presentation
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_R:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_R:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return

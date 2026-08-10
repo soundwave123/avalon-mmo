@@ -41,6 +41,9 @@ func setup_ex(send_intent_ex: Callable) -> void:
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	visible = false
+	# T-759: the panel below requests the "SolidWindow" variation but no theme was ever in scope, so
+	# the variation never resolved and the window rendered default Godot grey. Carry the shared theme.
+	theme = UiTheme.build()
 	var dim := ColorRect.new()
 	dim.color = Color(0.0, 0.0, 0.0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -62,10 +65,18 @@ func _ready() -> void:
 	_title.add_theme_font_size_override("font_size", 22)
 	box.add_child(_title)
 
+	# T-759: ~8 inbox rows (a Label + an action HBox each) overflowed the window off-screen. Cap the
+	# inbox in a scroll so the compose form and Close below it stay reachable (service_panel idiom).
+	var inbox_scroll := ScrollContainer.new()
+	inbox_scroll.name = "MailInboxScroll"
+	inbox_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	inbox_scroll.custom_minimum_size = Vector2(420.0, 220.0)
+	box.add_child(inbox_scroll)
 	_inbox_list = VBoxContainer.new()
 	_inbox_list.name = "MailInbox"
+	_inbox_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_inbox_list.add_theme_constant_override("separation", 4)
-	box.add_child(_inbox_list)
+	inbox_scroll.add_child(_inbox_list)
 
 	box.add_child(HSeparator.new())
 	_build_compose(box)

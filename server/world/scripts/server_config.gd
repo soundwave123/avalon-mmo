@@ -223,6 +223,21 @@ static func get_master_port() -> int:
 	return _master_port
 
 
+# T-749: THE server clock. Every combat/movement/telemetry site used to inline
+# `Time.get_ticks_msec() / (1000 / TICK_RATE_HZ)` — an integer division of an integer division,
+# which is only exact when TICK_RATE_HZ divides 1000. At 20 Hz (1000/20 = 50) it is correct and
+# this function is bit-identical to it for every msec value; at 30 Hz the old form divides by
+# 1000/30 = 33 instead of 33.33 (a 1% fast clock) and at 64 Hz by 15 instead of 15.625 (4% fast),
+# so every cooldown, cast timer and respawn would silently drift the day the rate changed.
+# Multiply-then-divide has no such truncation: floor(msec * hz / 1000) is exact at any rate.
+static func tick_of_msec(msec: int) -> int:
+	return msec * TICK_RATE_HZ / 1000
+
+
+static func now_tick() -> int:
+	return tick_of_msec(Time.get_ticks_msec())
+
+
 # T-016: Resource regen accessors (pure constants, no runtime state).
 static func get_hp_regen_interval() -> int:
 	return HP_REGEN_INTERVAL

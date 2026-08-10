@@ -14,6 +14,12 @@ extends RefCounted
 # literal to keep in sync by hand (the T-078 "kept in sync by hand" comment is what rotted).
 #
 # Pure/static — headless-safe, no scene, no InputMap (remapping stays the named T-078 deferral).
+#
+# T-761: these are PHYSICAL keycodes now. main.gd matches them against event.physical_keycode, so
+# slot 1 is the key one right of the tilde whatever that key prints — an AZERTY number row is
+# "&é"'(" and would otherwise have cast nothing. Labels go the other way through
+# KeyRegistry.label_for, so the pip under slot 1 shows what the player's own board is engraved
+# with. KeyRegistry lists these nine rows alongside every other binding in the game.
 
 # The number row is contiguous in keycode order (KEY_1 = 49 ... KEY_9 = 57), so slot N binds to
 # FIRST_KEYCODE + N. If the bar ever grows to a tenth slot, that one takes KEY_0 (the WoW layout)
@@ -56,11 +62,14 @@ static func slot_for_keycode(keycode: int) -> int:
 
 # The printable key name for a slot — the bar's keybind pip and the tooltip's "Key: N" line. Empty
 # for an unreachable slot, so a pip can never advertise a key that does nothing.
+#
+# T-761: resolved through KeyRegistry.label_for, not OS.get_keycode_string, so the pip shows the
+# character on THIS player's keyboard at that position rather than the US one.
 static func slot_label(slot: int) -> String:
 	var keycode: int = keycode_for_slot(slot)
 	if keycode == -1:
 		return ""
-	return OS.get_keycode_string(keycode)
+	return KeyRegistry.label_for(keycode)
 
 
 # "1 - 9": the whole keyed range as one label (Esc > Controls, the glossary line).

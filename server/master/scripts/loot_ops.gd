@@ -15,6 +15,7 @@ extends RefCounted
 # durable answer.
 
 const CharacterManager = preload("res://scripts/character_manager.gd")
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 static var _pending: Dictionary = {}  # username -> Array[{item_id:String, count:int}]
 
@@ -22,10 +23,10 @@ static var _pending: Dictionary = {}  # username -> Array[{item_id:String, count
 # params: {usernames: Array[String], items: Array, item_registry: Dict, quest_defs: Dict}
 # Returns {ok, reason, credited, granted_to, held}.
 static func grant_or_hold(params: Dictionary) -> Dictionary:
-	var usernames: Array = params.get("usernames", [])
-	var items: Array = params.get("items", [])
-	var item_registry: Dictionary = params.get("item_registry", {})
-	var quest_defs: Dictionary = params.get("quest_defs", {})
+	var usernames: Array = _RI.shaped(params, "usernames", [])
+	var items: Array = _RI.shaped(params, "items", [])
+	var item_registry: Dictionary = _RI.shaped(params, "item_registry", {})
+	var quest_defs: Dictionary = _RI.shaped(params, "quest_defs", {})
 	for raw_username in usernames:
 		var username := str(raw_username)
 		if username == "":

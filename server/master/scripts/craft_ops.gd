@@ -1,5 +1,6 @@
 class_name CraftOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-414: master-owned crafting ops — the *Ops-module extraction pattern (durability_ops/vault_ops).
 # Every op resolves identity from the username the WORLD passed (session-derived), never the wire;
@@ -30,13 +31,13 @@ static func gather_op(params: Dictionary) -> Dictionary:
 	# T-677: an ADDITIVE rare cross-find (herb/ore/timber proc) rides alongside the guaranteed
 	# primary yield when the world rolled one — both mint in the SAME transactional add, so the proc
 	# never displaces the primary. Empty/absent bonus (fishing, legacy nodes) is a no-op.
-	var bonus: Dictionary = params.get("bonus", {})
+	var bonus: Dictionary = _RI.shaped(params, "bonus", {})
 	if not bonus.is_empty() and str(bonus.get("item_id", "")) != "":
 		additions.append(
 			{"item_id": str(bonus["item_id"]), "count": maxi(1, int(bonus.get("count", 1)))}
 		)
 	var result: Dictionary = CharacterManager.try_add_items(
-		cid, additions, params.get("item_registry", {})
+		cid, additions, _RI.shaped(params, "item_registry", {})
 	)
 	# T-676: one credited gather action advances the gather counter (running total + per-material).
 	# Fires only on a real minted yield (never a bag-full/invalid no-op), the same server-observed
@@ -56,7 +57,7 @@ static func recipe_op(params: Dictionary) -> Dictionary:
 	if cid < 0:
 		return {"error": "unknown_character"}
 	if str(params.get("action", "list")) == "learn":
-		var recipe: Dictionary = params.get("recipe", {})
+		var recipe: Dictionary = _RI.shaped(params, "recipe", {})
 		var rid := str(recipe.get("id", ""))
 		if rid == "":
 			return {"error": "unknown_recipe"}
@@ -83,7 +84,7 @@ static func craft_op(params: Dictionary) -> Dictionary:
 	var cid := _char_id(params)
 	if cid < 0:
 		return {"error": "unknown_character"}
-	var recipe: Dictionary = params.get("recipe", {})
+	var recipe: Dictionary = _RI.shaped(params, "recipe", {})
 	var rid := str(recipe.get("id", ""))
 	if rid == "":
 		return {"error": "unknown_recipe"}
@@ -102,12 +103,14 @@ static func craft_op(params: Dictionary) -> Dictionary:
 	var added := _IL.add_items(
 		work,
 		[{"item_id": str(output.get("item", "")), "count": int(output.get("count", 1))}],
-		params.get("item_registry", {})
+		_RI.shaped(params, "item_registry", {})
 	)
 	if not bool(added["ok"]):
 		return {"error": str(added["reason"])}
 	CharacterManager._persist_inventory(
-		cid, added["slots"], _IP.wearable_appearance_ids([output], params.get("item_registry", {}))
+		cid,
+		added["slots"],
+		_IP.wearable_appearance_ids([output], _RI.shaped(params, "item_registry", {}))
 	)  # single write + first-acquisition look unlock
 	# T-676: a completed craft advances the craft counter (running total + per-recipe) for the
 	# first-craft + craft-count achievements.
@@ -133,7 +136,7 @@ static func use_item_op(params: Dictionary) -> Dictionary:
 			break
 	if item_id == "":
 		return {"error": "empty_slot"}
-	var registry: Dictionary = params.get("item_registry", {})
+	var registry: Dictionary = _RI.shaped(params, "item_registry", {})
 	var item_def: Dictionary = registry.get(item_id, {})
 	var effect: Dictionary = item_def.get("use_effect", {})
 	if not (effect is Dictionary) or effect.is_empty():

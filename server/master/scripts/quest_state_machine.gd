@@ -19,6 +19,10 @@ const STATE_ACTIVE := "active"
 const STATE_COMPLETE := "complete"
 const STATE_ABANDONED := "abandoned"
 
+# T-754: shape guards for wire-supplied quest payloads. Pure + static, so the no-DB/no-time
+# determinism constraints above still hold.
+const _RI = preload("res://scripts/rpc_intake.gd")
+
 # T-621: quest-log cap (WoW classic = 20 active quests). A full log refuses the NEXT accept with a
 # clean "log_full" reason (surfaced via the T-575 failure-toast path). The cap counts ACTIVE quests
 # only — completed/abandoned rows don't occupy a log slot. Enforced in character_manager.try_accept
@@ -87,7 +91,9 @@ static func evaluate_turn_in(
 		return QuestResult.failure("objectives_incomplete")
 	if not at_turnin_npc:
 		return QuestResult.failure("not_at_turnin_npc")
-	var rewards: Dictionary = quest.get("rewards", {"xp": 0, "items": []})
+	# T-754: `quest` is wire-supplied — being a Dictionary says nothing about "rewards",
+	# and a typed assign from a non-Dictionary aborts this frame mid-turn-in.
+	var rewards: Dictionary = _RI.shaped(quest, "rewards", {"xp": 0, "items": []})
 	return QuestResult.success(STATE_COMPLETE, rewards)
 
 

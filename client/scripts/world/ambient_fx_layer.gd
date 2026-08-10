@@ -355,16 +355,34 @@ static func era_gate_atten(bed_era: int, hearer_era: int) -> float:
 	return 0.0 if bed_era == hearer_era else ERA_MISMATCH_ATTEN_DB
 
 
-# T-409: resolve the listener's era from the active Camera3D (the audio listener). Falls back to
-# ERA_MEDIEVAL with no camera (headless tests / no viewport), so the medieval beds default on.
-static func listener_era(any_node: Node) -> int:
+# T-752: THE node the mix is measured at — the shared answer to "where is the player hearing
+# from", for every gate that needs it (this layer's era gate, the global beds in AudioManager, the
+# music-region crossfade in MusicBedLayer). It is the current AudioListener3D (LocalPlayer parks
+# one on the player BODY, at ear height) and only falls through to the active Camera3D when no
+# listener is current — which is exactly the engine's own fallback rule, so this never disagrees
+# with where Godot actually mixes. Reading the camera directly (as every caller did before T-752)
+# put the measuring point ~8 m behind the character and let a pure camera orbit flip the era gate.
+# Null with no viewport/camera/listener at all (headless tests), and callers default medieval.
+static func listener_node(any_node: Node) -> Node3D:
 	if any_node == null or not any_node.is_inside_tree():
-		return ERA_MEDIEVAL
+		return null
 	var vp := any_node.get_viewport()
-	var cam := vp.get_camera_3d() if vp != null else null
-	if cam == null:
+	if vp == null:
+		return null
+	var lis: Node3D = vp.get_audio_listener_3d()
+	if lis != null:
+		return lis
+	return vp.get_camera_3d()
+
+
+# T-409: resolve the listener's era from where the mix is measured (T-752: the player-body
+# AudioListener3D, camera only as the engine's fallback). Falls back to ERA_MEDIEVAL with no
+# listener at all (headless tests / no viewport), so the medieval beds default on.
+static func listener_era(any_node: Node) -> int:
+	var lis := listener_node(any_node)
+	if lis == null:
 		return ERA_MEDIEVAL
-	var p := cam.global_position
+	var p := lis.global_position
 	return resolved_era(p.x, p.z)
 
 

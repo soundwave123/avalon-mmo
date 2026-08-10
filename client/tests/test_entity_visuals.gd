@@ -327,3 +327,67 @@ func test_warmup_request_is_headless_safe_and_make_visual_still_builds() -> void
 	var second := EV.make_visual("mob_wolf")  # repeat sighting keeps resolving (engine cache)
 	add_child_autofree(second)
 	assert_gt(second.get_child_count(), 0, "repeat sightings keep resolving")
+
+
+# T-758: tinted materials are memo-cached on (source material, tint, hair). Before this, every
+# entity's every surface got a fresh mat.duplicate(), so two identical NPCs shared no material and
+# the renderer could not batch them. _apply_body_tints is private, so drive it through the public
+# apply_appearance seam. A BoxMesh's single-surface material is what get_active_material returns.
+func after_each() -> void:
+	TintMaterialCache.clear()  # T-758: drop cached duplicates so RIDs don't leak to exit
+
+
+func _rig_sharing_material(mat: StandardMaterial3D) -> Node3D:
+	var root := Node3D.new()
+	var mi := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.material = mat  # a material name that maps to no special slot resolves to "body"
+	mi.mesh = mesh
+	root.add_child(mi)
+	return root
+
+
+func _body_override(root: Node3D) -> BaseMaterial3D:
+	var mi := root.get_child(0) as MeshInstance3D
+	return mi.get_surface_override_material(0) as BaseMaterial3D
+
+
+func test_same_tint_entities_share_one_cached_material() -> void:
+	# One SHARED source material (as GLB sub-resources are shared across scene instances) tinted the
+	# same way on two separate rigs must resolve to the SAME duplicate — that is what lets the
+	# renderer batch identical NPCs again.
+	var source := StandardMaterial3D.new()
+	source.albedo_color = Color(0.8, 0.8, 0.8)
+	var tint := {"body": Color(0.5, 0.4, 0.3)}
+	var a: Node3D = autofree(_rig_sharing_material(source))
+	var b: Node3D = autofree(_rig_sharing_material(source))
+	EV.apply_appearance(a, tint)
+	EV.apply_appearance(b, tint)
+	var ma := _body_override(a)
+	var mb := _body_override(b)
+	assert_not_null(ma, "rig A got a tinted body material")
+	assert_not_null(mb, "rig B got a tinted body material")
+	assert_eq(
+		ma.get_instance_id(), mb.get_instance_id(), "same source+tint share ONE cached material"
+	)
+	# Tint still applied correctly: source albedo * tint.
+	assert_almost_eq(ma.albedo_color.r, 0.8 * 0.5, 0.001, "tint multiplies the source albedo (r)")
+	assert_almost_eq(ma.albedo_color.g, 0.8 * 0.4, 0.001, "tint multiplies the source albedo (g)")
+
+
+func test_different_tints_do_not_collide_on_one_material() -> void:
+	# The cache key includes the EXACT tint, so two differently-tinted NPCs off the same source must
+	# get DISTINCT materials (else one dye would recolor the other).
+	var source := StandardMaterial3D.new()
+	source.albedo_color = Color.WHITE
+	var a: Node3D = autofree(_rig_sharing_material(source))
+	var b: Node3D = autofree(_rig_sharing_material(source))
+	EV.apply_appearance(a, {"body": Color(0.9, 0.2, 0.2)})
+	EV.apply_appearance(b, {"body": Color(0.2, 0.2, 0.9)})
+	var ma := _body_override(a)
+	var mb := _body_override(b)
+	assert_ne(
+		ma.get_instance_id(), mb.get_instance_id(), "different tints -> different cached materials"
+	)
+	assert_gt(ma.albedo_color.r, ma.albedo_color.b, "red-tinted rig stays red")
+	assert_gt(mb.albedo_color.b, mb.albedo_color.r, "blue-tinted rig stays blue")

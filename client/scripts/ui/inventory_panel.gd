@@ -39,8 +39,10 @@ func _ready() -> void:
 	anchor_bottom = 1.0
 	offset_left = -376.0
 	offset_right = -16.0
-	offset_top = 56.0
-	offset_bottom = -56.0
+	# T-759: raw 56/-56 drove through the minimap (150x104 overlap) and the hotbar. Route both edges
+	# through the shared HudSafeZone: MINIMAP_SAFE_TOP because this is a RIGHT-side panel.
+	offset_top = HudSafeZone.MINIMAP_SAFE_TOP
+	offset_bottom = HudSafeZone.PANEL_SAFE_BOTTOM
 	visible = false  # toggled open with I
 	theme = UiTheme.build()  # T-400: SolidWindow variation resolves off the shared theme
 	var frame := PanelContainer.new()
@@ -96,8 +98,14 @@ func render(slots: Array) -> void:
 	_bag_used = bag.size()
 	var summary: Array[String] = ["Inventory", "Equipped"]
 
+	# T-751: detach-then-QUEUE_free, the idiom every sibling panel already uses (service_panel.gd
+	# _clear_body). These cells carry live `hovered`/`unhovered`/`activated` connections and T-640
+	# drag state, and render() is itself called from inside signal handling — `free()` destroys the
+	# emitter mid-emission, which is the documented free-during-emission crash. remove_child keeps
+	# the old rows out of get_children() this same frame, so tests and layout see only the new set.
 	for child in _equip_grid.get_children():
-		child.free()
+		_equip_grid.remove_child(child)
+		child.queue_free()
 	for slot_type: String in _EQUIP_SLOTS:
 		var entry: Dictionary = equip.get(slot_type, {})
 		var cell := _add_cell(_equip_grid, entry, slot_type.capitalize())
@@ -106,8 +114,9 @@ func render(slots: Array) -> void:
 
 	_bags_header.text = "Bags (%d/%d)" % [_bag_used, _BAG_SLOTS]
 	summary.append("Bags (%d/%d)" % [_bag_used, _BAG_SLOTS])
-	for child in _bag_grid.get_children():
-		child.free()
+	for child in _bag_grid.get_children():  # T-751: see the equip grid above
+		_bag_grid.remove_child(child)
+		child.queue_free()
 	for i in range(_BAG_SLOTS):
 		var entry: Dictionary = bag.get(i, {})
 		var cell := _add_cell(_bag_grid, entry, "")

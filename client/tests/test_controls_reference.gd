@@ -38,7 +38,7 @@ func test_ability_row_collapses_the_whole_keyed_run() -> void:
 
 func test_help_keycode_matches_the_help_row() -> void:
 	# main.gd re-opens the card on HELP_KEYCODE; the card advertises the same key, from one source.
-	assert_eq(ControlsReference.HELP_KEYCODE, KEY_F1)
+	assert_eq(ControlsReference.help_keycode(), KEY_F1)
 	assert_true(
 		OS.get_keycode_string(KEY_F1) in _label_for("This help card"),
 		"the help row must advertise the same key main.gd listens for"

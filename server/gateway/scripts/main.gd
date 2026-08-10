@@ -104,12 +104,29 @@ func _process(_delta: float) -> void:
 			# Note: not logging close codes for now; useful later for diagnostics.
 
 
+static func decode_frame(raw: String) -> Variant:
+	"""Decode one client frame; returns the Dictionary, or null if the frame is unusable.
+
+	T-754: JSON.new().parse() rather than JSON.parse_string(). The type guard was always
+	correct here — this is the idiom the master now copies — but parse_string pushes its OWN
+	engine ERROR plus a backtrace on every malformed input, and this listener is the PUBLIC
+	0.0.0.0 bind, so any unauthenticated peer could flood stderr with garbage frames. The
+	instance API reports the same failure silently via a return code.
+
+	Static + pure so the malformed cases are testable without a socket.
+	"""
+	var json := JSON.new()
+	if json.parse(raw) != OK:
+		return null
+	var parsed: Variant = json.data
+	return parsed if parsed is Dictionary else null
+
+
 func _handle_message(peer_id: int, ws: WebSocketPeer, raw: String) -> void:
-	var parsed: Variant = JSON.parse_string(raw)
+	var parsed: Variant = decode_frame(raw)
 
 	# Reject anything that isn't a Dictionary, including null and
-	# primitives. JSON.parse_string returns null on parse failure
-	# and on bare-null input; both are invalid frames.
+	# primitives: a parse failure and bare-null input are both invalid frames.
 	if not (parsed is Dictionary):
 		_send_err_and_close(peer_id, ws, "malformed_request")
 		return

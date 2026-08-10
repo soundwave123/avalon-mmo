@@ -158,7 +158,7 @@ func test_npc_world_layer_pixel_size_reflects_the_primary_marker_scale() -> void
 	add_child_autofree(cam)
 	cam.global_position = Vector3(0, 2, 10)
 	cam.look_at(Vector3(0, 1, 0))
-	l._process(0.016)
+	l._physics_process(0.016)  # T-753: the label-LOD pass moved to the physics callback
 	var hale_size: float = l._npcs["npc_drillmaster"]["label"].pixel_size
 	var kessa_size: float = l._npcs["npc_trainer"]["label"].pixel_size
 	assert_gt(

@@ -123,7 +123,7 @@ func setup(send_fn: Callable, is_typing_fn: Callable = Callable()) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	var key := (event as InputEventKey).keycode
+	var key := KeyRegistry.event_code(event as InputEventKey)
 	# T-653 (#74): main._input's top-of-function is_text_input_focused check swallows Escape
 	# whenever ANY of this panel's three LineEdits holds focus, so main._handle_escape() never
 	# runs and the panel (which had no Close button either) could only be recovered by a relog.
@@ -244,6 +244,12 @@ func _rank_of(my_name: String) -> int:
 	return -1
 
 
+# T-755: EVERY value interpolated below arrives in a server reply and is ultimately player-typed
+# (guild names, recruitment blurbs, seek/mentor notes) or a player identity. This label is
+# bbcode_enabled AND its meta_clicked fires guild_kick/guild_promote/guild_demote/party_invite, so
+# an unescaped "[" here lets a crafted note paint a fake management link that acts on whoever
+# clicks it. The rule is uniform and admits no per-field judgement: DISPLAY text goes through
+# BBCode.escape, and anything embedded in a [url=...] payload goes through BBCode.escape_meta.
 func _render() -> void:
 	if _body == null:
 		return
@@ -253,7 +259,7 @@ func _render() -> void:
 		lines.append(
 			(
 				"  <%s>  [url=accept]\\[accept\\][/url]  [url=decline]\\[decline\\][/url]"
-				% _pending_invite
+				% BBCode.escape(_pending_invite)
 			)
 		)
 		lines.append("")
@@ -261,9 +267,9 @@ func _render() -> void:
 		lines.append("[color=#808080]You are not in a guild.[/color]")
 		lines.append("Create one, browse open guilds, or flag yourself as seeking.")
 	else:
-		lines.append("[b]<%s>[/b]  (%d)" % [_guild_name, _members.size()])
+		lines.append("[b]<%s>[/b]  (%d)" % [BBCode.escape(_guild_name), _members.size()])
 		for m: Dictionary in _members:
-			var mname := str(m.get("name", ""))
+			var mname := BBCode.escape_meta(str(m.get("name", "")))
 			var online := bool(m.get("online", false))
 			var rank_name := str(m.get("rank_name", ""))
 			var promote := (
@@ -280,8 +286,8 @@ func _render() -> void:
 						"  [color=#%s]%s[/color] (%s)%s"
 						% [
 							"7fff7f" if online else "808080",
-							mname,
-							rank_name,
+							BBCode.escape(str(m.get("name", ""))),
+							BBCode.escape(rank_name),
 							mgmt,
 						]
 					)
@@ -292,7 +298,13 @@ func _render() -> void:
 		lines.append("[b]Guild Bank[/b]  %d copper" % _bank_coins)
 		for entry: Dictionary in _bank_items:
 			lines.append(
-				"  %s x%d" % [str(entry.get("item_id", "")), int(entry.get("item_count", 0))]
+				(
+					"  %s x%d"
+					% [
+						BBCode.escape(str(entry.get("item_id", ""))),
+						int(entry.get("item_count", 0))
+					]
+				)
 			)
 	if not _open_guilds.is_empty():
 		lines.append("")
@@ -302,9 +314,9 @@ func _render() -> void:
 				(
 					"  <%s> (%d) — %s"
 					% [
-						str(guild.get("name", "")),
+						BBCode.escape(str(guild.get("name", ""))),
 						int(guild.get("members", 0)),
-						str(guild.get("blurb", ""))
+						BBCode.escape(str(guild.get("blurb", "")))
 					]
 				)
 			)
@@ -317,11 +329,11 @@ func _render() -> void:
 				(
 					"  [url=invite|%s]%s[/url] L%d %s — %s"
 					% [
-						sname,
-						sname,
+						BBCode.escape_meta(sname),
+						BBCode.escape(sname),
 						int(seeker.get("level", 1)),
-						str(seeker.get("role", "")),
-						str(seeker.get("note", ""))
+						BBCode.escape(str(seeker.get("role", ""))),
+						BBCode.escape(str(seeker.get("note", "")))
 					]
 				)
 			)
@@ -334,11 +346,11 @@ func _render() -> void:
 				(
 					"  %s L%d %s — %s%s"
 					% [
-						str(player.get("name", "")),
+						BBCode.escape(str(player.get("name", ""))),
 						int(player.get("level", 1)),
-						str(player.get("role", "")),
-						str(player.get("zone", "")),
-						" <%s>" % guild if guild != "" else ""
+						BBCode.escape(str(player.get("role", ""))),
+						BBCode.escape(str(player.get("zone", ""))),
+						" <%s>" % BBCode.escape(guild) if guild != "" else ""
 					]
 				)
 			)
@@ -354,12 +366,12 @@ func _render() -> void:
 					(
 						"  [url=party|%s]%s[/url] L%d %s — %s — %s"
 						% [
-							player_name,
-							player_name,
+							BBCode.escape_meta(player_name),
+							BBCode.escape(player_name),
 							int(entry.get("level", 1)),
-							str(entry.get("role", "")),
-							str(entry.get("zone", "")),
-							str(entry.get("note", "")),
+							BBCode.escape(str(entry.get("role", ""))),
+							BBCode.escape(str(entry.get("zone", ""))),
+							BBCode.escape(str(entry.get("note", ""))),
 						]
 					)
 				)

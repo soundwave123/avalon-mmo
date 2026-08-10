@@ -91,7 +91,10 @@ func _choose_invite() -> void:
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event is InputEventKey and event.is_pressed() and event.keycode == KEY_ESCAPE:
+	# T-761: physical position (KeyRegistry modal_cancel) — Esc is layout-stable, but reading it the
+	# same way as every other listener is what keeps the meta-test's coverage sweep honest.
+	var esc: bool = event is InputEventKey and event.is_pressed()
+	if esc and KeyRegistry.event_code(event as InputEventKey) == KEY_ESCAPE:
 		close_menu()
 		get_viewport().set_input_as_handled()
 		return

@@ -25,8 +25,19 @@ static func role_for_class(char_class: String) -> String:
 	return str(CLASS_ROLES.get(char_class, "dps"))
 
 
+# T-755: seek/mentor notes are free text that GuildPanel renders into a bbcode_enabled label whose
+# meta_clicked fires party_invite — the same sink as the guild blurb. The client escapes markup and
+# that is the real fix; dropping bracket characters here is defence in depth, so the world server
+# never stores a payload that a future client could render live.
+#
+# STRIPPING (not rejecting) is what fits this path: clean_note is already a sanitiser with no
+# rejection channel — it silently folds newlines, collapses runs of spaces and truncates — and
+# flag() has no way to report a refusal to the player. Rejecting would mean inventing a reply for a
+# verb that has never had one. The guild blurb takes the opposite choice for the opposite reason
+# (see GuildLogic.valid_recruitment_blurb): it already has a "bad_blurb" reply to carry the news.
 static func clean_note(note: String) -> String:
-	var cleaned := note.replace("\n", " ").replace("\r", " ").strip_edges()
+	var cleaned := note.replace("[", "").replace("]", "")
+	cleaned = cleaned.replace("\n", " ").replace("\r", " ").strip_edges()
 	while cleaned.contains("  "):
 		cleaned = cleaned.replace("  ", " ")
 	return cleaned.left(NOTE_MAX)

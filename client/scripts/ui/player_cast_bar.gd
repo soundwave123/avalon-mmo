@@ -58,6 +58,11 @@ func _ready() -> void:
 	_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_name_label)
 	hide()
+	# T-748: the root was IGNORE but `_bar` (ProgressBar, PRESET_FULL_RECT, default STOP) spans the
+	# whole 320x22 rect — so while you were casting, a click anywhere in that band was swallowed and
+	# never reached the world (no target change, no move). Exactly the bug xp_bar.gd:48-50 already
+	# documents as fixed. Recipe (a) in ui_theme.gd: nothing on this bar is ever clickable.
+	UiTheme.set_mouse_filter_deep(self)
 
 
 # ability_id -> display name, sourced from main's class kit (id/name entries).

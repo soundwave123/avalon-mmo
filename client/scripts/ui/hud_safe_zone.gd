@@ -51,18 +51,74 @@ const PANEL_SAFE_TOP := 120.0
 # require reasoning about MAX vs MIN_VISIBLE_SLOTS width. 720 - 148 = 572 <= 580 - 8.
 const PANEL_SAFE_BOTTOM := -148.0
 
+# T-759: the minimum `offset_top` a RIGHT-anchored, top-fixed panel needs so its top edge clears the
+# always-on MinimapPanel (MINIMAP_RECT bottom = 160) with an 8 px margin. PANEL_SAFE_TOP (120) only
+# clears the LEFT-side VitalsFrame; a right-side panel at that top still drove straight through the
+# minimap (the audit's 4g table: inventory_panel 150x104, objective_tracker 150x50). 160 + 8 = 168.
+# Consumers: inventory_panel.gd / recipe_panel.gd / pvp_panel.gd / objective_tracker.gd.
+const MINIMAP_SAFE_TOP := 168.0
 
-static func intersects_vitals(rect: Rect2) -> bool:
-	return rect.intersects(VITALS_RECT)
+# T-759: the maximum `offset_bottom` (a POSITIVE number this time) an anchor=0.5 vertically-CENTERED
+# fixed-size panel may use so its bottom edge clears ACTION_BAR_RECT's top (580). A centered panel's
+# bottom sits at BASE_HEIGHT*0.5 + offset_bottom, so the ceiling is 580 - 360 - 8 = 212 (keep the
+# panel's height by pulling offset_top up by the same amount). Consumers: wardrobe_panel.gd /
+# weekly_panel.gd / cosmetic_shop_panel.gd — the centered modals the audit flagged over the hotbar.
+const PANEL_SAFE_BOTTOM_CENTERED := 212.0
 
 
-static func intersects_action_bar(rect: Rect2) -> bool:
-	return rect.intersects(ACTION_BAR_RECT)
+# T-747: the 1280x720 base above is REAL now — project.godot declares it as the content base under
+# canvas_items stretch, where before this file described a resolution the client never actually
+# ran at. One caveat comes with it, and it is the reason these accessors exist.
+#
+# stretch/aspect="expand" guarantees only the base HEIGHT. The content WIDTH grows on anything
+# wider than 16:9 — a 21:9 monitor yields roughly 1706 — so the absolute x in three of the four
+# rects above is a 16:9 snapshot, not a constant:
+#
+#   VITALS_RECT      left-anchored     x is genuinely fixed
+#   ACTION_BAR_RECT  centre-anchored   x baked from 640-261; the real bar slides right
+#   COMPASS_RECT     centre-anchored   x baked from 640±70; same
+#   MINIMAP_RECT     right-anchored    x baked from 1280-170; the real minimap slides further
+#
+# Pass the live viewport width and you get the rect the chrome ACTUALLY occupies; omit it and you
+# get the 16:9 case, which is what the shipped 1920x1080 window produces and what every existing
+# caller means. Nothing shipped was ever at risk here — production consumes only PANEL_SAFE_TOP /
+# PANEL_SAFE_BOTTOM, which are vertical — but a helper that silently returns the wrong rect on an
+# ultrawide is a trap worth closing while the base is being made honest.
+static func vitals_rect(_viewport_width: float = BASE_WIDTH) -> Rect2:
+	return VITALS_RECT  # left-anchored: unaffected by a wider content rect
 
 
-static func intersects_compass(rect: Rect2) -> bool:
-	return rect.intersects(COMPASS_RECT)
+static func action_bar_rect(viewport_width: float = BASE_WIDTH) -> Rect2:
+	return _recentre(ACTION_BAR_RECT, viewport_width)
 
 
-static func intersects_minimap(rect: Rect2) -> bool:
-	return rect.intersects(MINIMAP_RECT)
+static func compass_rect(viewport_width: float = BASE_WIDTH) -> Rect2:
+	return _recentre(COMPASS_RECT, viewport_width)
+
+
+static func minimap_rect(viewport_width: float = BASE_WIDTH) -> Rect2:
+	var r := MINIMAP_RECT
+	r.position.x += viewport_width - BASE_WIDTH  # right-anchored: tracks the full width delta
+	return r
+
+
+static func _recentre(rect: Rect2, viewport_width: float) -> Rect2:
+	var r := rect
+	r.position.x += (viewport_width - BASE_WIDTH) * 0.5  # centre-anchored: half the width delta
+	return r
+
+
+static func intersects_vitals(rect: Rect2, viewport_width: float = BASE_WIDTH) -> bool:
+	return rect.intersects(vitals_rect(viewport_width))
+
+
+static func intersects_action_bar(rect: Rect2, viewport_width: float = BASE_WIDTH) -> bool:
+	return rect.intersects(action_bar_rect(viewport_width))
+
+
+static func intersects_compass(rect: Rect2, viewport_width: float = BASE_WIDTH) -> bool:
+	return rect.intersects(compass_rect(viewport_width))
+
+
+static func intersects_minimap(rect: Rect2, viewport_width: float = BASE_WIDTH) -> bool:
+	return rect.intersects(minimap_rect(viewport_width))

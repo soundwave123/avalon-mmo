@@ -486,12 +486,12 @@ static func _apply_body_tints(model: Node, tints: Dictionary, hair_tex: String =
 			var slot := AppearanceResolver.material_slot(str(mat.resource_name))
 			if not tints.has(slot):
 				continue
-			var dup := mat.duplicate() as BaseMaterial3D
+			# T-758: memo-cache on (source, tint, hair) so identical NPCs share one material and batch.
+			var dup := TintMaterialCache.tinted(
+				mat, tints[slot] as Color, slot, hair_swap, hair_tex
+			)
 			if dup == null:
 				continue
-			dup.albedo_color = dup.albedo_color * (tints[slot] as Color)
-			if slot == "hair" and hair_swap != null:
-				dup.albedo_texture = hair_swap
 			mi.set_surface_override_material(s, dup)
 
 

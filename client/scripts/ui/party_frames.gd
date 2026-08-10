@@ -113,6 +113,13 @@ func _make_row(index: int) -> Dictionary:
 	ready.visible = false
 	root.add_child(ready)
 	var peer_ref := {"id": -1}
+	# T-748: click-to-target was DEAD since ship. `root.gui_input` never fired because all 7
+	# decoration children above default to MOUSE_FILTER_STOP and physically cover the row — GUI
+	# picking returns the topmost non-IGNORE control, so the ColorRects won every press and the
+	# row root behind them was never picked. Recipe (b) in ui_theme.gd: cascade IGNORE over the
+	# whole row, then re-arm the row root as the ONE surface that takes the click.
+	UiTheme.set_mouse_filter_deep(root)
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	root.gui_input.connect(func(ev: InputEvent): _on_row_input(ev, peer_ref))
 	add_child(root)
 	return {

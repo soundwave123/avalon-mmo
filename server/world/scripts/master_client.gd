@@ -90,19 +90,41 @@ func _process(_delta: float) -> void:
 		_handle_packet(packet)
 
 
+static func decode_response(raw_text: String) -> Variant:
+	"""Parse one master frame; returns the Dictionary, or null when the frame is unusable.
+
+	T-754: pure + static so the malformed-frame cases are testable without a live socket
+	(the same seam pattern as _translate_master_response). Uses JSON.new().parse() rather
+	than JSON.parse_string() because the static helper pushes its OWN engine ERROR on
+	malformed input regardless of the destination type — a garbled frame would spam stderr
+	even after the type guard became reachable. The instance API reports silently.
+	"""
+	var json := JSON.new()
+	if json.parse(raw_text) != OK:
+		return null
+	var parsed: Variant = json.data
+	return parsed if parsed is Dictionary else null
+
+
 func _handle_packet(data: Variant) -> void:
-	var response: Dictionary
+	# T-754: this used to declare `var response: Dictionary` and assign the parse result
+	# straight into it, which made the `if not response is Dictionary` guard below dead
+	# code — parse_string returns null on garbage and an Array on a non-object root, so the
+	# typed assignment aborted the frame BEFORE the guard could ever run. Receive as
+	# Variant, type-test, then assign typed (the world_regions.gd idiom).
+	var parsed: Variant = null
 	if data is PackedByteArray:
-		if _ws.was_string_packet():
-			response = JSON.parse_string(data.get_string_from_utf8())
-		else:
+		if not _ws.was_string_packet():
 			# Binary packet — ignore (not part of our JSON protocol)
 			return
+		parsed = decode_response(data.get_string_from_utf8())
 	else:
-		response = data
+		parsed = data
 
-	if not response is Dictionary:
+	# Now reachable for every malformed shape: null, Array, scalar, garbage JSON.
+	if not parsed is Dictionary:
 		return
+	var response: Dictionary = parsed
 
 	# Extract request id for correlation — normalise to int to match world-side keys.
 	var req_id: Variant = response.get("id", null)

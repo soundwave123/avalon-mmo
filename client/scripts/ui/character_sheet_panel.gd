@@ -201,7 +201,10 @@ func update_stats(data: Dictionary) -> void:
 
 
 func _header_line(level: int) -> String:
-	var name := _username if _username != "" else "Character"
+	# T-755: this is the viewer's OWN name so there is no attacker here today — but it is still a
+	# player-typed string reaching a bbcode_enabled label, and the whole point of the T-755 sweep is
+	# that no such site is left to be judged case-by-case later.
+	var name := BBCode.escape(_username) if _username != "" else "Character"
 	var cls := _char_class.capitalize() if _char_class != "" else "Adventurer"
 	return "[b]%s[/b] — Level [color=ffd866]%d[/color] %s" % [name, level, cls]
 

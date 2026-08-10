@@ -83,7 +83,7 @@ func setup(providers: Dictionary) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != TOGGLE_KEYCODE:
+	if KeyRegistry.event_code(event as InputEventKey) != TOGGLE_KEYCODE:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return

@@ -9,7 +9,7 @@ extends Node3D
 # derive-don't-send rule the server applies to players). Spawn on sight, despawn on payload exit.
 #
 # Gotchas: Label3D billboard mode faces the camera; no_depth_test keeps the marker above terrain;
-# size scales with distance but is clamped (see _process) so it stays proportionate. Click picking
+# size scales with distance but is clamped (see _physics_process) so it stays proportionate. Picking
 # ALSO needs the viewport's physics_object_picking enabled (main.gd does that) — off by default.
 
 signal npc_clicked(npc_id: String)
@@ -174,11 +174,19 @@ func _process(delta: float) -> void:
 			e["anim_state"] = state
 			EntityVisuals.play_state(e["model"], state)
 
+
+# The throttled ~10 Hz label-LOD pass (T-697 fix 7 — see the LABEL_LOD_INTERVAL_MS const note).
+# T-753 moved it whole from _process onto the PHYSICS callback rather than the render one,
+# because _marker_occluded casts a space query — and the manual only guarantees a space query
+# outside a locked space inside _physics_process. Off-phase, a locked space returns {} and the
+# marker reads as un-occluded, so a quest ! behind a wall silently pops to full brightness.
+# The throttle is wall-clock (LABEL_LOD_INTERVAL_MS), so the pass still fires at ~10 Hz here — the
+# 60 Hz physics tick is 6× faster than it needs to be, and the label work per fire is unchanged.
+func _physics_process(_delta: float) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
 	var now_ms := Time.get_ticks_msec()
-	# T-697 fix 7: everything below is the throttled ~10 Hz label-LOD pass (see the const note).
 	if now_ms < _label_lod_next_ms:
 		return
 	_label_lod_next_ms = now_ms + LABEL_LOD_INTERVAL_MS
@@ -232,8 +240,8 @@ func _marker_occluded(cam: Camera3D, anchor: Vector3, e: Dictionary, now_ms: int
 	if now_ms < next_ms:
 		return bool(e.get("occluded", false))
 	e["occl_next_ms"] = now_ms + OCCLUSION_INTERVAL_MS
-	# Headless/no-camera contexts never reach this (the _process caller bails when there's no
-	# camera); this guard is the belt-and-suspenders no-op for a not-yet-ready world/space state.
+	# Headless/no-camera contexts never reach this (the _physics_process caller bails when there's
+	# no camera); this guard is the belt-and-suspenders no-op for a not-yet-ready world/space state.
 	if not is_inside_tree():
 		e["occluded"] = false
 		return false

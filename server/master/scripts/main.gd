@@ -30,6 +30,7 @@ const RiftSeason := preload("res://scripts/rift_season.gd")  # T-393/T-394 rift 
 const AccountMastery := preload("res://scripts/account_mastery.gd")  # T-395 permanent mastery
 const TutorialOps := preload("res://scripts/tutorial_ops.gd")  # T-426 tutorial + T-550 onboarding
 const OnboardingStore := preload("res://scripts/onboarding_store.gd")  # T-706 graduation flag
+const RpcIntake := preload("res://scripts/rpc_intake.gd")  # T-754 untrusted-frame decoder
 # Default session TTL in minutes (2 hours for dev)
 const DEFAULT_TTL_MINUTES := 120
 
@@ -154,26 +155,24 @@ func _process(_delta: float) -> void:
 
 
 func _handle_message(raw: String) -> String:
-	var json: JSON = JSON.new()
-	var parse_err: int = json.parse(raw)
-	if parse_err != OK:
-		# Malformed JSON — close with protocol error
-		return _json_resp("", {"error": "invalid_json"})
+	# T-754: decode types the envelope only; payload stays Variant until after auth.
+	var frame: Dictionary = RpcIntake.decode(raw)
+	var msg_id: String = str(frame.get(RpcIntake.MSG_ID, ""))
+	if not bool(frame.get(RpcIntake.SLOT_OK, false)):
+		return _json_resp(msg_id, {"error": str(frame.get(RpcIntake.SLOT_ERROR, "invalid_json"))})
 
-	var data: Variant = json.data
-	if typeof(data) != TYPE_DICTIONARY:
-		return _json_resp("", {"error": "invalid_json"})
-
-	var method: String = str(data.get("method", ""))
-	var params: Dictionary = data.get("params", {})
-	var msg_id: String = str(int(data.get("id", 0)))
-
-	# T-074: shared-secret gate for non-loopback deployments — anyone who could reach the
-	# port could issue_session/turn_in/equip for any username otherwise.
-	if _rpc_shared_secret != "" and str(data.get("secret", "")) != _rpc_shared_secret:
+	# T-074: shared-secret gate — anyone reaching the port could otherwise issue_session/
+	# turn_in/equip as any user. T-754: runs BEFORE params is typed (no pre-auth coercion).
+	if _rpc_shared_secret != "" and str(frame.get(RpcIntake.SECRET, "")) != _rpc_shared_secret:
 		return _json_resp(msg_id, {"error": "unauthorized"})
 
-	var result: Dictionary = _dispatch(method, params)
+	# T-754: receive as Variant, type-test, then assign typed.
+	var raw_params: Variant = frame.get(RpcIntake.RAW_PARAMS, {})
+	if not raw_params is Dictionary:
+		return _json_resp(msg_id, {"error": "invalid_params"})
+	var params: Dictionary = raw_params
+
+	var result: Dictionary = _dispatch(str(frame.get(RpcIntake.METHOD, "")), params)
 	return _json_resp(msg_id, result)
 
 
@@ -203,7 +202,7 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 
 		# T-186: append-only telemetry batch from the world (fire-and-forget; master is the writer).
 		"record_events":
-			result = TelemetryStore.record_events(params.get("events", []))
+			result = TelemetryStore.record_events(RpcIntake.shaped(params, "events", []))
 
 		"ops_apply":
 			result = OpsStore.apply(params)
@@ -218,7 +217,9 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 
 		# T-427: world-observed movement edge; identity resolves to the persisted character here.
 		"discover":
-			result = _discover(str(params.get("username", "")), params.get("node", {}))
+			result = _discover(
+				str(params.get("username", "")), RpcIntake.shaped(params, "node", {})
+			)
 
 		"revoke_session":
 			result = {"success": SessionManager.revoke_session(str(params.get("token", "")))}
@@ -232,7 +233,7 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = DailyAppointmentStore.status(
 				str(params.get("username", "")),
 				str(params.get("date_key", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 			# T-480: the weekly build-toward rides the daily browse (feeds the T-483 end cue).
 			result["weekly"] = WeeklyVaultStore.summary(
@@ -251,8 +252,8 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		"accept_quest":
 			result = _accept_quest(
 				str(params.get("username", "")),
-				params.get("quest", {}),
-				params.get("item_registry", {})
+				RpcIntake.shaped(params, "quest", {}),
+				RpcIntake.shaped(params, "item_registry", {})
 			)
 
 		# T-042: server-observed kill credit. mob_id + quest_defs come from the world (def authority);
@@ -261,14 +262,14 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = KillCreditOps.credit_kill(
 				str(params.get("username", "")),
 				str(params.get("mob_id", "")),
-				params.get("quest_defs", {}),
+				RpcIntake.shaped(params, "quest_defs", {}),
 				int(params.get("mob_xp", 0)),
 				int(params.get("mob_level", 1)),
 				int(params.get("party_size", 1)),
 				int(params.get("mentor_level", -1)),
 				bool(params.get("mentor_opted_in", false)),
 				bool(params.get("mentor_active", false)),
-				params.get("party_usernames", [])
+				RpcIntake.shaped(params, "party_usernames", [])
 			)
 
 		# T-043: atomic turn-in + reward grant. objectives_complete is computed here (master holds
@@ -276,11 +277,11 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		"turn_in":
 			result = _turn_in(
 				str(params.get("username", "")),
-				params.get("quest", {}),
+				RpcIntake.shaped(params, "quest", {}),
 				bool(params.get("at_turnin_npc", false)),
-				params.get("item_registry", {}),
+				RpcIntake.shaped(params, "item_registry", {}),
 				str(params.get("date_key", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 			if bool(result.get("ok", false)):  # T-480: a turn-in ticks the weekly quests track
 				WeeklyVaultStore.credit(
@@ -290,14 +291,16 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		# T-044: talk to an NPC — credits talk objectives + returns !/? status (world proximity-gated).
 		"talk":
 			result = _talk(
-				str(params.get("username", "")), params.get("npc", {}), params.get("quest_defs", {})
+				str(params.get("username", "")),
+				RpcIntake.shaped(params, "npc", {}),
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 		# T-044: abandon a quest (no proximity — issued from the quest log).
 		"abandon_quest":
 			result = _abandon_quest(
 				str(params.get("username", "")),
 				str(params.get("quest_id", "")),
-				params.get("quest", {})
+				RpcIntake.shaped(params, "quest", {})
 			)
 		# T-550: control-hint sighting -> ACCOUNT-scoped fire-once memory (account resolved server-side).
 		"onboarding_hint_seen":
@@ -314,15 +317,15 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = _equip(
 				str(params.get("username", "")),
 				int(params.get("bag_slot", -1)),
-				params.get("item_registry", {}),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "item_registry", {}),
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		"unequip":
 			result = _unequip(
 				str(params.get("username", "")),
 				str(params.get("equip_slot", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		"drop":
@@ -331,7 +334,7 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 				str(params.get("slot_type", "")),
 				int(params.get("slot_index", -1)),
 				int(params.get("count", 1)),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		# T-073/T-644: server-observed loot grant (world rolls a killed mob's loot table). Tries the
@@ -351,7 +354,7 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = _credit_reach(
 				str(params.get("username", "")),
 				str(params.get("target", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		# T-426: world-observed ability-use credit (tutorial "use_ability" verb).
@@ -359,23 +362,23 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 			result = TutorialOps.credit_ability(
 				str(params.get("username", "")),
 				str(params.get("ability_slug", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		"credit_interrupt":  # T-426 slice 4: world-observed interrupt credit (tactical verb, q_tut_03)
 			result = TutorialOps.credit_interrupt(
 				str(params.get("username", "")),
 				str(params.get("mob_alias", "")),
-				params.get("quest_defs", {})
+				RpcIntake.shaped(params, "quest_defs", {})
 			)
 
 		# T-046: per-player !/? indicator for each NPC.
 		"npc_indicators":
 			result = _npc_indicators(
 				str(params.get("username", "")),
-				params.get("npcs", []),
-				params.get("quest_defs", {}),
-				params.get("npc_quest_defs", {})
+				RpcIntake.shaped(params, "npcs", []),
+				RpcIntake.shaped(params, "quest_defs", {}),
+				RpcIntake.shaped(params, "npc_quest_defs", {})
 			)
 
 		# T-064: talents — spend one point / read spent state / reroll-clear. talent defs come
@@ -383,8 +386,8 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		"spend_talent":
 			result = _spend_talent(
 				str(params.get("username", "")),
-				params.get("talent", {}),
-				params.get("talent_defs", {})
+				RpcIntake.shaped(params, "talent", {}),
+				RpcIntake.shaped(params, "talent_defs", {})
 			)
 
 		"get_talents":
@@ -417,7 +420,7 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		# T-422c: persist the world-validated action-bar layout (an ordered ability-id list).
 		"save_bar_layout":
 			result = ServicesStore.save_layout_for_user(
-				str(params.get("username", "")), params.get("layout", [])
+				str(params.get("username", "")), RpcIntake.shaped(params, "layout", [])
 			)
 
 		# T-431: world-authoritative route gate; master persists discovery and commits coin sinks.
@@ -429,8 +432,8 @@ func _dispatch(method: String, params: Dictionary) -> Dictionary:
 		"get_character_combat":
 			result = CharacterManager.get_character_combat(
 				str(params.get("username", "")),
-				params.get("talent_defs", {}),
-				params.get("item_stats", {})  # T-399: world-injected item_id -> stats registry
+				RpcIntake.shaped(params, "talent_defs", {}),
+				RpcIntake.shaped(params, "item_stats", {})  # T-399: world-injected item_id -> stats registry
 			)
 			if not result.has("error"):
 				# T-208: trained-ability unlocks ride the combat payload (world's kit filter)
@@ -643,7 +646,9 @@ func _carry_gear(params: Dictionary) -> Dictionary:
 	if character.is_empty():
 		return {"carried": [], "retired": []}
 	return CharacterManager.carry_gear_across_era(
-		int(character.get("id", -1)), int(params.get("target_era", 2)), params.get("rarities", {})
+		int(character.get("id", -1)),
+		int(params.get("target_era", 2)),
+		RpcIntake.shaped(params, "rarities", {})
 	)
 
 
@@ -782,9 +787,11 @@ func _npc_indicators(
 		return {"indicators": {}}
 	var character_id: int = int(character.get("id", -1))
 	var out: Dictionary = {}
-	for npc: Dictionary in npcs:
+	for npc: Variant in npcs:  # T-754: the npcs Array is wire-supplied; entries may be anything
+		if not npc is Dictionary:
+			continue
 		var npc_id := str(npc.get("id", ""))
-		var defs: Dictionary = npc_quest_defs.get(npc_id, quest_defs)
+		var defs: Dictionary = RpcIntake.shaped(npc_quest_defs, npc_id, quest_defs)
 		out[npc_id] = CharacterManager.npc_state_for_character(character_id, npc, defs)["indicator"]
 	return {"indicators": out}
 
@@ -880,7 +887,7 @@ func _credit_collect_for_craft(params: Dictionary, result: Dictionary) -> void:
 	if character.is_empty():
 		return
 	result["collect_refreshed"] = CharacterManager.refresh_collect_for_character(
-		int(character["id"]), params.get("quest_defs", {})
+		int(character["id"]), RpcIntake.shaped(params, "quest_defs", {})
 	)
 
 
@@ -936,12 +943,7 @@ func _drop(
 
 
 func _json_resp(id: String, payload: Dictionary) -> String:
-	var resp: Dictionary = {}
-	if not id.is_empty():
-		resp["id"] = id
-	resp["result"] = payload
-	var json_str: String = JSON.stringify(resp)
-	return json_str if not json_str.is_empty() else "{}"
+	return RpcIntake.encode_response(id, payload)  # T-754 carve: envelope codec lives together
 
 
 func _exit_tree() -> void:

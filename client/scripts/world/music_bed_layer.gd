@@ -123,11 +123,14 @@ func _process(delta: float) -> void:
 		node.volume_db = move_toward(node.volume_db, target, step)
 
 
-# The region the audio listener (active Camera3D) is in; falls back to "meadow" headlessly.
+# The region the audio listener is in; falls back to "meadow" headlessly. T-752: resolved through
+# the shared AmbientFxLayer.listener_node — the AudioListener3D on the player BODY, not the camera
+# ~8 m behind it. The village/speakeasy rects are small enough (33 m and 8 m half-widths) that a
+# camera-measured region flipped the score's crossfade a full camera-length early or late, and a
+# left-drag orbit at the boundary could swing the whole score by itself.
 func _active_region() -> String:
-	var vp := get_viewport()
-	var cam := vp.get_camera_3d() if vp != null else null
-	if cam == null:
+	var lis := AmbientFxLayer.listener_node(self)
+	if lis == null:
 		return "meadow"
-	var p := cam.global_position
+	var p := lis.global_position
 	return region_at(p.x, p.z)

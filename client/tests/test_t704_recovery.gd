@@ -204,3 +204,27 @@ func test_headless_client_still_fails_fast_with_the_reason() -> void:
 	assert_eq(_owner.setups, 0, "a harness client does not open a login form")
 	assert_eq(_owner.fails.size(), 1)
 	assert_string_contains(str(_owner.fails[0]), "out of date")
+
+
+# --- T-751: the backoff window is long enough to outlive the client -------------------------------
+
+
+# recover() suspends for up to 16 s between attempts. If the client is torn down in that window the
+# coroutine still resumes — the SceneTree that owns the timer outlives the node — and the guard
+# that was there, `if owner.get_tree() == null`, is itself a CALL ON the freed instance. The check
+# written to prevent a freed-instance error was the thing raising it. is_instance_valid comes first
+# now. GUT fails a test on any unhandled engine error, so this asserts the absence directly.
+func test_an_owner_freed_during_the_backoff_is_never_dereferenced() -> void:
+	OS.set_environment("AVALON_TOKEN", "env-token")
+	var control := StubOwner.new()
+	add_child_autofree(control)
+	var doomed := StubOwner.new()
+	add_child(doomed)
+	var doomed_recovery: RefCounted = ConnectionRecovery.new()
+	_recovery.recover(control, {})  # attempt 1 -> 1.0 s backoff
+	doomed_recovery.recover(doomed, {})  # same, on its own budget
+	remove_child(doomed)
+	doomed.free()  # the client goes away mid-backoff
+	await wait_seconds(1.4)
+	assert_eq(control.setups, 1, "control: a LIVE owner really does resume and re-connect")
+	assert_eq(get_errors().size(), 0, "and the freed owner produced no freed-instance error")

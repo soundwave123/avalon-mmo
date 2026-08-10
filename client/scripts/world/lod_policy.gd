@@ -39,6 +39,17 @@ const _IMPOSTOR_PREFIXES := [
 # Full-tree cull is generous so the impostor (cheap) carries the mid-far band before it winks out.
 const _TREE_CULL := 320.0
 
+# T-758: cull distance (m) for the boot-time WorldView ground clutter (grass tufts, scatter rocks,
+# meadow flowers). These 8 MultiMeshes (~13.7k instances) shipped with NO visibility_range at all,
+# so the whole meadow drew even when the camera was in another zone. Each value sits comfortably
+# beyond its scatter radius so the near field never clips, but the field culls once you are well
+# outside it. Small ground detail, so shorter than the prop-mesh table above.
+const _CLUTTER_CULL := {
+	"grass": 150.0,  # tufts read only close; the tallest grass disc has radius ~120
+	"rock": 200.0,  # scatter pebbles, disc radius ~130
+	"flower": 160.0,  # sparse colour pops, disc radius ~110
+}
+
 
 # Engine visibility_range_end for this prop's file basename (e.g. "prop_oak_real.glb"). 0.0 means
 # "never cull" — the caller leaves visibility_range_end at its default (0 = unlimited).
@@ -51,6 +62,12 @@ static func cull_distance(base: String, mult: float = 1.0) -> float:
 		if base.begins_with(entry[0]):
 			return float(entry[1]) * mult
 	return 0.0
+
+
+# T-758: engine visibility_range_end for a boot-time ground-clutter class ("grass"/"rock"/"flower").
+# 0.0 for an unknown class -> the caller leaves the MultiMesh uncapped (the pre-T-758 behaviour).
+static func clutter_cull_distance(clutter_class: String, mult: float = 1.0) -> float:
+	return float(_CLUTTER_CULL.get(clutter_class, 0.0)) * mult
 
 
 # Distance (m) at which this prop swaps to a billboard impostor. 0.0 = this class never impostors.

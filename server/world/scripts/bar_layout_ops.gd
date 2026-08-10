@@ -28,6 +28,11 @@ static func sanitize(layout: Array, known: Array) -> Array:
 	var seen := {}
 	var out: Array = []
 	for raw in layout:
+		# T-754: entries come straight off the client packet. int() has no Dictionary/Array/
+		# null constructor — it ABORTS the frame rather than returning 0 — so a junk entry
+		# used to kill the handler before it could fail-closed. Reject the layout instead.
+		if not (raw is int or raw is float or raw is String):
+			return []
 		var id := int(raw)
 		if not known_set.has(id):
 			return []  # unknown / not-owned ability id — reject the whole layout

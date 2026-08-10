@@ -41,6 +41,9 @@ var _coins_label: Label = null  # T-655 (#66): live handle so repair/repair_quot
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	visible = false  # opened from a service NPC's talk_result (main.gd)
+	# T-759: the panel below requests the "SolidWindow" variation but no theme was ever in scope, so
+	# the variation never resolved and the window rendered default Godot grey. Carry the shared theme.
+	theme = UiTheme.build()
 	var dim := ColorRect.new()
 	dim.color = Color(0.0, 0.0, 0.0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -65,9 +68,18 @@ func _ready() -> void:
 	_heading.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	box.add_child(_heading)
 
+	# T-759: the bank vault (~16 slots) and vendor lists overflowed the window off the bottom of the
+	# screen — a plain VBox in a CenterContainer grows unbounded. Cap it in a scroll so the title
+	# above and the Close button below stay on screen and only the list scrolls (inventory idiom).
+	var body_scroll := ScrollContainer.new()
+	body_scroll.name = "SvcScroll"
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body_scroll.custom_minimum_size = Vector2(380.0, 380.0)
+	box.add_child(body_scroll)
 	_body = VBoxContainer.new()
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_constant_override("separation", 4)
-	box.add_child(_body)
+	body_scroll.add_child(_body)
 
 	_status = Label.new()
 	_status.add_theme_color_override("font_color", Color(0.6, 0.85, 0.6))
@@ -487,6 +499,12 @@ func _accept_bounty(quest_id: String) -> void:
 
 
 func _build_body(service: String) -> void:
+	# T-751: _build_body is a second, independent clear of the SAME children _clear_body clears —
+	# and it used to skip the handle nulls _clear_body documents (T-655), so a rebuild through this
+	# path left `_vendor_tabs`/`_coins_label` pointing at rows that had just been queue_free'd.
+	# Freed is not null, so the next `if _coins_label != null` read true and wrote to a corpse.
+	_vendor_tabs = null
+	_coins_label = null
 	for child in _body.get_children():
 		_body.remove_child(child)
 		child.queue_free()

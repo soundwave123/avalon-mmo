@@ -37,8 +37,10 @@ func _ready() -> void:
 	anchor_bottom = 1.0
 	offset_left = -420.0
 	offset_right = -16.0
-	offset_top = 56.0
-	offset_bottom = -56.0
+	# T-759: shared safe-zone — MINIMAP_SAFE_TOP (right-side panel clears the always-on minimap),
+	# PANEL_SAFE_BOTTOM clears the hotbar (was raw 56/-56 driving through both).
+	offset_top = HudSafeZone.MINIMAP_SAFE_TOP
+	offset_bottom = HudSafeZone.PANEL_SAFE_BOTTOM
 	# T-400: the shared theme's SolidWindow frame — self-carried (settings_panel idiom) so the
 	# "SolidWindow" variation resolves without depending on an ancestor's theme.
 	theme = UiTheme.build()
@@ -78,7 +80,7 @@ func setup(send_fn: Callable, is_typing_fn: Callable, reply_router) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_P:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_P:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return
@@ -283,10 +285,11 @@ func _render_board(lines: Array[String]) -> void:
 
 # T-599: a leaderboard entry's name is SERVER DATA (a player's username), not a dev-authored catalog
 # string — a raw "[" would open (or, worse, complete) a real BBCode tag and the RichTextLabel would
-# swallow every character after it to the end of the string, including the closing color tag. Same
-# neutralisation idiom as ChatFormatter._escape (client/scripts/ui/chat_formatter.gd).
+# swallow every character after it to the end of the string, including the closing color tag.
+# T-755 promoted this idiom (which lived here and in ChatFormatter as two private copies) to the
+# shared BBCode utility; this wrapper stays so the call site reads the same as before.
 static func _bbcode_safe(s: String) -> String:
-	return s.replace("[", "[lb]")
+	return BBCode.escape(s)
 
 
 func _rarity_hex(rarity: String) -> String:

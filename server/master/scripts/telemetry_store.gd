@@ -38,16 +38,23 @@ static func reset_for_test() -> void:
 # Append a batch of events. Returns {written:int}. Each event: {event_type, account, character,
 # payload}. A single parameterized multi-row INSERT keeps a big flush to one round-trip.
 static func record_events(events: Array) -> Dictionary:
-	if events.is_empty():
+	# T-754: `events` is wire-supplied and its ENTRIES are unvalidated — the typed
+	# `for e: Dictionary in events` iterators below aborted the frame on a scalar entry.
+	# Filter once, then both loops (and the written count) work off honest rows.
+	var clean: Array = []
+	for raw: Variant in events:
+		if raw is Dictionary:
+			clean.append(raw)
+	if clean.is_empty():
 		return {"written": 0}
 	if _test_skip_db:
-		for e: Dictionary in events:
+		for e: Dictionary in clean:
 			_test_events.append(e)
-		return {"written": events.size()}
+		return {"written": clean.size()}
 	var tuples: Array = []
 	var params: Array = []
 	var i := 0
-	for e: Dictionary in events:
+	for e: Dictionary in clean:
 		params.append(e.get("account"))
 		params.append(e.get("character"))
 		params.append(str(e.get("event_type", "")))
@@ -59,7 +66,7 @@ static func record_events(events: Array) -> Dictionary:
 		+ ", ".join(tuples)
 	)
 	var ok: bool = _CM._execute(sql, params)
-	return {"written": events.size() if ok else 0}
+	return {"written": clean.size() if ok else 0}
 
 
 # T-427: typed discovery writer. Native Godot 4.7's subprocess bridge can reject a JSON string

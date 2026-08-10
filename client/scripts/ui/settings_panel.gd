@@ -14,21 +14,26 @@ extends Control
 const CONFIG_PATH := "user://settings.cfg"
 
 # Read-only list of the core keybinds (T-078 Controls display; remapping is deferred). One label
-# per row so the parchment theme colours them; kept in sync by hand with main.gd's _input map —
-# EXCEPT the action-bar range, which T-723 DERIVES from AbilityKeybinds (the same map main._input
-# dispatches through and the bar prints on its pips). That row is the one that actually rotted: it
-# still advertised "1 - 4" while the bar drew nine slots. _keybind_rows() resolves the token.
+# per row so the parchment theme colours them.
+#
+# T-761: the key STRINGS are gone. Every row now names KeyRegistry binding ids and _keybind_rows()
+# renders them through KeyRegistry.label_for. The old hand-typed column ("W A S D", "L", "Esc") was
+# the second of the two drifted keymap lists the audit called out — a hand-typed label cannot
+# follow a rebind, and on an AZERTY board it was simply wrong about which keys to press. Only the
+# action-bar row was already derived (T-723, after it rotted to "1 - 4" against a nine-slot bar);
+# now every row is. Third element is an optional spoken-name hint for a key whose glyph is easy to
+# misread aloud.
 const ABILITY_KEYS_TOKEN := "{ability_keys}"
 const KEYBINDS := [
-	["Move", "W A S D"],
+	["Move", ["move_forward", "move_left", "move_back", "move_right"]],
 	["Action bar", ABILITY_KEYS_TOKEN],
-	["Auto-attack", "` (backtick)"],
-	["Quest log", "L"],
-	["Bags", "I"],
-	["Talents", "N"],
-	["Character sheet", "C"],
-	["World map", "T"],
-	["Options / cancel", "Esc"],
+	["Auto-attack", ["autoattack"], "backtick"],
+	["Quest log", ["quest_log"]],
+	["Bags", ["inventory"]],
+	["Talents", ["talents"]],
+	["Character sheet", ["character_sheet"]],
+	["World map", ["world_map"]],
+	["Options / cancel", ["menu"]],
 ]
 
 # Quality preset -> the WorldView environment/sun knobs + (T-692 Part B) the asset-loading knobs:
@@ -178,8 +183,11 @@ func _ready() -> void:
 	_add_title(box, "Options")
 	_add_header(box, "Video")
 	_window_opt = _add_option(box, "Window Mode", ["Windowed", "Fullscreen"], 0, _on_window_mode)
-	# Owner 2026-07-08: PC game, uncapped by default — VSync opt-IN (project.godot vsync_mode=0).
-	_vsync_check = _add_check(box, "VSync", false, _on_vsync)
+	# Owner 2026-07-08 had VSync opt-IN (uncapped by default). T-753 flipped it to opt-OUT to match
+	# project.godot vsync_mode=1: uncapped render against a fixed 60 Hz physics tick made the local
+	# player — the one body moved from _physics_process — judder while every interpolated remote
+	# stayed smooth. Still a toggle; unchecking it restores the uncapped behaviour immediately.
+	_vsync_check = _add_check(box, "VSync", true, _on_vsync)
 	_scale_slider = _add_slider(box, "Render Scale", 0.5, 1.0, 0.05, 1.0, _on_render_scale)
 	_quality_opt = _add_option(
 		box, "Quality", ["Low", "Medium", "High", "Ultra"], DEFAULT_QUALITY, _on_quality
@@ -354,13 +362,17 @@ func _apply_ambience() -> void:
 
 
 func _apply_music() -> void:
-	# T-416: the score sits on its own "Music" bus (created by MusicBedLayer); trim it like Master.
-	var idx := AudioServer.get_bus_index(MusicBedLayer.BUS_NAME)
-	if idx < 0:
+	# T-416: the score sits on its own "Music" bus (created by MusicBedLayer).
+	# T-752: routed through AudioManager rather than written here. AudioManager also DUCKS this bus
+	# on heavy impacts, and while both wrote set_bus_volume_db absolutely the two stomped each
+	# other — a 40% slider made the duck a volume BOOST, and the duck's recovery ramp then reset the
+	# bus to full and threw this slider away. AudioManager composes (user level + duck) and is now
+	# the bus's only volume writer; this just tells it where the slider sits.
+	if _audio == null:
 		return
 	var pct := float(_music_slider.value)
-	AudioServer.set_bus_mute(idx, pct <= 0.0)
-	AudioServer.set_bus_volume_db(idx, _slider_db(pct))
+	_audio.set_music_muted(pct <= 0.0)
+	_audio.set_music_volume_db(_slider_db(pct))
 
 
 func _apply_sfx() -> void:
@@ -589,13 +601,21 @@ func _add_header(box: VBoxContainer, text: String) -> void:
 	box.add_child(lbl)
 
 
-# T-723: the rows as RENDERED — KEYBINDS with the derived tokens resolved against the live map.
+# T-723/T-761: the rows as RENDERED — KEYBINDS with every binding id resolved against the live
+# registry and labelled for THIS keyboard, so the Controls list cannot drift from what dispatches.
 func _keybind_rows() -> Array:
 	var out: Array = []
 	for bind: Array in KEYBINDS:
-		var keys := str(bind[1])
-		if keys == ABILITY_KEYS_TOKEN:
-			keys = AbilityKeybinds.range_label()
+		var keys := ""
+		if bind[1] is String:
+			keys = AbilityKeybinds.range_label() if bind[1] == ABILITY_KEYS_TOKEN else str(bind[1])
+		else:
+			var names: Array = []
+			for id in bind[1]:
+				names.append(KeyRegistry.label_for_id(str(id)))
+			keys = " ".join(names)
+		if bind.size() > 2:
+			keys += " (%s)" % str(bind[2])
 		out.append([str(bind[0]), keys])
 	return out
 

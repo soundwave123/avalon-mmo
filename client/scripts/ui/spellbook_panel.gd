@@ -132,7 +132,7 @@ func set_resource_kind(kind: String) -> void:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_B:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_B:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return

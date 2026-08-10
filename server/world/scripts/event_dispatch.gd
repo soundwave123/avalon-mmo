@@ -68,6 +68,26 @@ static func player_death(
 	}
 
 
+# T-749: the last event payload still built inline in main.gd, moved here beside its siblings for
+# the same max-file-lines reason. Wire shape is byte-identical to the inline dict it replaces.
+# `entity_id` is the _mobs KEY (what every client-side handler matches on); `credited` is the
+# T-034/T-293 kill-credit list (threat-holders + party-mates) the quest matcher reads.
+static func mob_death(entity_id: int, mob, credited: Array) -> Dictionary:
+	return {
+		"type": "mob_death",
+		"mob_id": entity_id,
+		"mob_name": mob.name,
+		"target_id": entity_id,
+		"target_name": mob.name,
+		"caster_name": "",
+		"caster_id": "",
+		"hp": 0,
+		"max_hp": mob.resources.max_hp,
+		"credited_player_ids": credited,
+		"mob_type_id": mob.mob_type_id,
+	}
+
+
 static func player_respawn(pid: int, player_name: String, max_hp: int) -> Dictionary:
 	return {
 		"type": "player_respawn",

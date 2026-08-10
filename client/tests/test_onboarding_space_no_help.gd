@@ -27,6 +27,7 @@ func _help_button(oc: OnboardingController) -> Button:
 func _key(code: int) -> InputEventKey:
 	var e := InputEventKey.new()
 	e.keycode = code
+	e.physical_keycode = code  # T-761: the controller dispatches on the PHYSICAL code
 	e.pressed = true
 	return e
 
@@ -53,9 +54,9 @@ func test_help_key_still_toggles_the_handbook() -> void:
 	# The intended opener (F1) still works — we fixed SPACE without breaking help.
 	var oc := _make()
 	assert_false(oc.card.visible, "handbook starts hidden")
-	oc._input(_key(ControlsReference.HELP_KEYCODE))
+	oc._input(_key(ControlsReference.help_keycode()))
 	assert_true(oc.card.visible, "the help key (F1) opens the handbook")
-	oc._input(_key(ControlsReference.HELP_KEYCODE))
+	oc._input(_key(ControlsReference.help_keycode()))
 	assert_false(oc.card.visible, "the help key toggles the handbook closed again")
 
 

@@ -137,12 +137,24 @@ func test_input_row_hidden_until_summoned() -> void:
 	assert_false(_panel.input_visible(), "no permanently-drawn input box; hidden until Enter")
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_ENTER
+	ev.physical_keycode = KEY_ENTER  # T-761: the panel dispatches on the PHYSICAL code
 	ev.pressed = true
 	_panel._input(ev)
 	assert_true(_panel.input_visible(), "Enter summons the input row")
 
 
 func test_input_row_hidden_after_focus_lost() -> void:
+	# T-756: this used to call _on_input_focus_exited() on a fresh panel and assert the input row
+	# was hidden — but before_each's panel starts hidden, so the assertion held no matter what
+	# (or whether) _on_input_focus_exited did anything. Gut the function body and it still
+	# passed. Summon the row first so the assertion is about the DISMISSAL.
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ENTER
+	ev.physical_keycode = KEY_ENTER  # T-761: the panel dispatches on the PHYSICAL code
+	ev.pressed = true
+	_panel._input(ev)
+	assert_true(_panel.input_visible(), "precondition: Enter summoned the input row")
+
 	_panel._on_input_focus_exited()
 	assert_false(_panel.input_visible(), "dismissing typing hides the input row again")
 

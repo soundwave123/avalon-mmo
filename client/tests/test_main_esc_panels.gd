@@ -142,6 +142,38 @@ func test_escape_closes_an_open_character_sheet_before_options() -> void:
 	sheet.free()
 
 
+# T-759: seven panels were outside the Esc sweep (pvp/recipe/weekly/social/trade/quest_offer/
+# party_invite_dialog); quest_offer in particular trapped the player, stacking Options on top of an
+# un-dismissable offer. main.gd now appends them to _panel_set. These drive the REAL panel classes
+# (constructed off-tree, so _ready — which would start them hidden — never fires, same as the
+# character-sheet case above) through _handle_escape to prove each closes rather than trapping.
+const QuestOfferPanel = preload("res://scripts/ui/quest_offer_panel.gd")
+const PartyInviteDialog = preload("res://scripts/ui/party_invite_dialog.gd")
+const TradePanel = preload("res://scripts/ui/trade_panel.gd")
+
+
+func _assert_escape_closes(panel: Control, label: String) -> void:
+	panel.visible = true
+	_m._panel_set = [panel]
+	_m._target_id = -1
+	assert_eq(_m._open_hud_panels(), [panel], "%s is reported open" % label)
+	_m._handle_escape()
+	assert_false(panel.visible, "Esc closed the %s, not Options" % label)
+	panel.free()
+
+
+func test_escape_closes_the_quest_offer_panel_instead_of_trapping() -> void:
+	_assert_escape_closes(QuestOfferPanel.new(), "quest-offer prompt")
+
+
+func test_escape_closes_the_party_invite_dialog() -> void:
+	_assert_escape_closes(PartyInviteDialog.new(), "party-invite dialog")
+
+
+func test_escape_closes_the_trade_window() -> void:
+	_assert_escape_closes(TradePanel.new(), "trade window")
+
+
 func test_escape_closes_recap_and_a_panel_set_member_together() -> void:
 	var recap := _visible_recap()
 	var quest_log := _visible_control()

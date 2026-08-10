@@ -62,6 +62,26 @@ func _find_all(root: Node, klass: String) -> Array:
 # ---- placement parity -------------------------------------------------------------------------
 
 
+# T-758 (item 4): each batched-pool MultiMesh must carry an explicit custom_aabb (computed as the
+# union of the instance AABBs while filling the buffer) so the engine skips its runtime bounds
+# recompute at chunk build. The union must be non-degenerate and at least span the placement spread.
+func test_chunk_multimesh_carries_a_custom_aabb() -> void:
+	var manifest: Array = []
+	for k in 6:
+		manifest.append(_rock(float(k * 4), 0.0))  # rocks spread ~20m along x
+	var layer := _make_layer(manifest)
+	layer.stream_to(Vector2.ZERO)
+	await wait_process_frames(2)
+	var mmis := _find_all(layer, "MultiMeshInstance3D")
+	assert_gt(mmis.size(), 0, "a batched rock pool was built")
+	var spread := 0.0
+	for n in mmis:
+		var aabb: AABB = (n as MultiMeshInstance3D).multimesh.custom_aabb
+		assert_ne(aabb.size, Vector3.ZERO, "the pool carries an explicit (non-default) custom_aabb")
+		spread = maxf(spread, aabb.size.x)
+	assert_gt(spread, 15.0, "the union AABB spans the ~20m rock spread, not a single instance")
+
+
 func test_batched_placements_render_once_and_leave_the_individual_path() -> void:
 	var manifest: Array = []
 	for k in 6:  # repeated decorative flora -> batched

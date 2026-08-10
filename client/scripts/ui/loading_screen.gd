@@ -88,7 +88,11 @@ func _dismiss(save := true) -> void:
 	_dismissed = true
 	if save:
 		_model.save()  # fold this login's observed timings into the persisted calibration
-	mouse_filter = Control.MOUSE_FILTER_IGNORE  # the world is playable — stop eating clicks now
+	# T-748: this flipped the ROOT only, but the opaque full-rect `Backdrop` ColorRect underneath it
+	# is default-STOP and stays in the tree for the whole FADE_SECS fade — so for 0.45s after the
+	# world became playable, every click on screen still died on a screen the player can already see
+	# through. Cascade so the whole overlay goes click-through at once (ui_theme.gd recipe a).
+	UiTheme.set_mouse_filter_deep(self)  # the world is playable — stop eating clicks now
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, FADE_SECS)
 	tween.tween_callback(queue_free)

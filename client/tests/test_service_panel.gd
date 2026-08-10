@@ -456,6 +456,85 @@ func test_bank_ack_renders_vault_and_move_buttons() -> void:
 		assert_false(str(b.text).begins_with("Upgrade Vault"), "no cost data -> no upgrade button")
 
 
+# T-756: this replaces client/tests/test_service_panel_item_naming.gd, now deleted. That file
+# "tested" T-646 by opening service_panel.gd with FileAccess and asserting the SOURCE TEXT
+# contained "ItemNaming.display_name(item_id" and that the string occurred at least 3 times. It
+# never built a ServicePanel and never rendered a row: it would have passed with the call sitting
+# in unreachable code, and it would have FAILED on a harmless local-variable rename while the
+# bank rendered perfectly. Its two assertions could not distinguish a working bank from a broken
+# one in either direction. This is the claim itself — a raw id in, a human name out, and the id
+# never reaching the player's eyes.
+func test_bank_lists_show_display_names_never_raw_item_ids() -> void:
+	var p = _panel()
+	p.setup(func(_n, _a): pass)
+	p.setup_ex(func(_n, _action, _extra): pass)
+	p.open("npc_hk_banker", "Banker Coyne", "bank")
+	(
+		p
+		. on_ack(
+			{
+				"npc_id": "npc_hk_banker",
+				"ok": true,
+				"action": "vault_list",
+				# No "name" on either row, which is the case T-646 is about: with nothing from
+				# the server, the humanizer is all that stands between the player and the id.
+				"vault":
+				[{"slot_index": 0, "item_id": "itm_potion_minor_healing", "item_count": 1}],
+				"bag": [{"slot_index": 1, "item_id": "itm_iron_ingot", "item_count": 2}],
+				"vault_slots": 12,
+				"coins": 90,
+			}
+		)
+	)
+	var parts: Array = []
+	for c in p._body.find_children("*", "Label", true, false):
+		parts.append((c as Label).text)
+	for c in p._body.find_children("*", "Button", true, false):
+		parts.append((c as Button).text)
+	var shown: String = " ".join(parts)
+
+	assert_true(
+		shown.contains("Potion Minor Healing"), "the vault stack shows a display name: %s" % shown
+	)
+	assert_true(shown.contains("Iron Ingot"), "the bag stack shows a display name too: %s" % shown)
+	assert_false(shown.contains("itm_"), "no raw item id ever reaches the player: %s" % shown)
+
+
+func test_bank_prefers_a_server_supplied_name_over_the_humanized_id() -> void:
+	var p = _panel()
+	p.setup(func(_n, _a): pass)
+	p.setup_ex(func(_n, _action, _extra): pass)
+	p.open("npc_hk_banker", "Banker Coyne", "bank")
+	(
+		p
+		. on_ack(
+			{
+				"npc_id": "npc_hk_banker",
+				"ok": true,
+				"action": "vault_list",
+				"vault":
+				[
+					{
+						"slot_index": 0,
+						"item_id": "itm_potion_minor_healing",
+						"item_count": 1,
+						"name": "Minor Healing Draught",
+					}
+				],
+				"bag": [],
+				"vault_slots": 12,
+				"coins": 90,
+			}
+		)
+	)
+	var parts: Array = []
+	for c in p._body.find_children("*", "Label", true, false):
+		parts.append((c as Label).text)
+	var shown: String = " ".join(parts)
+	assert_true(shown.contains("Minor Healing Draught"), "the server's name wins: %s" % shown)
+	assert_false(shown.contains("Potion Minor Healing"), "the humanizer stands down: %s" % shown)
+
+
 # ---- T-611: the vault tier-upgrade sink is reachable from the bank body ----
 
 
@@ -655,3 +734,35 @@ func test_on_ack_forwards_mail_shaped_acks_to_the_mail_panel() -> void:
 		if c is Label:
 			texts.append(c.text)
 	assert_true(" ".join(texts).contains("empty"), "ServicePanel.on_ack forwarded the mail ack")
+
+
+# T-751: open() -> _build_body() is a SECOND, independent clear of the same children _clear_body()
+# clears — and it used to skip _clear_body's T-655 handle nulls. Switching services therefore left
+# _coins_label / _vendor_tabs pointing at rows _build_body had just queue_free'd, and a freed
+# instance is not null, so the next `_coins_label != null` refresh wrote to a corpse.
+func test_rebuilding_the_body_drops_the_stale_row_handles() -> void:
+	var p = _panel()
+	var spy := SendSpy.new()
+	p.setup(spy.intent)
+	p.open("npc_merchant", "Merchant", "vendor")
+	(
+		p
+		. on_ack(
+			{
+				"npc_id": "npc_merchant",
+				"ok": true,
+				"coins": 120,
+				"wares": [],
+				"bag": [],
+				"buyback": [],
+			}
+		)
+	)
+	assert_not_null(p._coins_label, "precondition: the vendor body published its coins handle")
+	assert_not_null(p._vendor_tabs, "precondition: and its tab container")
+	p.open("npc_banker", "Banker", "bank")  # a different service -> _build_body, not _clear_body
+	assert_null(p._coins_label, "the rebuild released the freed coins label")
+	assert_null(p._vendor_tabs, "and the freed vendor tabs")
+	# The refresh path must now be a no-op instead of a write into freed memory.
+	p.on_ack({"npc_id": "npc_banker", "ok": true, "action": "repair", "coins": 9, "repaired": 1})
+	assert_null(p._coins_label, "still released — nothing resurrected a dead handle")

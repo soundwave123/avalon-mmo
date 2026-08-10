@@ -24,7 +24,9 @@ const _DIFFICULTY_HEX := {
 	"grey": "9d9d9d",
 }
 const _WIDTH := 300.0
-const _TOP := 110.0  # clears the compass strip / top-center cluster
+# T-759: was 110 — a RIGHT-edge column at y=110 drove 50px up into the always-on minimap (the
+# audit's 4g 150x50 overlap). MINIMAP_SAFE_TOP (168) clears the minimap bottom (160) with a margin.
+const _TOP := HudSafeZone.MINIMAP_SAFE_TOP
 
 var _backdrop: TextureRect = null
 var _panel: PanelContainer = null

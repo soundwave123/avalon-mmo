@@ -122,3 +122,55 @@ func test_shrinking_then_growing_the_roster_reconciles() -> void:
 	f.set_party([])  # party disbanded
 	assert_eq(f.visible_row_count(), 0)
 	assert_false(f.visible)
+
+
+# ---- T-748: the click that never fired ----------------------------------------------------------
+#
+# `member_clicked` was DEAD from ship to 2026-08-09. `_make_row` connects gui_input on the row root
+# and then covers it with 7 default-MOUSE_FILTER_STOP decoration children — and GUI picking returns
+# the TOPMOST non-IGNORE control under the cursor, so a ColorRect ate every press and the row root
+# behind it was never picked. No test caught it because every existing party test asserts on state,
+# not on a click. These two do it the only way that can fail: a real pick in a real viewport.
+
+
+func _viewport() -> SubViewport:
+	var sv := SubViewport.new()
+	sv.size = Vector2i(1280, 720)
+	add_child_autofree(sv)
+	return sv
+
+
+func _left_click(sv: SubViewport, pos: Vector2) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	ev.position = pos
+	sv.push_input(ev)
+
+
+func test_row_decoration_never_wins_the_pick() -> void:
+	var f := _frames()
+	f.set_party([_row("Ana", 100, 100, true), _row("Bo", 50, 100)])
+	var root := f.get_child(0) as Control
+	assert_eq(root.mouse_filter, Control.MOUSE_FILTER_STOP, "the row root is the ONE picker")
+	for child in root.get_children():
+		assert_eq(
+			(child as Control).mouse_filter,
+			Control.MOUSE_FILTER_IGNORE,
+			"decoration child %s must not swallow the row's click" % child.get_class()
+		)
+
+
+func test_clicking_a_row_emits_member_clicked() -> void:
+	var sv := _viewport()
+	var f: PartyFrames = PartyFrames.new()
+	sv.add_child(f)
+	var ana := _row("Ana", 100, 100, true)
+	f.set_party([ana, _row("Bo", 50, 100)])
+	var got: Array = []
+	f.member_clicked.connect(func(pid: int): got.append(pid))
+	await get_tree().process_frame
+	var root := f.get_child(0) as Control
+	_left_click(sv, root.get_global_rect().get_center())
+	await get_tree().process_frame
+	assert_eq(got, [int(ana["peer_id"])], "clicking a party row targets that member")

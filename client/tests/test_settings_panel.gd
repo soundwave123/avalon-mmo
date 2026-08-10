@@ -19,10 +19,33 @@ func _panel():
 	return p
 
 
+# T-756: this suite used to clobber the developer's REAL user://settings.cfg. Two routes:
+# _ready() calls load_settings() on the default path, and — the destructive one — assigning
+# a control's value directly (`_vsync_check.button_pressed = false`) emits its changed signal,
+# which runs the panel's handler, which calls save() with the DEFAULT path. Every round-trip
+# test overwrote the real file with test values. Snapshot it and put it back byte-for-byte.
+var _real_cfg_existed := false
+var _real_cfg_backup := ""
+
+
+func before_each() -> void:
+	_real_cfg_existed = FileAccess.file_exists(SettingsPanel.CONFIG_PATH)
+	_real_cfg_backup = ""
+	if _real_cfg_existed:
+		_real_cfg_backup = FileAccess.get_file_as_string(SettingsPanel.CONFIG_PATH)
+
+
 func after_each() -> void:
 	if FileAccess.file_exists(TMP_CFG):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(TMP_CFG))
 	LocalPlayer.sensitivity_mult = 1.0  # restore the shared default touched by the sensitivity test
+	if _real_cfg_existed:
+		var f := FileAccess.open(SettingsPanel.CONFIG_PATH, FileAccess.WRITE)
+		if f != null:
+			f.store_string(_real_cfg_backup)
+			f.close()
+	elif FileAccess.file_exists(SettingsPanel.CONFIG_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SettingsPanel.CONFIG_PATH))
 
 
 func test_panel_builds_all_controls() -> void:
@@ -50,14 +73,19 @@ func test_toggle_shows_and_hides() -> void:
 
 func test_settings_round_trip() -> void:
 	var p = _panel()
-	p._window_opt.selected = 1
-	p._vsync_check.button_pressed = false
-	p._scale_slider.value = 0.75
+	# T-756: no_signal setters. A plain `.value =` / `.button_pressed =` fires the control's
+	# changed signal, which runs the panel's handler, which calls save() on the DEFAULT path —
+	# so this round-trip test used to write the real settings.cfg as a side effect. This test is
+	# about save(TMP_CFG) → load_settings(TMP_CFG); the handlers are not part of that claim and
+	# are covered separately by the apply tests below.
+	p._window_opt.selected = 1  # OptionButton.selected does not emit item_selected
+	p._vsync_check.set_pressed_no_signal(false)
+	p._scale_slider.set_value_no_signal(0.75)
 	p._quality_opt.selected = 1
-	p._master_slider.value = 42.0
-	p._ambience_slider.value = 30.0
-	p._sfx_slider.value = 66.0
-	p._sens_slider.value = 2.5
+	p._master_slider.set_value_no_signal(42.0)
+	p._ambience_slider.set_value_no_signal(30.0)
+	p._sfx_slider.set_value_no_signal(66.0)
+	p._sens_slider.set_value_no_signal(2.5)
 	p.save(TMP_CFG)
 
 	var q = _panel()

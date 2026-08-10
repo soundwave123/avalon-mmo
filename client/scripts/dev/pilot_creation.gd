@@ -109,7 +109,8 @@ static func _click_and_wait(pilot, button_name: String, visible_key: String, ste
 	if rect.size == Vector2.ZERO:
 		steps.append("%s never laid out" % button_name)
 		return false
-	pilot._click_at(rect.get_center())
+	# get_global_rect() is CONTENT space; injection wants WINDOW space (T-747).
+	PilotMouse.click_content(pilot, rect.get_center())
 	steps.append("clicked %s" % button_name)
 	return await _wait_cleared(pilot, visible_key, steps)
 
@@ -143,7 +144,7 @@ static func _type_name_and_wait(pilot, char_name: String, steps: Array) -> bool:
 	if rect.size == Vector2.ZERO:
 		steps.append("Btn_confirm never laid out")
 		return false
-	pilot._click_at(rect.get_center())
+	PilotMouse.click_content(pilot, rect.get_center())  # CONTENT -> WINDOW (T-747)
 	steps.append("typed name '%s' + confirmed" % char_name)
 	return await _wait_cleared(pilot, "name_panel_visible", steps)
 

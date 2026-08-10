@@ -319,7 +319,9 @@ func handle(msg_type: String, peer_id: int, data: Dictionary) -> void:
 			await _ach.handle_renown_read(peer_id, player)
 		"gather", "gather_nodes", "craft", "use_item", "learn_recipe", "recipe_catalog":
 			await _craft.handle(msg_type, peer_id, player, data)  # T-414
-		"wardrobe_list", "wardrobe_apply", "wardrobe_clear", "wardrobe_hide_helm":
+		# T-750: this list MUST mirror WardrobeService._INTENTS — wardrobe_buy was missing, so the
+		# whole T-476 store's purchase path fell through to _inventory and was silently dropped.
+		"wardrobe_list", "wardrobe_apply", "wardrobe_clear", "wardrobe_hide_helm", "wardrobe_buy":
 			await _wardrobe.handle(peer_id, player, data)
 		_:
 			await _inventory(peer_id, player, msg_type, data)
@@ -961,8 +963,6 @@ func _grant_dungeon_loot_async(peer_id: int, username: String, boss_id: String, 
 # ---- T-046: reach credit (movement-observed, from main._on_request_move) --
 # T-698: carved to reach_service.gd — precomputed reach list + the ~4 Hz per-player throttle live
 # there; these delegators keep main's and instance_service's call surface unchanged.
-
-
 # Credit reach objectives the player NEWLY entered (in new_pos radius, not old_pos). No client pos.
 func on_player_moved(peer_id: int, username: String, old_pos: Vector3, new_pos: Vector3) -> void:
 	_reach.on_player_moved(peer_id, username, old_pos, new_pos)

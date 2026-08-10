@@ -101,7 +101,15 @@ func test_smoke_mode_also_chains_the_toast() -> void:
 	handler.call({"type": "turn_in_result", "ok": false, "reason": "not_at_turnin_npc"})
 
 	assert_eq(combat.get_combat_log().get_count(), 1, "the toast must fire in smoke mode too")
-	assert_false(_m._accept_ok, "HarnessProbe.on_accept still ran alongside the toast")
+
+	# T-756: the second assertion here was `assert_false(_m._accept_ok, "on_accept still ran")`.
+	# _accept_ok is already false on a fresh MainScene, and on_accept early-returns on any type
+	# that isn't accept_quest_result — so asserting it was STILL false proved nothing about the
+	# probe having run. Unwiring HarnessProbe completely left it green. Send the reply on_accept
+	# actually grades, and assert its positive effects.
+	handler.call({"type": "accept_quest_result", "ok": true})
+	assert_true(_m._accept_ok, "HarnessProbe.on_accept graded the accept reply alongside the toast")
+	assert_true(_m._awaiting_indicators, "and chained on into the NPC-indicator request")
 
 
 # talk_result is deliberately NOT driven through _wire_result_handler here: on ok==false,

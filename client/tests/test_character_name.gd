@@ -29,9 +29,21 @@ func test_length_bounds() -> void:
 
 # The charset is the wire-safety rule, not a style choice: names ride jwt.gd's hand-rolled JSON and
 # database.gd's TSV layers, so quotes/tabs/newlines/non-ASCII must never get in.
+#
+# T-755 added the brackets. They were ALREADY rejected — the rule is an allowlist, so it refuses
+# every character it does not name — but the UI layer now leans on that fact: a character name is
+# rendered into bbcode_enabled labels on five panels, and "no name can carry a tag delimiter" is
+# the reason those sites were latent rather than live. A property several panels depend on should
+# be stated where it is decided, not left to be re-derived from the regex.
 func test_wire_hostile_characters_are_rejected() -> void:
 	for bad in ['al"ric', "al\tric", "al\nric", "al ric", "aldriç", "al;ric", "al/ric"]:
 		assert_eq(CharacterName.reject_reason(bad), "bad_chars", "rejects %s" % bad)
+	for markup in ["al[ric", "al]ric", "[b]aldric", "aldric[/b]"]:
+		assert_eq(
+			CharacterName.reject_reason(markup),
+			"bad_chars",
+			"a name can never carry a BBCode delimiter (%s)" % markup
+		)
 
 
 func test_every_reason_has_a_plain_english_sentence() -> void:

@@ -7,7 +7,11 @@ const PlayerSessions = preload("res://scripts/player_sessions.gd")
 const MentorshipService = preload("res://scripts/mentorship_service.gd")
 const PartyLogic = preload("res://scripts/party_logic.gd")
 
+# T-750: the router must cover this service's OWN intent list — it is the source of truth.
+const WardrobeService = preload("res://scripts/wardrobe_service.gd")
+
 const TOKEN := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0"  # gitleaks:allow
+const STORE_LOOK := "cos_gilded_blade"  # T-750: a real priced row on the T-476 store board
 
 
 class FakeMaster:
@@ -171,10 +175,83 @@ func test_handles_quest_and_inventory_intents() -> void:
 		"wardrobe_apply",
 		"wardrobe_clear",
 		"wardrobe_hide_helm",
+		"wardrobe_buy",
 	]:
 		assert_true(r.handles(m), m)
 	assert_false(r.handles("use_ability"))
 	assert_false(r.handles("session"))
+
+
+# T-750 REGRESSION (router level). The T-476 store's purchase intent shipped DEAD: handle()'s match
+# arm named four wardrobe intents and not wardrobe_buy, so every real client buy fell through to the
+# `_:` arm and was swallowed by _inventory. handles() answered true the whole time (it delegates to
+# the service), which is exactly why the service-level tests above passed while production was
+# broken — only driving the real match arm can catch it. Asserting the SERVICE's own intent list
+# routes means the next intent added to WardrobeService._INTENTS cannot ship unrouted either.
+func test_every_wardrobe_service_intent_reaches_the_service_through_the_router() -> void:
+	for intent: String in WardrobeService._INTENTS:
+		_make()
+		PlayerSessions._reset_for_test()
+		PlayerSessions.add_player(10, TOKEN, "alice", Vector3.ZERO)
+		await _rpc.handle(intent, 10, {"type": intent, "appearance_id": STORE_LOOK})
+		# Both outcomes are exclusively the wardrobe service's: it either asks the master for a
+		# wardrobe_op or replies wardrobe_result. _inventory can produce neither.
+		var asked_master := _fm.calls.size() > 0 and str(_fm.calls[0]["method"]) == "wardrobe_op"
+		var service_reply := (
+			_replied.size() > 0 and str(_replied[0].get("type", "")) == "wardrobe_result"
+		)
+		assert_true(
+			asked_master or service_reply,
+			"%s must route to wardrobe_service, not fall through to _inventory" % intent
+		)
+
+
+# T-750: the buy path end-to-end through the router — the client names only an appearance_id and the
+# server resolves the priced store row itself (never a client-asserted price) before the master
+# debits. This exact call was a silent no-op for the whole life of the T-476 store.
+func test_wardrobe_buy_routes_and_resolves_the_priced_store_row_server_side() -> void:
+	_make()
+	PlayerSessions._reset_for_test()
+	PlayerSessions.add_player(10, TOKEN, "alice", Vector3.ZERO)
+	_fm.responses["wardrobe_op"] = {
+		"ok": true,
+		"slots": [],
+		"looks": {},
+		"unlocks": [STORE_LOOK],
+		"cosmetic_currency": 30,
+		"purchased": STORE_LOOK,
+	}
+	await _rpc.handle(
+		"wardrobe_buy", 10, {"type": "wardrobe_buy", "appearance_id": STORE_LOOK, "price": 1}
+	)
+	assert_eq(_fm.calls.size(), 1, "the buy reached the master (it used to be dropped entirely)")
+	var params: Dictionary = _fm.calls[0]["params"]
+	assert_eq(str(_fm.calls[0]["method"]), "wardrobe_op")
+	assert_eq(str(params.get("action", "")), "purchase")
+	assert_eq(str(params.get("username", "")), "alice")
+	assert_eq(
+		int(params["appearance"].get("price", 0)),
+		120,
+		"the server-authored catalog price, not the client's asserted 1"
+	)
+	assert_eq(str(_replied[0].get("type", "")), "wardrobe_state", "the buyer gets the new balance")
+	assert_eq(int(_replied[0].get("cosmetic_currency", -1)), 30)
+	assert_eq(str(_replied[0].get("purchased", "")), STORE_LOOK)
+
+
+# T-750: a look that is not on the store board is refused by the service (and still ROUTES there —
+# a fall-through to _inventory would have produced no wardrobe_result at all).
+func test_wardrobe_buy_of_an_unsold_look_is_refused_by_the_service() -> void:
+	_make()
+	PlayerSessions._reset_for_test()
+	PlayerSessions.add_player(10, TOKEN, "alice", Vector3.ZERO)
+	await _rpc.handle(
+		"wardrobe_buy", 10, {"type": "wardrobe_buy", "appearance_id": "guild_tabard_vanguard"}
+	)
+	assert_eq(_fm.calls.size(), 0, "no master spend for an unsold look")
+	assert_eq(str(_replied[0].get("type", "")), "wardrobe_result")
+	assert_false(bool(_replied[0].get("ok", true)))
+	assert_eq(str(_replied[0].get("reason", "")), "not_for_sale")
 
 
 func test_handle_no_player_is_noop() -> void:

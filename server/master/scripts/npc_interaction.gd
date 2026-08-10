@@ -17,6 +17,8 @@
 extends RefCounted
 
 const _QSM = preload("res://scripts/quest_state_machine.gd")
+# T-754: quest_defs arrives from the world over the wire — its VALUES are unvalidated.
+const _RI = preload("res://scripts/rpc_intake.gd")
 
 # T-621: silver "!future" — a quest this NPC gives that unlocks within this many levels (the WoW
 # "visible promise" wayfinding). Kept in lock-step with content_query.SILVER_MARKER_RANGE (the world
@@ -41,11 +43,9 @@ static func evaluate(npc: Dictionary, quest_defs: Dictionary, facts: Dictionary)
 			continue
 		var f: Dictionary = facts.get(quest_id, {})
 		var player_level := int(f.get("player_level", 1))
+		var given: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754: wire-supplied value
 		var r := _QSM.evaluate_accept(
-			quest_defs[quest_id],
-			str(f.get("state", "")),
-			player_level,
-			bool(f.get("prereq_complete", false))
+			given, str(f.get("state", "")), player_level, bool(f.get("prereq_complete", false))
 		)
 		if r.ok:
 			available.append(quest_id)
@@ -53,13 +53,13 @@ static func evaluate(npc: Dictionary, quest_defs: Dictionary, facts: Dictionary)
 			# T-621: only the level gate stands between the player and this quest, and it's within
 			# reach — a silver "!future". (evaluate_accept checks level BEFORE prereq, but a still-
 			# locked prereq is a separate wall, so require prereq_complete too before promising it.)
-			var gap := int(quest_defs[quest_id].get("min_level", 1)) - player_level
+			var gap := int(given.get("min_level", 1)) - player_level
 			if bool(f.get("prereq_complete", false)) and gap > 0 and gap <= SILVER_MARKER_RANGE:
 				available_soon.append(quest_id)
 
 	# Quests this NPC TURNS IN (turnin_npc, defaulting to giver_npc) → turn-in ready now?
 	for quest_id: String in quest_defs:
-		var quest: Dictionary = quest_defs[quest_id]
+		var quest: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754: wire-supplied value
 		var turnin := str(quest.get("turnin_npc", quest.get("giver_npc", "")))
 		if turnin != npc_id:
 			continue
@@ -77,7 +77,10 @@ static func evaluate(npc: Dictionary, quest_defs: Dictionary, facts: Dictionary)
 		var f: Dictionary = facts.get(quest_id, {})
 		if str(f.get("state", "")) != _QSM.STATE_ACTIVE:
 			continue
-		for obj: Dictionary in quest_defs[quest_id].get("objectives", []):
+		var talk_def: Dictionary = _RI.shaped(quest_defs, quest_id, {})  # T-754
+		for obj: Variant in _RI.shaped(talk_def, "objectives", []):
+			if not obj is Dictionary:
+				continue
 			if str(obj.get("type", "")) == "talk" and str(obj.get("target", "")) == npc_id:
 				talk_targets.append(quest_id)
 				break

@@ -432,10 +432,18 @@ func _build_pool(
 	var stride := 16 if mm.use_custom_data else 12
 	var data := PackedFloat32Array()
 	data.resize(rows.size() * stride)
+	# T-758 (item 4): union the per-instance AABBs as we fill the buffer, then hand the MultiMesh an
+	# explicit custom_aabb so the engine skips recomputing bounds over every instance at chunk build.
+	var mesh_aabb: AABB = (lib["mesh"] as Mesh).get_aabb()
+	var bounds := AABB()
+	var have_bounds := false
 	for k in rows.size():
 		var p: Dictionary = _manifest[rows[k]]
 		var xf := placement_transform(p) * part_xf
 		xf.origin -= origin  # instance transforms are chunk-local (chunk node sits at the centre)
+		var inst_aabb := xf * mesh_aabb
+		bounds = bounds.merge(inst_aabb) if have_bounds else inst_aabb
+		have_bounds = true
 		var o := k * stride
 		for c in 3:
 			data[o + c * 4 + 0] = xf.basis.x[c]
@@ -445,6 +453,8 @@ func _build_pool(
 		if mm.use_custom_data:
 			data[o + 12] = float(p.get("terrain_y", 0.0))  # ground_y for the weathering overlay
 	mm.buffer = data
+	if have_bounds:
+		mm.custom_aabb = bounds
 	var mmi := MultiMeshInstance3D.new()
 	mmi.multimesh = mm
 	# Static dressing feeds the GI volumes (SDFGI) — same enforcement as the individual path.
@@ -543,9 +553,16 @@ func _add_impostor_pool(
 	mm.instance_count = rows.size()
 	var data := PackedFloat32Array()
 	data.resize(rows.size() * 12)
+	# T-758 (item 4): union the instance centres and grow by the quad span so the MultiMesh carries a
+	# custom_aabb (skips the engine's per-instance recompute). Billboards rotate to face the camera,
+	# so the AABB is grown by the full span in every axis — a conservative box that never clips.
+	var bounds := AABB()
+	var have_bounds := false
+	var max_scl := 0.0
 	for k in rows.size():
 		var p: Dictionary = _manifest[rows[k]]
 		var scl := float(p.get("scale", 1.0))
+		max_scl = maxf(max_scl, scl)
 		# Identity basis scaled uniformly: the billboard shader overrides orientation, and
 		# billboard_keep_scale reads the column length back to size the quad to this instance.
 		var b := Basis.IDENTITY.scaled(Vector3.ONE * scl)
@@ -554,6 +571,9 @@ func _add_impostor_pool(
 		)
 		org += Vector3(0.0, mid_y * scl, 0.0)  # centre the quad on the tree's mid-height
 		org -= origin  # chunk-local
+		var pt := AABB(org, Vector3.ZERO)
+		bounds = bounds.merge(pt) if have_bounds else pt
+		have_bounds = true
 		var o := k * 12
 		for c in 3:
 			data[o + c * 4 + 0] = b.x[c]
@@ -561,6 +581,8 @@ func _add_impostor_pool(
 			data[o + c * 4 + 2] = b.z[c]
 			data[o + c * 4 + 3] = org[c]
 	mm.buffer = data
+	if have_bounds:
+		mm.custom_aabb = bounds.grow(span * max_scl)
 	var mmi := MultiMeshInstance3D.new()
 	mmi.name = "impostors"
 	mmi.multimesh = mm

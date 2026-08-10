@@ -138,6 +138,7 @@ func test_mount_returns_the_mounted_instance() -> void:
 func _key_event(code: int) -> InputEventKey:
 	var ev := InputEventKey.new()
 	ev.keycode = code
+	ev.physical_keycode = code  # T-761: the panel dispatches on the PHYSICAL code
 	ev.pressed = true
 	return ev
 

@@ -43,8 +43,13 @@ static func mount(hud: Node, theme_src: Control) -> LevelUpUi:
 	var ui := LevelUpUi.new()
 	ui._banner = Label.new()
 	ui._banner.name = "LevelUpBanner"
+	# T-759: CENTER_TOP anchors both edges at 0.5 — setting only offset_top leaves a 0px-wide box that
+	# collapses a centered Label (the degenerate-anchor trap; set all four, per maintenance_banner).
 	ui._banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	ui._banner.offset_left = -400.0
+	ui._banner.offset_right = 400.0
 	ui._banner.offset_top = 120.0
+	ui._banner.offset_bottom = 200.0
 	ui._banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ui._banner.modulate = Color(1, 1, 1, 0)
 	ui._banner.add_theme_font_size_override("font_size", 40)
@@ -54,8 +59,11 @@ static func mount(hud: Node, theme_src: Control) -> LevelUpUi:
 	# T-712: the sub-line — smaller, parchment-toned, sharing the banner's hold-then-fade beat.
 	ui._subline = Label.new()
 	ui._subline.name = "LevelUpSubline"
-	ui._subline.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	ui._subline.set_anchors_preset(Control.PRESET_CENTER_TOP)  # T-759: all four offsets (see banner)
+	ui._subline.offset_left = -360.0
+	ui._subline.offset_right = 360.0
 	ui._subline.offset_top = 172.0
+	ui._subline.offset_bottom = 220.0
 	ui._subline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ui._subline.modulate = Color(1, 1, 1, 0)
 	ui._subline.add_theme_font_size_override("font_size", 18)

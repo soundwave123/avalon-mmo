@@ -55,10 +55,31 @@ static func valid_name(name: String) -> bool:
 	return true
 
 
+# T-755: true when `text` carries a BBCode tag delimiter. The client escapes markup before it
+# reaches a RichTextLabel and THAT is the real fix — a server can never know what every present and
+# future client will do with a string. This is the defence-in-depth half: the master should not
+# accept a stored attack payload in the first place, so that a client which someday forgets the
+# escape is not handed live ammunition out of the database.
+#
+# Brackets are the whole vocabulary of a BBCode tag — no "[" means no tag, whatever the tag name
+# would have been — so this needs no list of tag names to keep in sync with Godot's parser. "]" is
+# rejected too: harmless alone, but it can close a tag opened by an adjacent field.
+static func has_markup(text: String) -> bool:
+	return text.contains("[") or text.contains("]")
+
+
 # Public listing copy is deliberately short and single-line. Empty is valid because the open flag
 # carries the actual consent to be listed; a guild can recruit without writing marketing copy.
+#
+# T-755: this was the one free-text field with NO charset rule (guild NAMES were always an
+# alphanumeric allowlist, and character names go through character_name.gd), which made the blurb
+# the live vector for the guild-panel injection. Rejecting rather than stripping is deliberate
+# here: _set_recruitment already has a "bad_blurb" reply path, so the player is TOLD their copy was
+# refused instead of silently publishing something they did not write.
 static func valid_recruitment_blurb(blurb: String) -> bool:
 	if blurb.length() > RECRUITMENT_BLURB_MAX:
+		return false
+	if has_markup(blurb):
 		return false
 	return not blurb.contains("\n") and not blurb.contains("\r")
 

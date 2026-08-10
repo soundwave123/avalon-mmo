@@ -206,6 +206,15 @@ func test_all_nodes_share_one_shimmer_overlay_material() -> void:
 	var b = _layer._nodes["herb_bloodthorn_2"]["highlight"]
 	assert_true(is_same(a, b), "both nodes reference the same overlay material instance")
 	assert_true(is_same(a, _layer._shimmer_mat), "and it is the layer's single shared material")
+	# T-756: this used to run one _process(0.5) and assert the alpha was between 0.05 and 0.09 —
+	# a band strictly WIDER than the one production can emit (0.055 + 0.025*[0..1], i.e.
+	# 0.055..0.080), so every value the formula is capable of producing passed. It also never
+	# checked the alpha MOVED, which is the entire claim in the phrase "still pulses": delete the
+	# pulse line and freeze the alpha at its constant and the old assertion was still true.
 	_layer._process(0.5)
-	var pulsed: float = (_layer._shimmer_mat as StandardMaterial3D).albedo_color.a
-	assert_between(pulsed, 0.05, 0.09, "the shared overlay still pulses in the shimmer band")
+	var a1: float = (_layer._shimmer_mat as StandardMaterial3D).albedo_color.a
+	_layer._process(0.5)
+	var a2: float = (_layer._shimmer_mat as StandardMaterial3D).albedo_color.a
+	assert_ne(a1, a2, "the shared overlay alpha moves between frames — it really pulses")
+	for v: float in [a1, a2]:
+		assert_between(v, 0.0549, 0.0801, "the pulse stays inside the production shimmer band")

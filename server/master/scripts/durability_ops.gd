@@ -1,5 +1,6 @@
 class_name DurabilityOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-364: the two master-owned durability ops — SERVER-OBSERVED (the world calls them; there is NO
 # client verb reaching either). Extracted from master/main.gd to keep it under the 1000-line cap.
@@ -42,7 +43,7 @@ static func repair_op(params: Dictionary) -> Dictionary:
 	var dur: Dictionary = ServicesStore.get_durability(cid)
 	# T-412: price each worn slot at ITS item's rarity rate (server-computed; a client-supplied cost is
 	# never read). No registry (older callers) → every rarity is "" → base rate → identity with T-364.
-	var rarity_by_slot := _rarity_by_slot(cid, params.get("item_registry", {}))
+	var rarity_by_slot := _rarity_by_slot(cid, _RI.shaped(params, "item_registry", {}))
 	var cost: int = Durability.repair_cost_scaled(
 		dur,
 		rarity_by_slot,

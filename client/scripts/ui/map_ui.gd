@@ -94,6 +94,7 @@ func texture_for(zone: Dictionary) -> Texture2D:
 			"rect": zone["rect"],
 			"next_row": 0,
 		}
+		set_process(true)  # T-758: re-arm the incremental bake for this newly-requested zone
 	return _bakes[zone_id]["tex"]
 
 
@@ -104,15 +105,25 @@ func bake_progress(zone_id: String) -> float:
 
 
 func _process(_delta: float) -> void:
+	var all_done := true
 	for zone_id in _bakes:
 		var bake: Dictionary = _bakes[zone_id]
 		var row := int(bake["next_row"])
 		if row >= RESOLUTION:
 			continue
+		all_done = false
 		_baker.bake_rows(bake["img"], bake["rect"], row, ROWS_PER_FRAME)
 		bake["next_row"] = row + ROWS_PER_FRAME
 		(bake["tex"] as ImageTexture).update(bake["img"])
+		# T-758: once every row is baked, drop the CPU Image — from here the GPU texture is the only
+		# copy the world map + minimap read, so the RESOLUTION^2 RGB8 buffer need not linger per zone.
+		if int(bake["next_row"]) >= RESOLUTION:
+			bake["img"] = null
 		return  # one zone chunk per frame — the bake never stacks work on a frame
+	# T-758: nothing left to bake — stop the per-frame walk of _bakes (it ran forever before). A new
+	# zone's texture_for re-arms processing, so a later-loaded zone still bakes.
+	if all_done:
+		set_process(false)
 
 
 # ---- shared providers (null-safe before the world/player exist) ----

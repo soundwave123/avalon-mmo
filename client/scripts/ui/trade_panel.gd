@@ -21,8 +21,14 @@ func _ready() -> void:
 	offset_top = -190.0
 	offset_right = 230.0
 	offset_bottom = 190.0
+	# T-759: a two-party item/coin trade is an IRREVERSIBLE transaction, but the frame resolved the
+	# 0.42-alpha idle-HUD glass stylebox (the PanelContainer default) — the world read straight through
+	# the thing the player is about to commit gear to. Carry the shared theme + opt into the solid
+	# window surface (SocialUi also assigns the theme; self-carrying makes the modal self-sufficient).
+	theme = UiTheme.build()
 	var frame := PanelContainer.new()
 	frame.name = "TradeFrame"
+	frame.theme_type_variation = "SolidWindow"  # T-396: deliberate window = opaque opt-in
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(frame)
 	var col := VBoxContainer.new()
@@ -99,7 +105,12 @@ func _render() -> void:
 				% [str(it["item_id"]), int(it["count"]), int(it["slot_index"])]
 			)
 		)
-	lines.append("[b]%s's offer[/b] (%d coins)" % [partner, int(theirs.get("coins", 0))])
+	# T-755: the partner is the one player-controlled value on this label (item_ids are dev-authored
+	# content keys), and an unclosed tag here would swallow the entire offer list below it — i.e.
+	# hide what you are actually agreeing to trade away.
+	lines.append(
+		"[b]%s's offer[/b] (%d coins)" % [BBCode.escape(partner), int(theirs.get("coins", 0))]
+	)
 	for it: Dictionary in theirs.get("items", []):
 		lines.append("  %s x%d" % [str(it["item_id"]), int(it["count"])])
 	lines.append("[b]Your bag[/b] (click to offer)")

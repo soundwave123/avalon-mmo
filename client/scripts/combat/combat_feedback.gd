@@ -28,6 +28,7 @@ var hud_overlays_enabled: bool = true  # T-057: false in 3D (3D health bars + lo
 var show_tick: bool = false  # T-308: raw [tick=NNN] prefix is off; AVALON_DEBUG_TICKS=1 re-enables
 
 var _last_reject_log_ms: int = -REJECT_LOG_THROTTLE_MS  # T-402: first rejection always logs
+var _reject_feedback_allowed: bool = false  # T-750: this event's verdict, read by main.gd's text
 
 var _parser: CombatEventParser
 var _floating_pool: FloatingTextPool
@@ -226,10 +227,18 @@ func _on_mob_respawn(evt: CombatEventParser.CombatEvent) -> void:
 # melee player whose abilities silently no-op'd against a kiting gunsel). All other rejection
 # reasons stay silent per the T-027 spec (the log records outcomes, not every denied press).
 func _on_ability_rejected(reason: String, detail: Dictionary = {}) -> void:
+	_reject_feedback_allowed = false
 	if reason != "out_of_range":
 		return
-	if not _should_show_reject_feedback():
+	# T-644/T-750: ONE throttle verdict per rejection, decided here and READ by both surfaces (the
+	# log line below and main.gd's floating text). There used to be two byte-identical throttles —
+	# this handler spent the budget, then main.gd's second call always returned false, so the
+	# out-of-range floating text could never render. Never re-arm the clock from a reader.
+	var now: int = Time.get_ticks_msec()
+	if now - _last_reject_log_ms < REJECT_LOG_THROTTLE_MS:
 		return
+	_last_reject_log_ms = now
+	_reject_feedback_allowed = true
 	var msg := "Out of range."
 	if detail.has("dist_m") and detail.has("range_m"):
 		msg = (
@@ -239,23 +248,12 @@ func _on_ability_rejected(reason: String, detail: Dictionary = {}) -> void:
 	_combat_log.add_entry(msg, _COLOR_ERROR)
 
 
-# T-644: check if sufficient time has passed since the last out_of_range rejection to show feedback.
-# Shared by both the combat log line and the floating text to keep them synchronized.
+# T-644/T-750: NON-CONSUMING read of the throttle verdict decided by the most recent
+# ability_rejected event. main.gd gates the out-of-range floating text on this, so the text and the
+# combat-log line always agree: both appear for a rejection that passes the throttle, both are
+# suppressed for one that doesn't. Do not turn this back into a second throttle — that is the bug.
 func should_show_reject_feedback() -> bool:
-	var now: int = Time.get_ticks_msec()
-	if now - _last_reject_log_ms < REJECT_LOG_THROTTLE_MS:
-		return false
-	_last_reject_log_ms = now
-	return true
-
-
-# Private helper for the internal handler.
-func _should_show_reject_feedback() -> bool:
-	var now: int = Time.get_ticks_msec()
-	if now - _last_reject_log_ms < REJECT_LOG_THROTTLE_MS:
-		return false
-	_last_reject_log_ms = now
-	return true
+	return _reject_feedback_allowed
 
 
 # ---- Accessors (for testing) --------------------------------------------

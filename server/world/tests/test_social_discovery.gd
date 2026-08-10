@@ -50,6 +50,39 @@ func test_note_is_single_line_and_bounded() -> void:
 	assert_eq(Discovery.clean_note("x".repeat(500)).length(), Discovery.NOTE_MAX)
 
 
+# ---- T-755: the world server must not STORE a bbcode payload ------------------
+#
+# GuildPanel renders these notes into a bbcode_enabled label whose meta_clicked fires
+# party_invite. The client escape is the real fix; this is the defence-in-depth half, and it
+# STRIPS rather than rejects because clean_note has always been a silent sanitiser with no
+# channel to report a refusal to the player.
+func test_note_strips_bbcode_so_no_payload_is_ever_stored() -> void:
+	assert_eq(
+		Discovery.clean_note("[url=party|victim]free gold[/url]"),
+		"url=party|victimfree gold/url",
+		"the forged party-invite payload cannot survive into the board"
+	)
+	assert_eq(Discovery.clean_note("[color=red]pick me"), "color=redpick me", "no opening tag")
+	assert_false(Discovery.clean_note("[b]x[/b]").contains("["), "no bracket survives, either way")
+	assert_false(Discovery.clean_note("[b]x[/b]").contains("]"))
+
+
+func test_note_stripping_leaves_ordinary_copy_alone() -> void:
+	# A sanitiser nobody notices is the point — an honest note must round-trip untouched.
+	var honest := "New to the game, happy to learn — EU evenings, 18+"
+	assert_eq(Discovery.clean_note(honest), honest, "a normal note is unaffected")
+
+
+func test_stripped_note_reaches_the_board_row() -> void:
+	# The unit above proves the helper; this proves flag() actually routes through it, which is the
+	# part a refactor could silently drop.
+	var store := Discovery.new_store()
+	Discovery.flag(store, 1, 5, "tank", "[url=party|victim]click[/url]")
+	var rows := Discovery.board(store)
+	assert_eq(rows.size(), 1)
+	assert_false(str(rows[0]["note"]).contains("["), "the stored row carries no tag opener")
+
+
 # T-477: mentor/mentee discovery is a pure opt-in signals board. Eligibility is decided from the
 # injected authoritative level, and rows carry only server-projected role/zone plus a bounded note.
 func test_mentorship_flags_enforce_level_eligibility_and_filter_each_side() -> void:

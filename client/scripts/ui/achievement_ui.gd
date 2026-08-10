@@ -16,8 +16,14 @@ func _init(hud: Node, theme_src: Control, send: Callable, is_typing: Callable = 
 	panel.setup(send, is_typing)
 	_toast = Label.new()
 	_toast.name = "AchievementToast"
+	# T-759: CENTER_TOP anchors both edges at 0.5, so setting only offset_top left the box 0px WIDE —
+	# a centered Label collapses and the text is clipped/mispositioned (the T-748-adjacent degenerate
+	# -anchor trap; maintenance_banner.gd sets all four). Give it a real 720px-wide centered rect.
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_toast.offset_left = -360.0
+	_toast.offset_right = 360.0
 	_toast.offset_top = 64.0
+	_toast.offset_bottom = 160.0
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_toast.modulate = Color(1, 1, 1, 0)
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE

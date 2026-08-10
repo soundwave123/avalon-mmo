@@ -25,8 +25,10 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(420, 460)
 	offset_left = -210.0
 	offset_right = 210.0
-	offset_top = -230.0
-	offset_bottom = 230.0
+	# T-759: centered at 460px tall, the +230 bottom sat at y=590 — into the hotbar band. Pin the
+	# bottom to the shared centered-panel ceiling and pull the top up the same amount to keep the size.
+	offset_top = HudSafeZone.PANEL_SAFE_BOTTOM_CENTERED - 460.0
+	offset_bottom = HudSafeZone.PANEL_SAFE_BOTTOM_CENTERED
 	var frame := PanelContainer.new()
 	frame.name = "WeeklyFrame"
 	frame.theme_type_variation = "SolidWindow"  # T-396: deliberate window = opaque opt-in
@@ -64,7 +66,7 @@ func setup(send: Callable, is_typing: Callable = Callable(), reply_router = null
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	if (event as InputEventKey).keycode != KEY_J:
+	if KeyRegistry.event_code(event as InputEventKey) != KEY_J:
 		return
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return

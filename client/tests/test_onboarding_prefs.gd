@@ -6,6 +6,32 @@ extends GutTest
 
 const OnboardingPrefs = preload("res://scripts/ui/onboarding_prefs.gd")
 
+# T-756: the round-trip tests below write the developer's REAL user://onboarding.cfg, keying
+# each entry by a fresh `Time.get_ticks_usec()` username. Nothing ever removed them, so the
+# file grew by two more dead sections on every single test run — forever — and each run began
+# from different on-disk state than the last. The old comment "clean up after" described
+# cleanup that did not exist. Snapshot the file and restore it byte-for-byte instead: that
+# both stops the growth and makes these tests independent of whatever is already on disk.
+var _cfg_existed := false
+var _cfg_backup := ""
+
+
+func before_each() -> void:
+	_cfg_existed = FileAccess.file_exists(OnboardingPrefs.CONFIG_PATH)
+	_cfg_backup = ""
+	if _cfg_existed:
+		_cfg_backup = FileAccess.get_file_as_string(OnboardingPrefs.CONFIG_PATH)
+
+
+func after_each() -> void:
+	if _cfg_existed:
+		var f := FileAccess.open(OnboardingPrefs.CONFIG_PATH, FileAccess.WRITE)
+		if f != null:
+			f.store_string(_cfg_backup)
+			f.close()
+	elif FileAccess.file_exists(OnboardingPrefs.CONFIG_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(OnboardingPrefs.CONFIG_PATH))
+
 
 func test_first_entry_auto_shows_then_never_again() -> void:
 	# Brand-new character: not seen -> show it.

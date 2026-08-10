@@ -1,39 +1,41 @@
 class_name ControlsReference
 # T-376: the single source of truth for "how do I play" — the ordered list of controls the
-# onboarding card (controls_card.gd) renders. Key labels are DERIVED from the same KEY_* keycode
-# constants the live handlers use (main.gd._input, local_player.gd._unhandled_input), rendered via
-# OS.get_keycode_string, so the card can never drift from the real bindings: change a binding and
-# the label follows. Mouse gestures (no keycode) carry explicit text. Pure/static — headless-safe.
+# onboarding card (controls_card.gd) renders.
+#
+# T-761: the rows no longer carry key literals of their own. Each names KeyRegistry binding IDs and
+# asks the registry for the keycode, so this file can only ever describe what the live listeners
+# actually dispatch — the previous "derived from the same KEY_* constants" arrangement still meant
+# two copies of every literal, and copies rot. Labels resolve through KeyRegistry.label_for, so a
+# French player reads "Z Q S D" for the same physical keys a US player reads as "W A S D".
+# Mouse gestures (no keycode) carry explicit text. Pure/static — headless-safe.
 
 extends RefCounted
 
-# Each row: a human "action" and EITHER a list of keycodes OR a mouse-gesture string.
-# Keep this list in the order a new player needs it: move, look, fight, then the panels.
+# Each row: a human "action" and EITHER a list of KeyRegistry binding ids OR a mouse-gesture
+# string. Keep this list in the order a new player needs it: move, look, fight, then the panels.
+# The action wording is this card's own (it groups four move bindings into one "Move" row); the
+# KEYS are always the registry's.
 const _ROWS: Array = [
-	{"action": "Move", "keys": [KEY_W, KEY_A, KEY_S, KEY_D]},
-	{"action": "Walk / run", "keys": [KEY_SLASH]},
+	{"action": "Move", "ids": ["move_forward", "move_left", "move_back", "move_right"]},
+	{"action": "Walk / run", "ids": ["walk_toggle"]},
 	{"action": "Look around", "mouse": "Hold Right-Mouse + drag"},
 	{"action": "Orbit camera", "mouse": "Hold Left-Mouse + drag"},
 	{"action": "Zoom", "mouse": "Mouse wheel"},
 	{"action": "Target / talk", "mouse": "Left-click a foe or townsfolk"},
-	{"action": "Auto-attack", "keys": [KEY_QUOTELEFT]},
+	{"action": "Auto-attack", "ids": ["autoattack"]},
 	# T-723: no key literals here — the ability row renders the LIVE slot->key map (AbilityKeybinds),
 	# so the handbook grew from "1 - 4" to the whole keyed bar the moment the bindings did.
 	{"action": "Abilities", "ability_keys": true},
-	{"action": "Inventory", "keys": [KEY_I]},
-	{"action": "Quest log", "keys": [KEY_L]},
-	{"action": "Character", "keys": [KEY_C]},
-	{"action": "Talents", "keys": [KEY_N]},
-	{"action": "World map", "keys": [KEY_T]},
-	{"action": "Wardrobe", "keys": [KEY_V]},
-	{"action": "Cosmetics store", "keys": [KEY_H]},
-	{"action": "Menu / cancel", "keys": [KEY_ESCAPE]},
-	{"action": "This help card", "keys": [KEY_F1]},
+	{"action": "Inventory", "ids": ["inventory"]},
+	{"action": "Quest log", "ids": ["quest_log"]},
+	{"action": "Character", "ids": ["character_sheet"]},
+	{"action": "Talents", "ids": ["talents"]},
+	{"action": "World map", "ids": ["world_map"]},
+	{"action": "Wardrobe", "ids": ["wardrobe"]},
+	{"action": "Cosmetics store", "ids": ["cosmetics"]},
+	{"action": "Menu / cancel", "ids": ["menu"]},
+	{"action": "This help card", "ids": ["help_card"]},
 ]
-
-# The keycode that re-opens the card (also the F1 row above). Sourced here so main.gd and the card
-# agree on the one binding without a second literal.
-const HELP_KEYCODE := KEY_F1
 
 # T-426: the glossary — every load-bearing VERB/CONCEPT with a one-line plain-language explanation,
 # so a new player can look anything up without leaving the game (GameFlow: "online help so players
@@ -76,6 +78,13 @@ const GLOSSARY: Array = [
 const _ESSENTIAL_ACTIONS: Array = ["Move", "Look around", "Target / talk"]
 
 
+# The physical keycode that re-opens the card (also the F1 row above). Kept as this file's public
+# name because onboarding_controller dispatches on it; the VALUE is the registry's. A function
+# rather than the old const because a const cannot call into the registry.
+static func help_keycode() -> int:
+	return KeyRegistry.key_for("help_card")
+
+
 # The glossary rows the card renders: [{term, tip}] (a stable copy, same shape as GLOSSARY).
 static func glossary_rows() -> Array:
 	var out: Array = []
@@ -104,30 +113,35 @@ static func essential_rows() -> Array:
 	return out
 
 
-# Render one row's key/mouse label. Keycodes go through OS.get_keycode_string (the engine's own
-# printable name), joined with a thin space; a contiguous run (1-9) collapses to "1 – 9".
+# Render one row's key/mouse label. Keycodes resolve through KeyRegistry.label_for (this
+# keyboard's engraving for that physical position), joined with a thin space; a contiguous run
+# collapses to "1 – 9".
+#
+# Contiguity is tested on the PHYSICAL codes, not the labels: the number row is one unbroken run of
+# positions on every layout, but its labels are "&é"'(" on AZERTY, so a label-based check would
+# print nine separate glyphs there and a range here. Positions decide the shape, labels fill it in.
 static func _label_for(row: Dictionary) -> String:
 	if row.has("mouse"):
 		return str(row["mouse"])
-	# T-723: the ability row carries no keycodes of its own — it asks AbilityKeybinds.
-	var keys: Array = AbilityKeybinds.keycodes() if row.has("ability_keys") else row["keys"]
+	var keys: Array = _row_keycodes(row)
 	if _is_contiguous(keys):
-		return "%s – %s" % [_key_name(keys[0]), _key_name(keys[keys.size() - 1])]
+		var last: int = int(keys[keys.size() - 1])
+		return "%s – %s" % [KeyRegistry.label_for(int(keys[0])), KeyRegistry.label_for(last)]
 	var names: Array = []
 	for k in keys:
-		names.append(_key_name(int(k)))
+		names.append(KeyRegistry.label_for(int(k)))
 	return "  ".join(names)
 
 
-# A friendlier printable for a few keys whose engine name is unhelpful for players.
-static func _key_name(keycode: int) -> String:
-	match keycode:
-		KEY_QUOTELEFT:
-			return "`"
-		KEY_SLASH:
-			return "/"
-		_:
-			return OS.get_keycode_string(keycode)
+# The physical keycodes a row renders. T-723: the ability row carries no ids of its own — it asks
+# AbilityKeybinds for the live slot->key map. T-761: every other row names registry ids.
+static func _row_keycodes(row: Dictionary) -> Array:
+	if row.has("ability_keys"):
+		return AbilityKeybinds.keycodes()
+	var out: Array = []
+	for id in row.get("ids", []):
+		out.append(KeyRegistry.key_for(str(id)))
+	return out
 
 
 static func _is_contiguous(keys: Array) -> bool:

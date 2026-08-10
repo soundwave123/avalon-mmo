@@ -147,3 +147,56 @@ func test_seed_supplies_the_spawn_order() -> void:
 	var s = _svc(FakeMaster.new())
 	s.seed(1, [204, 201, 1])
 	assert_eq(s.bar_layout_for(1), [204, 201, 1], "the master combat payload seeds the saved order")
+
+
+# ---- T-754: malformed "layout" off the wire ----------------------------------
+
+# BarLayoutOps.sanitize takes a typed Array parameter, so a non-Array "layout" aborted the
+# handler frame outright: no reply was ever sent and the client hung waiting for a
+# bar_layout_result. This was the ONE client-reachable typed coercion left on the world's
+# intake surface (every sibling service coerces its nested reads with str()/int()).
+
+
+func test_non_array_layout_is_rejected_not_coerced() -> void:
+	for payload: Variant in [{}, {"a": 1}, 5, 1.5, "layout", true, null]:
+		_sent = []
+		PlayerSessions._reset_for_test()
+		PlayerSessions.add_player(1, TOK, "Alice", Vector3.ZERO)
+		var master := FakeMaster.new()
+		var s = _svc(master)
+		s.set_known(1, [1, 201, 202])
+		s.handle("set_bar_layout", 1, {"layout": payload})
+		var reply := _reply_to(1)
+		assert_false(
+			reply.is_empty(), "layout=%s produced NO reply (handler aborted)" % str(payload)
+		)
+		assert_false(bool(reply.get("ok", true)), "layout=%s must be rejected" % str(payload))
+		assert_eq(str(reply.get("reason", "")), "invalid_layout", "reason for %s" % str(payload))
+		assert_eq(master.calls.size(), 0, "a malformed layout must never hit persistence")
+	assert_engine_error_count(0, "a malformed layout must not raise an engine error")
+
+
+func test_missing_layout_key_is_rejected_cleanly() -> void:
+	PlayerSessions.add_player(1, TOK, "Alice", Vector3.ZERO)
+	var master := FakeMaster.new()
+	var s = _svc(master)
+	s.set_known(1, [1, 201, 202])
+	s.handle("set_bar_layout", 1, {})
+	var reply := _reply_to(1)
+	assert_false(bool(reply.get("ok", true)), "an absent layout key is rejected")
+	assert_eq(master.calls.size(), 0, "an absent layout key must never hit persistence")
+	assert_engine_error_count(0, "an absent layout key must not raise an engine error")
+
+
+func test_layout_array_with_non_integer_entries_survives() -> void:
+	# A legal Array whose ENTRIES are junk still has to reject gracefully, not abort.
+	PlayerSessions.add_player(1, TOK, "Alice", Vector3.ZERO)
+	var master := FakeMaster.new()
+	var s = _svc(master)
+	s.set_known(1, [1, 201, 202])
+	s.handle("set_bar_layout", 1, {"layout": [{}, "x", null, [1], 1]})
+	var reply := _reply_to(1)
+	assert_false(reply.is_empty(), "a junk-entry layout produced NO reply (handler aborted)")
+	assert_false(bool(reply.get("ok", true)), "a junk-entry layout must be rejected")
+	assert_eq(master.calls.size(), 0, "a junk-entry layout must never hit persistence")
+	assert_engine_error_count(0, "junk layout entries must not raise an engine error")

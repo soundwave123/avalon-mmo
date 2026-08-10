@@ -443,3 +443,50 @@ func test_sub_deadzone_travel_swings_no_camera() -> void:
 	assert_false(p._looking)
 	assert_eq(p.rotation.y, yaw_before, "no camera/body creep below the deadzone")
 	p._unhandled_input(_rmb(false, Vector2(102, 100)))
+
+
+# T-761: the gap T-424 left. The tests above inject a typing predicate, which only ever reported
+# CHAT focus — so naming a guild, haggling in trade or typing a character name left the raw WASD
+# and SPACE polls wide open, and the player walked off mid-word. This one wires NO predicate at
+# all: it focuses a real LineEdit in the player's own viewport, which is exactly what those panels
+# do, and asserts the polls read nothing. Failing this means the gate is back to chat-only.
+func test_movement_and_jump_suppressed_while_any_line_edit_owns_focus() -> void:
+	var p = _player()
+	var field := LineEdit.new()
+	add_child_autofree(field)
+	assert_false(p._is_typing(), "precondition: nothing focused, movement is live")
+
+	# Baseline: with no field focused the held key really does drive the body, so a pass below
+	# means the gate stopped it — not that the harness never moved anything.
+	Input.parse_input_event(_w(true))
+	Input.flush_buffered_events()
+	var origin: Vector3 = p.global_position
+	for _i in range(10):
+		p._physics_process(0.05)
+	assert_gt((p.global_position - origin).length(), 0.5, "baseline: held W walks")
+
+	# Now a text field takes focus, exactly as the guild/trade/name dialogs do.
+	field.grab_focus()
+	assert_true(field.has_focus(), "the LineEdit owns viewport focus")
+	assert_true(p._is_typing(), "the movement gate sees a focused text field, not just chat")
+	p.global_position = origin
+	p._move_vel = Vector3.ZERO
+	Input.parse_input_event(_space(true))  # W still held; add SPACE for the jump poll
+	Input.flush_buffered_events()
+	for _i in range(10):
+		p._physics_process(0.05)
+	assert_almost_eq(
+		(p.global_position - origin).length(), 0.0, 0.001, "typing consumes ZERO movement input"
+	)
+	assert_false(p.is_airborne(), "space between two words does not jump")
+	assert_eq(p.anim_state(), "idle", "no locomotion animation while typing")
+
+	# And it is a gate, not a break: releasing focus restores the same held key.
+	field.release_focus()
+	assert_false(p._is_typing(), "focus released, movement is live again")
+	for _i in range(10):
+		p._physics_process(0.05)
+	assert_gt((p.global_position - origin).length(), 0.5, "movement resumes after typing")
+	Input.parse_input_event(_w(false))  # release — global key state leaks into later tests
+	Input.parse_input_event(_space(false))
+	Input.flush_buffered_events()

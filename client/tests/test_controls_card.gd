@@ -87,3 +87,76 @@ func test_handbook_keeps_screen_edge_margin() -> void:
 	await get_tree().process_frame
 	assert_gt(card.offset_left, 0.0, "handbook overlay has a left screen margin")
 	assert_gt(card.offset_top, 0.0, "handbook overlay has a top screen margin")
+
+
+# ---- T-748 (audit 4c): the handbook must not win every pick -------------------------------------
+#
+# The handbook is parented LAST to $HUD, and GUI picking walks the tree in REVERSE CHILD ORDER and
+# IGNORES z_index (modal_input.gd) — so a full-screen default-STOP card beat the z=200 creation
+# modals and every panel underneath it. Fix: the porous overlay (ui_theme.gd recipe c) — the
+# full-rect chrome (root + dim + centering container) takes no pick at all, only the bounded card
+# body does. The per-panel ModalInput workarounds (class/gender/name) are untouched by this.
+
+
+func _pick_probe(sv: SubViewport) -> Control:
+	var probe := Control.new()  # the modal beneath: added FIRST, so it LOSES the pick order
+	probe.set_anchors_preset(Control.PRESET_FULL_RECT)
+	probe.mouse_filter = Control.MOUSE_FILTER_STOP
+	sv.add_child(probe)
+	return probe
+
+
+func _click(sv: SubViewport, pos: Vector2) -> void:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	ev.position = pos
+	sv.push_input(ev)
+
+
+func test_full_rect_chrome_is_porous() -> void:
+	var card := _make()
+	assert_eq(card.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the full-screen root takes no pick")
+	var dim := card.get_node("Dim") as ColorRect
+	assert_eq(dim.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the scrim is decoration, not a wall")
+	var center := card.get_node("CardCenter") as CenterContainer
+	assert_eq(center.mouse_filter, Control.MOUSE_FILTER_IGNORE, "centering chrome takes no pick")
+	assert_eq(
+		card.card_body().mouse_filter,
+		Control.MOUSE_FILTER_STOP,
+		"the bounded card body is the one surface that blocks"
+	)
+
+
+func test_click_outside_the_card_reaches_the_panel_underneath() -> void:
+	var sv := SubViewport.new()
+	sv.size = Vector2i(1280, 720)
+	add_child_autofree(sv)
+	var probe := _pick_probe(sv)
+	var got: Array = []
+	probe.gui_input.connect(func(ev: InputEvent): got.append(ev))
+	var card := ControlsCard.new()
+	sv.add_child(card)  # parented LAST, exactly as onboarding_controller mounts it into $HUD
+	card.open()
+	await get_tree().process_frame
+	var body := card.card_body().get_global_rect()
+	assert_false(body.has_point(Vector2(40, 40)), "the probe point really is outside the card")
+	_click(sv, Vector2(40, 40))
+	await get_tree().process_frame
+	assert_eq(got.size(), 1, "the modal underneath still gets clicks the handbook does not own")
+
+
+func test_click_on_the_card_is_still_swallowed_by_the_card() -> void:
+	var sv := SubViewport.new()
+	sv.size = Vector2i(1280, 720)
+	add_child_autofree(sv)
+	var probe := _pick_probe(sv)
+	var got: Array = []
+	probe.gui_input.connect(func(ev: InputEvent): got.append(ev))
+	var card := ControlsCard.new()
+	sv.add_child(card)
+	card.open()
+	await get_tree().process_frame
+	_click(sv, card.card_body().get_global_rect().get_center())
+	await get_tree().process_frame
+	assert_eq(got.size(), 0, "a click on the handbook itself never leaks to what is behind it")

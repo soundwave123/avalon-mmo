@@ -1,5 +1,6 @@
 class_name TradeOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-363: the master-side trade coordinator — MASTER owns the whole trade session (state authority
 # lives here, per the server-authority rule). The world resolves BOTH identities from live sessions
@@ -110,7 +111,7 @@ func _confirm(cid: int, params: Dictionary) -> Dictionary:
 		_CM.get_inventory(b),
 		ServicesStore.get_coins(a),
 		ServicesStore.get_coins(b),
-		params.get("item_registry", {})
+		_RI.shaped(params, "item_registry", {})
 	)
 	_TL.close(_store, int(session["id"]))
 	if not bool(plan.get("ok", false)):
@@ -119,7 +120,7 @@ func _confirm(cid: int, params: Dictionary) -> Dictionary:
 			"reason": "aborted_" + str(plan.get("reason", "invalid")),
 			"views": _ended_views(session),
 		}
-	if not _persist_swap(a, b, plan, params.get("item_registry", {})):
+	if not _persist_swap(a, b, plan, _RI.shaped(params, "item_registry", {})):
 		return {"ended": true, "reason": "aborted_persist_failed", "views": _ended_views(session)}
 	return {"ended": true, "completed": true, "reason": "", "views": _ended_views(session)}
 

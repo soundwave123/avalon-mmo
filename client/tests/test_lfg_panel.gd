@@ -162,8 +162,12 @@ func test_close_button_hides_the_window() -> void:
 
 
 func test_open_panel_clears_the_hud_safe_zone() -> void:
+	# T-747: sized from the LIVE content rect, not a literal or even the constants — the client
+	# really does run at this base now, so this asserts clearance at the real default.
+	UiViewport.normalize_headless(self)
+	await get_tree().process_frame
 	var root := Control.new()
-	root.size = Vector2(HudSafeZone.BASE_WIDTH, HudSafeZone.BASE_HEIGHT)
+	root.size = get_tree().root.get_visible_rect().size
 	add_child_autofree(root)
 	_panel.get_parent().remove_child(_panel)
 	root.add_child(_panel)
@@ -177,3 +181,30 @@ func test_open_panel_clears_the_hud_safe_zone() -> void:
 	# Restore ownership so after_each's plain queue_free doesn't race root's autofree cascade.
 	root.remove_child(_panel)
 	add_child(_panel)
+
+
+# ---- T-755: BBCode injection through a board name ------------------------------
+#
+# bbcode_enabled label + meta_clicked -> party_invite. A board row is the one place this panel
+# renders another player's identity, so it is the one place the escape has to hold.
+func test_hostile_board_name_renders_literally_and_forges_no_invite_link() -> void:
+	(
+		_panel
+		. receive(
+			_board(
+				[
+					{"name": "[url=invite|victim]join[/url]", "level": 10, "role": "tank"},
+					{"name": "honest", "level": 11, "role": "heal"},
+				]
+			)
+		)
+	)
+	var body := _panel.body_text()
+	assert_eq(body.count("[url=invite|"), 2, "one live invite link per row, no forged extras")
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = body
+	var parsed := rtl.get_parsed_text()
+	assert_string_contains(parsed, "[url=invite|victim]join[/url]", "the name renders as text")
+	assert_string_contains(parsed, "honest", "the row below is not swallowed")

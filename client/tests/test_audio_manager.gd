@@ -13,6 +13,33 @@ func _am():
 	return am
 
 
+# T-756: the Music bus is process-global AudioServer state, not per-test state.
+# _ensure_music_bus() below ADDS a bus that nothing ever removed, and every duck test writes
+# that bus's volume — so this file leaked audio state forward into every later test in the same
+# process (test_music_bed.gd builds the same bus and reads it). T-752 left a single manual
+# `am.set_music_volume_db(0.0)` at the tail of one test, which restores an ASSUMED default
+# rather than the value that was actually there, and is skipped entirely the moment an assert
+# above it fails. Snapshot the real prior state; restore it unconditionally.
+var _music_bus_existed := false
+var _music_bus_db := 0.0
+
+
+func before_each() -> void:
+	var idx := AudioServer.get_bus_index(AudioManager.MUSIC_BUS)
+	_music_bus_existed = idx != -1
+	_music_bus_db = AudioServer.get_bus_volume_db(idx) if _music_bus_existed else 0.0
+
+
+func after_each() -> void:
+	var idx := AudioServer.get_bus_index(AudioManager.MUSIC_BUS)
+	if idx == -1:
+		return
+	if _music_bus_existed:
+		AudioServer.set_bus_volume_db(idx, _music_bus_db)
+	else:
+		AudioServer.remove_bus(idx)  # this file created it — leave the server as we found it
+
+
 func test_ambient_stream_loaded_and_looping() -> void:
 	var am = _am()
 	assert_not_null(am.ambient, "ambient AudioStreamPlayer exists")
@@ -129,26 +156,127 @@ func test_charge_progress_ramps_pitch_up_then_stop_ends_it() -> void:
 	assert_false(am.is_charging(), "stop_charge ends the layer (impact / interrupt)")
 
 
-# T-503: the impact ducks the Music bus, then _process recovers it back toward 0 dB.
-func test_music_duck_dips_the_bus_and_recovers() -> void:
+# The Music bus is created by MusicBedLayer, which may not have been built yet in this process.
+# Create it (bus only — no bed players, no WAV loads) so the duck tests below always really assert
+# instead of taking the "no bus, nothing to check" branch the T-503 version could silently take.
+func _ensure_music_bus() -> int:
+	if AudioServer.get_bus_index(AudioManager.MUSIC_BUS) == -1:
+		var m := MusicBedLayer.new()
+		m._ensure_bus()
+		m.free()
+	return AudioServer.get_bus_index(AudioManager.MUSIC_BUS)
+
+
+# A 40% Music slider, in the dB the settings panel actually sends (settings_panel._slider_db:
+# lerp(-40, 0, pct/100)). Named because the whole point of these tests is that the duck is
+# measured RELATIVE to a real slider position, never against an implied full-volume default.
+const USER_40_PCT_DB := -24.0
+
+
+# T-503/T-752: the impact ducks the Music bus RELATIVE to the player's Music slider and recovers to
+# that level. The T-503 version of this test set no slider level and asserted recovery to 0.0 dB —
+# it codified the bug rather than catching it: at this 40% (-24 dB) setting the old absolute
+# -12 dB "duck" was a +12 dB BOOST, and the recovery ramp then parked the bus at full volume.
+func test_music_duck_dips_relative_to_the_user_level_and_recovers_to_it() -> void:
 	var am = _am()
-	var bus := AudioServer.get_bus_index(AudioManager.MUSIC_BUS)
-	if bus == -1:  # no Music bus in this headless run -> duck is a safe no-op, nothing to assert
-		am.duck_music()  # must not crash
-		assert_true(true, "duck_music is a safe no-op without the Music bus")
-		return
+	var bus := _ensure_music_bus()
+	assert_ne(bus, -1, "the Music bus exists for this test")
+	am.set_music_volume_db(USER_40_PCT_DB)
+	assert_almost_eq(
+		AudioServer.get_bus_volume_db(bus),
+		USER_40_PCT_DB,
+		0.001,
+		"the user's Music slider sets the bus (routed through AudioManager, T-752)"
+	)
 	am.duck_music()
 	assert_almost_eq(
 		AudioServer.get_bus_volume_db(bus),
-		AudioManager.MUSIC_DUCK_DB,
+		USER_40_PCT_DB + AudioManager.MUSIC_DUCK_DB,
 		0.001,
-		"duck_music dips the Music bus"
+		"the duck SUBTRACTS from the user's level (composed, not an absolute -12 dB)"
+	)
+	assert_lt(
+		AudioServer.get_bus_volume_db(bus),
+		USER_40_PCT_DB,
+		"a duck is quieter than the user's level — at 40% the old absolute duck was +12 dB LOUDER"
 	)
 	for _i in range(120):  # ~2s of recovery at 60fps — well past the ~0.5s ramp
 		am._process(0.016)
 	assert_almost_eq(
-		AudioServer.get_bus_volume_db(bus), 0.0, 0.01, "the duck recovers back to 0 dB"
+		AudioServer.get_bus_volume_db(bus),
+		USER_40_PCT_DB,
+		0.01,
+		"recovery lands back on the user's level, NOT on full volume"
 	)
+	# (T-756: the AudioServer restore moved to after_each — it must not depend on the asserts
+	# above this line all having passed.)
+
+
+# T-752: the invariant, swept across the slider — a duck can never make the score louder, at any
+# position, and recovery always returns exactly to the chosen level.
+func test_duck_never_exceeds_the_user_level_at_any_slider_position() -> void:
+	var am = _am()
+	assert_ne(_ensure_music_bus(), -1, "the Music bus exists for this test")
+	for user_db: float in [0.0, -6.0, USER_40_PCT_DB, -30.0, -40.0]:
+		am.set_music_volume_db(user_db)
+		am.duck_music()
+		assert_almost_eq(
+			am.music_bus_db(),
+			user_db + AudioManager.MUSIC_DUCK_DB,
+			0.001,
+			"duck at %.1f dB = user + duck" % user_db
+		)
+		assert_lt(
+			am.music_bus_db(), user_db, "the duck never exceeds the user level at %.1f dB" % user_db
+		)
+		for _i in range(120):
+			am._process(0.016)
+		assert_almost_eq(am.music_bus_db(), user_db, 0.01, "recovers to %.1f dB" % user_db)
+	am.set_music_volume_db(0.0)
+
+
+# T-752: the composition holds in the other order too — dragging the slider DURING a duck must keep
+# the dip (the old code would have had the slider write win and cancel the duck outright).
+func test_moving_the_slider_mid_duck_keeps_the_dip() -> void:
+	var am = _am()
+	assert_ne(_ensure_music_bus(), -1, "the Music bus exists for this test")
+	am.duck_music()
+	am.set_music_volume_db(-20.0)
+	assert_almost_eq(
+		am.music_bus_db(),
+		-20.0 + AudioManager.MUSIC_DUCK_DB,
+		0.001,
+		"a slider move mid-duck re-composes; it does not cancel the dip"
+	)
+	am.set_music_volume_db(0.0)
+
+
+# T-752: the bus-name literal drift ("Music" written out in both files) is gone — one const. Proved
+# end-to-end rather than by string identity: the bus AudioManager ducks is the bus the music beds
+# actually route their playback to.
+func test_the_duck_targets_the_bus_the_music_beds_play_on() -> void:
+	var m := MusicBedLayer.new()
+	add_child_autofree(m)
+	var routed := ""
+	for c in m.get_children():
+		if c is AudioStreamPlayer:
+			routed = str((c as AudioStreamPlayer).bus)
+	assert_eq(routed, AudioManager.MUSIC_BUS, "the ducked bus is the one the beds play on")
+
+
+# T-752 (bonus): ~50 sources sum into Master with no headroom protection. One hard limiter, at its
+# default -0.3 dBFS ceiling (inaudible below the ceiling), installed exactly once however many
+# AudioManagers are built.
+func test_master_carries_exactly_one_hard_limiter() -> void:
+	_am()  # _ready installs it
+	_am()  # a second manager must not stack a second limiter
+	var bus := AudioServer.get_bus_index(AudioManager.MASTER_BUS)
+	assert_ne(bus, -1, "a Master bus exists")
+	var limiters := 0
+	for i in AudioServer.get_bus_effect_count(bus):
+		if AudioServer.get_bus_effect(bus, i) is AudioEffectHardLimiter:
+			limiters += 1
+	assert_eq(limiters, 1, "exactly one hard limiter on Master (idempotent)")
 
 
 # T-078: the settings menu drives these volume setters.

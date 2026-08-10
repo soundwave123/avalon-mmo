@@ -13,10 +13,47 @@ run/max_fps=0
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+; T-747 UI STRETCH. Read this before touching any key in this block.
+;
+; viewport_width/height is the CONTENT BASE, not the window. Every HudSafeZone constant, every
+; T-396 "anchor proportionally, offset absolutely" pixel offset and all 91 UI files were authored
+; against 1280x720 (verified by the 2026-08-09 full-manual audit, item 2) — the project declared
+; 1920x1080 with no stretch keys at all, so the HUD was pixel-mapped and every safe-zone
+; intersects() was wrong at every real resolution (the HUD is ~0.45% of a 4K screen).
+;
+; canvas_items + expand makes the authored base TRUE again: the 2D canvas is scaled by the
+; window/base ratio while 3D and text keep rendering at native resolution, and `expand` grows the
+; content on the wide axis instead of letterboxing, so an ultrawide sees MORE world (correct for
+; an MMO) rather than black bars. Only the base HEIGHT is guaranteed under `expand` — see the
+; expand-aware accessors in hud_safe_zone.gd before baking any new absolute x.
+;
+; window_width/height_override is what keeps the OS window opening at a sane 1920x1080 on the
+; owner's monitor: the override sizes the WINDOW, viewport_width/height sizes the CONTENT. Both
+; are 16:9, so the shipped client's content lands at exactly 1280x720 with a clean 1.5x stretch.
+;
+; COORDINATE SPACES now differ and the difference is load-bearing (measured on 4.7.1, see
+; ui_viewport.gd): Control rects, Camera3D.unproject_position and get_visible_rect() are CONTENT
+; space; Window.size, Viewport.size, DisplayServer.window_get_size, Input.parse_input_event
+; positions and viewport texture captures (screenshots) are WINDOW space. Convert with
+; UiViewport.content_to_window / window_to_content — never mix them.
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/window_width_override=1920
+window/size/window_height_override=1080
 window/size/resizable=true
-window/vsync/vsync_mode=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+; T-753 VSYNC DEFAULT. 1 = VSYNC_ENABLED (was 0/disabled). This is a correctness default, not a
+; perf one: physics ticks at a fixed 60 Hz and the local player is the only body moved from
+; _physics_process, so with the render loop uncapped your OWN character advances in 60 Hz steps
+; while every remote player and NPC is interpolated per rendered frame. The result is that
+; everyone else looks smooth and you look like the broken one. Locking presentation to the
+; monitor's refresh removes the mismatch on the common 60 Hz case and bounds it everywhere else.
+; It also stops the client spinning the GPU at several hundred fps to draw a village.
+; Still a player choice — Options → Video → VSync toggles it live (settings_panel._apply_vsync),
+; and the saved user setting overrides this on load. No fps-cap slider yet (deliberate follow-up).
+window/vsync/vsync_mode=1
 
 [input_devices]
 
@@ -26,6 +63,31 @@ pointing/emulate_touch_from_mouse=false
 
 limits/debugger/max_chars_per_second=32768
 limits/debugger/max_queued_messages=2048
+
+[physics]
+
+; T-753. Read this before adding a key here.
+;
+; physics_jitter_fix: engine default is 0.5. The manual's own guidance is to set it to 0 for
+; NETWORKED games, and Avalon is one. The jitter-fix nudges the physics clock to hide drift
+; between the physics rate and an unsynchronised render rate — it does that by making a physics
+; step's wall-clock duration differ from its nominal 1/60 s. Avalon's client-side prediction
+; integrates movement against that step (local_player._physics_process → MovementPredictor) and
+; the world server integrates against a true 1/60 s, so the fudge is pure client/server
+; divergence: it shows up as reconciliation snapping in apply_server_position that no one asked
+; for. Setting 0.0 makes the client's step match the server's assumption exactly.
+physics/common/physics_jitter_fix=0.0
+
+; physics_interpolation is deliberately NOT enabled — see the T-753 ticket for the full reasoning.
+; Short version: it is a GLOBAL switch, and the client's dominant motion source is not physics. The
+; remote players, mobs and NPCs are all moved by snapshot-buffer sampling on the RENDER callback
+; (remote_entities_layer / npc_world_layer _process). Turning interpolation on would have the
+; render server re-interpolate transforms those layers already rewrite every frame — that makes
+; them worse, not smoother. Doing it correctly means opting those subtrees out with
+; physics_interpolation_mode = OFF and leaving it on for the local player alone, which touches
+; remote_entities_layer.gd (owned by another lane this wave) and needs an on-GPU judder A/B that a
+; headless lane cannot perform. Filed as the T-753 follow-up. VSync-on (above) is the part of the
+; judder fix that is safe to land now.
 
 [rendering]
 

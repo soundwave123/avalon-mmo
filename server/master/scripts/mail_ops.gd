@@ -1,5 +1,6 @@
 class_name MailOps
 extends RefCounted
+const _RI = preload("res://scripts/rpc_intake.gd")  # T-754 shape guards
 
 # T-613: master-owned mail coordinator. The world proximity-gates (mailbox is bundled onto the
 # banker's existing "bank" service hub, world_rpc.gd _service_intent) and injects the item registry;
@@ -18,7 +19,7 @@ static func op(params: Dictionary) -> Dictionary:
 	var cid := _char_id(str(params.get("username", "")))
 	if cid < 0:
 		return {"error": "unknown_character"}
-	var registry: Dictionary = params.get("item_registry", {})
+	var registry: Dictionary = _RI.shaped(params, "item_registry", {})
 	match str(params.get("action", "inbox")):
 		"inbox":
 			return _full_view(cid, registry)

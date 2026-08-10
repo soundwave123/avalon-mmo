@@ -29,6 +29,12 @@ static func format_ability(
 	show_tick: bool = false,
 	kind: String = ""
 ) -> Dictionary:
+	# T-755: combatant names are player usernames (or mob names) coming off the wire, and BOTH
+	# consumers of these lines render them into a bbcode_enabled label (combat_log_panel and, for
+	# the combat channel, chat_panel). Neutralise at the entry point so neither consumer has to
+	# remember — and so the escape cannot be lost by a future third consumer.
+	caster_name = BBCode.escape(caster_name)
+	target_name = BBCode.escape(target_name)
 	var prefix := _prefix(tick, show_tick)
 	# T-586: environmental fall damage has no caster — its own line, tagged by source kind.
 	if kind == "falling":
@@ -65,14 +71,22 @@ static func format_heal(
 	caster_name: String, target_name: String, amount: int, tick: int, show_tick: bool = false
 ) -> Dictionary:
 	return _line(
-		_prefix(tick, show_tick) + "%s heals %s for %d." % [caster_name, target_name, amount],
+		(
+			_prefix(tick, show_tick)
+			+ (
+				"%s heals %s for %d."
+				% [BBCode.escape(caster_name), BBCode.escape(target_name), amount]
+			)
+		),
 		COLOR_HEAL,
 		"heal"
 	)
 
 
 static func format_loot(item_name: String, tick: int = -1, show_tick: bool = false) -> Dictionary:
-	return _line(_prefix(tick, show_tick) + "You receive %s." % item_name, COLOR_LOOT, "loot")
+	return _line(
+		_prefix(tick, show_tick) + "You receive %s." % BBCode.escape(item_name), COLOR_LOOT, "loot"
+	)
 
 
 static func format_system(message: String) -> Dictionary:

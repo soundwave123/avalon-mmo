@@ -108,12 +108,28 @@ const CHARGE_PITCH_HI := 1.35  # cast full (the rising telegraph)
 
 # T-503: a brief MUSIC-BED duck on the heavy frost impact — a simple bus dB dip that recovers over
 # ~0.5s so the score gets out of the way of the money hit (era-direction §11.5 "sound weight").
-# Ducks the "Music" bus (MusicBedLayer, T-416) additively via the bus volume, which MusicBedLayer
-# never touches (it drives per-player volume only) — so this never fights the crossfade. No-op when
-# the bus is absent (headless / music not built).
-const MUSIC_BUS := "Music"
+# Ducks the "Music" bus (MusicBedLayer, T-416) via the bus volume, which MusicBedLayer never
+# touches (it drives per-player volume only) — so this never fights the crossfade. No-op when the
+# bus is absent (headless / music not built).
+#
+# T-752: the duck is a RELATIVE term, never an absolute bus level, and THIS MANAGER IS THE MUSIC
+# BUS'S ONLY VOLUME WRITER — the settings panel routes its Music slider through
+# set_music_volume_db() instead of calling set_bus_volume_db itself. Before that both wrote the bus
+# absolutely: for a player on a 40% Music slider (-24 dB, settings_panel._slider_db) a -12 dB
+# "duck" was +12 dB — the score jumped LOUDER on every frost impact — and the recovery ramp then
+# parked the bus at 0 dB, silently throwing the slider away until they next touched it. Composing
+# (user + duck) makes the dip a real dip at every slider position and lands the recovery back on
+# the player's chosen level.
+const MUSIC_BUS := MusicBedLayer.BUS_NAME  # one const: the layer that CREATES the bus names it
 const MUSIC_DUCK_DB := -12.0
 const MUSIC_DUCK_RECOVER_DB_PER_SEC := 24.0  # ~0.5s back up from a full -12 dB dip
+
+# T-752 (bonus): a hard limiter on Master. ~50 sources (five global beds, the six-slot one-shot
+# pool, and one positional emitter per nearby entity) sum into one bus with no headroom
+# protection. AudioEffectHardLimiter at its default ceiling (-0.3 dBFS) is inaudible BELOW that
+# ceiling — it only acts on peaks that would otherwise clip — so it changes nothing the player
+# hears today and stops a busy moment (an impact inside a crowded market) from clipping the sum.
+const MASTER_BUS := "Master"
 
 # T-697 fix 8: the global-bed dB derivation (birdsong/meadow/hum/crickets/rain + wind pitch) runs
 # at ~10 Hz, not per frame — its gates (day clock, era, muffle, rain mix) move over seconds, and
@@ -134,11 +150,13 @@ var _sfx_volume_db := 0.0  # T-078: user SFX offset (dB) added to every one-shot
 var _ambient_volume_db := 0.0  # T-078: user ambience offset (dB) on top of AMBIENT_BASE_DB
 var _indoor_muffle_db := 0.0  # T-187: extra attenuation while indoors, layered on the user offset
 var _music_duck_db := 0.0  # T-503: current dip applied to the Music bus (<=0; 0 = no duck)
+var _user_music_db := 0.0  # T-752: the user's Music-slider level (dB offset; 0 = full/design)
 var _rain_mix := 0.0  # T-675: smoothed rain gate mix in [0,1] (0 = dry, 1 = full shower)
 var _bed_accum := _BED_TICK_S  # T-697 fix 8: bed volume-tick accumulator (born due)
 
 
 func _ready() -> void:
+	ensure_master_limiter()  # T-752: headroom protection before anything starts playing
 	ambient = AudioStreamPlayer.new()
 	ambient.name = "Ambient"
 	var s := load(AMBIENT) as AudioStream
@@ -284,13 +302,51 @@ func is_charging() -> bool:
 # recovery ramp lives in _process; no-op cleanly when the Music bus doesn't exist.
 func duck_music(amount_db := MUSIC_DUCK_DB) -> void:
 	_music_duck_db = minf(_music_duck_db, amount_db)
-	_apply_music_duck()
+	_apply_music_bus()
 
 
-func _apply_music_duck() -> void:
+# T-752: the composed Music-bus level — the user's slider level with the transient duck on top. The
+# duck term is clamped at or below 0 here as well as at its call sites, so a duck can only ever
+# ATTENUATE: the bus is never louder than the level the player chose, at any slider position.
+func music_bus_db() -> float:
+	return _user_music_db + minf(0.0, _music_duck_db)
+
+
+# T-752: the single writer of the Music bus volume (see MUSIC_BUS). No-op without the bus.
+func _apply_music_bus() -> void:
 	var bus := AudioServer.get_bus_index(MUSIC_BUS)
 	if bus != -1:
-		AudioServer.set_bus_volume_db(bus, _music_duck_db)
+		AudioServer.set_bus_volume_db(bus, music_bus_db())
+
+
+# T-752: the settings panel's Music slider routes HERE (settings_panel._apply_music) rather than
+# writing the bus itself, so the user level and the impact duck compose instead of stomping each
+# other. Takes a dB OFFSET like the ambience/SFX setters (0.0 = full, negative = quieter).
+func set_music_volume_db(offset_db: float) -> void:
+	_user_music_db = offset_db
+	_apply_music_bus()
+
+
+# Mute is an independent bus property (the duck never touches it), but it lives here so the whole
+# Music bus has one owner.
+func set_music_muted(muted: bool) -> void:
+	var bus := AudioServer.get_bus_index(MUSIC_BUS)
+	if bus != -1:
+		AudioServer.set_bus_mute(bus, muted)
+
+
+# T-752 (bonus, see MASTER_BUS): install the Master hard limiter once. Idempotent — a second
+# AudioManager (or a re-_ready) finds the existing one and leaves the chain alone. Returns false
+# when there is no Master bus at all (nothing to protect).
+static func ensure_master_limiter() -> bool:
+	var bus := AudioServer.get_bus_index(MASTER_BUS)
+	if bus == -1:
+		return false
+	for i in AudioServer.get_bus_effect_count(bus):
+		if AudioServer.get_bus_effect(bus, i) is AudioEffectHardLimiter:
+			return true
+	AudioServer.add_bus_effect(bus, AudioEffectHardLimiter.new())
+	return true
 
 
 # T-078: settings-menu volume setters. Both take a dB OFFSET (0.0 = the design level, negative =
@@ -326,9 +382,10 @@ func _apply_ambient_volume() -> void:
 # to full daylight when there's no world (headless tests keep the bed at its base level).
 func _process(delta: float) -> void:
 	# T-503: recover the Music-bus duck back toward 0 dB after an impact dip.
+	# T-752: the DUCK TERM recovers to 0 — which lands the composed bus back on the user's level.
 	if _music_duck_db < 0.0:
 		_music_duck_db = minf(0.0, _music_duck_db + MUSIC_DUCK_RECOVER_DB_PER_SEC * delta)
-		_apply_music_duck()
+		_apply_music_bus()
 	if birdsong == null:
 		return
 	# T-697 fix 8: throttle the bed derivation to ~10 Hz; dt carries the full elapsed time so the

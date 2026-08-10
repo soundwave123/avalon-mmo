@@ -75,6 +75,7 @@ var _threat_table = null  # ThreatTable
 var _world_regions = _WR.load_default()  # T-594: sleeping-zone region table (nearest-origin gate)
 var _qa_probe = _QAPROBE.boot()  # T-561: anomaly sentinel; null unless AVALON_QA_SENTINEL=1 (OFF)
 var _resource_ticker = _RT.new()  # T-071: resource dynamics run per server TICK (tick-edge driver)
+var _asm = _ASM.new()  # T-698: stateless FSM helper, hoisted (was an _ASM.new() per frame)
 var _move_limiter = _MRL.new()  # T-074: per-peer movement budget (units/sec across messages)
 var _intent_limiter = _IRL.new()  # T-382: per-peer budget for master-round-trip intents
 var _move_collision = _MCOL.new()  # T-379: anti-noclip — reject moves crossing barrier data
@@ -96,7 +97,12 @@ var _world_clock = _WCLOCK.new()  # T-734: owns day_t + resync pushes + master c
 
 func _ready() -> void:
 	print("[world] Avalon world server starting")
+	Engine.max_fps = 60  # T-698: headless _process free-ran uncapped for no benefit
+	_boot_services()  # T-749: the wiring tail — the regression test stubs THIS to assert the cap
 
+
+# T-749: _ready()'s wiring tail, verbatim — carved so the cap regression test can stub it out.
+func _boot_services() -> void:
 	_master_client = MasterClient.new()
 	add_child(_master_client)
 	_master_client.connect_to_master(ServerConfig.get_master_host(), ServerConfig.get_master_port())
@@ -203,6 +209,12 @@ func _ready() -> void:
 	_spawn_dispersion = _SPAWN.boot(_move_collision)  # T-373: validated login hubs
 
 
+# T-749: the ONE server-clock read here (~10 sites used to inline the same integer division, which
+# is wrong at any tick rate not dividing 1000). An instance method so the gate test can script it.
+func _now_tick() -> int:
+	return ServerConfig.now_tick()
+
+
 func _process(delta: float) -> void:
 	if _shutting_down:
 		return
@@ -231,15 +243,18 @@ func _process(delta: float) -> void:
 		if cleaned > 0:
 			print("[world] cleanup_expired removed %d old disconnected sessions" % cleaned)
 
+	# T-698: everything below compares ABSOLUTE ticks/msec — one tick-edge gate, same semantics.
+	# The delta-driven work above (handshake timeouts, broadcast, cleanup) stays per-frame.
+	var now_tick: int = _now_tick()
+	if not _resource_ticker.is_new_tick(now_tick):
+		return
+
 	_social_svc.bg_tick(Time.get_ticks_msec())  # T-413: Crownfield leash/score/end pass
-	# T-022/T-025: per-tick cast processing for CASTING players + mob AI tick in the same pass.
-	var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
-	var asm = _ASM.new()
 	# T-026: Advance player combat timers (GCD->IDLE, DEAD->IDLE respawn).
 	var respawn_players: Array[int] = []
 	for pid in _combat_states:
 		var old_state = _combat_states[pid]
-		var new_state = asm.advance_timers(old_state, now_tick)
+		var new_state = _asm.advance_timers(old_state, now_tick)
 		_combat_states[pid] = new_state
 		if (  # DEAD->IDLE transition triggers respawn
 			old_state.state == _CS.CombatStateEnum.DEAD
@@ -249,20 +264,18 @@ func _process(delta: float) -> void:
 	for pid in respawn_players:
 		_handle_player_respawn(pid)
 
-	# Once per SERVER TICK (not per frame): T-062/T-071 resource dynamics (rage/mana/OOC HP + swing
-	# regen) AND T-534 mob AI (shared tick edge → frame-rate-independent chase speed; was per-frame).
-	var new_server_tick: bool = _resource_ticker.is_new_tick(now_tick)
-	if new_server_tick:
-		_resource_ticker.tick_all(_combat_resources, _char_stats, _combat_states, now_tick)
-		_fall.finalize_idle(now_tick)  # T-586: land any open descent run whose mover went idle
+	# T-062/T-071 resource dynamics (rage/mana/OOC HP + swing regen) share the same tick edge.
+	_resource_ticker.tick_all(_combat_resources, _char_stats, _combat_states, now_tick)
+	_fall.finalize_idle(now_tick)  # T-586: land any open descent run whose mover went idle
 
-	var cast_actions: Array = []  # collect before mutating _combat_states
+	var cast_actions: Array = []  # T-022: per-tick cast scan; collect before mutating _combat_states
 	for pid in _combat_states:
 		var cs = _combat_states[pid]
 		if cs.state != _CS.CombatStateEnum.CASTING:
 			continue
-		var pos: Vector3 = PlayerSessions.get_player(pid).get("pos", Vector3.ZERO)
-		cast_actions.append({"pid": pid, "tick": asm.process_cast_tick(cs, pos, now_tick)})
+		# T-698: read-only view (pos is copied out immediately; the dict is never held or mutated).
+		var pos: Vector3 = PlayerSessions.get_player_view(pid).get("pos", Vector3.ZERO)
+		cast_actions.append({"pid": pid, "tick": _asm.process_cast_tick(cs, pos, now_tick)})
 	for entry in cast_actions:
 		var pid: int = entry["pid"]
 		var tick_result = entry["tick"]
@@ -271,17 +284,16 @@ func _process(delta: float) -> void:
 		elif tick_result.status == "cancelled":
 			var cancel_intent := _CS.CombatIntent.new()
 			cancel_intent.type = _CS.IntentType.CANCEL_CAST
-			_combat_states[pid] = asm.tick(_combat_states[pid], cancel_intent, now_tick).new_state
+			_combat_states[pid] = _asm.tick(_combat_states[pid], cancel_intent, now_tick).new_state
 			_send_to_peer(pid, {"type": "cast_cancelled", "reason": tick_result.cancel_reason})
 
-	if new_server_tick:  # T-534: advance mob AI once per SERVER TICK, not per frame
-		_run_mob_ai_tick(now_tick)
-		if _qa_probe != null:  # T-561: opt-in read-only runtime invariant pass
-			_qa_probe.scan(now_tick, _combat_resources, _mobs, _threat_table)
+	_run_mob_ai_tick(now_tick)  # T-534: mob AI once per SERVER TICK (frame-rate-independent chase)
+	if _qa_probe != null:  # T-561: opt-in read-only runtime invariant pass
+		_qa_probe.scan(now_tick, _combat_resources, _mobs, _threat_table)
 
 
 func _broadcast_positions() -> void:
-	var bnow: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+	var bnow: int = _now_tick()
 	var frames: Array = _BB.positions_frames_aoi(  # T-331 instance + T-370 AOI + T-401 titles
 		PlayerSessions.get_positions(),
 		_combat_resources,
@@ -329,7 +341,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	var username: String = str(player.get("username", "unknown"))
 	print("[world] disconnected peer_id=%d user=%s" % [peer_id, username])
 	_tel("session_end", peer_id)  # T-186
-	var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+	var now_tick: int = _now_tick()
 	_recap.on_disconnect(peer_id, username, now_tick)  # T-429: close private session window
 	if username != "unknown" and username != "":  # T-360: stamp the rested offline-window start
 		_master_client.call_master("rested_logout", {"username": username})
@@ -361,7 +373,7 @@ func _receive_message(data: Dictionary, _mirror: bool = false) -> void:
 		_on_use_ability(sender_id, data)
 	elif _recap.handles(msg_type) and _intent_limiter.allow(sender_id, Time.get_ticks_msec()):
 		var username := str(_connected_players.get(sender_id, {}).get("username", ""))
-		var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+		var now_tick: int = _now_tick()
 		_recap.handle(msg_type, sender_id, username, now_tick)
 	elif _social_svc.handles(msg_type):  # T-361/T-363: chat + trade + friends/ignore hub
 		_social_svc.handle(msg_type, sender_id, data, Time.get_ticks_msec())
@@ -542,14 +554,15 @@ func _apply_combat_stats(
 
 
 func _on_request_move(sender_id: int, data: Dictionary) -> void:
-	var player: Dictionary = PlayerSessions.get_player(sender_id)
+	# T-698: read-only view (audited: reads pos/username only; the write uses update_position).
+	var player: Dictionary = PlayerSessions.get_player_view(sender_id)
 	if player.is_empty():
 		push_warning("[world] move from unknown peer_id=%d" % sender_id)
 		return
 
 	var mcs = _combat_states.get(sender_id)  # T-063: a rooted or stunned player can't move (CC).
 	if mcs != null:
-		var nt: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+		var nt: int = _now_tick()
 		if nt < mcs.rooted_until or nt < mcs.stunned_until:
 			return
 
@@ -557,7 +570,7 @@ func _on_request_move(sender_id: int, data: Dictionary) -> void:
 	if current_pos == null:
 		current_pos = Vector3.ZERO
 	# T-379: intake validation (speed cap, bounds, anti-noclip) → movement_collision.resolve.
-	var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+	var now_tick: int = _now_tick()
 	var delta := Vector2(float(data.get("dx", 0)), float(data.get("dy", 0)))
 	var current2 := Vector2(current_pos.x, current_pos.y)
 	var res: Dictionary = _mount_svc.resolve_move(
@@ -602,7 +615,7 @@ func _on_use_ability(sender_id: int, data: Dictionary) -> void:
 	var caster_snap = _snap.caster(sender_id)
 	var target_snap = _snap.target(target_id, target_player, target_mob, target_cs)
 
-	var now: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)  # server clock
+	var now: int = _now_tick()  # server clock
 
 	var exec_result = _AE.execute_ability(
 		caster_snap, target_snap, ability, now, _rng, _threat_table, _ability_registry, _pvp_ok
@@ -664,7 +677,7 @@ func _on_cast_complete(caster_id: int) -> void:
 	var target_snap = _snap.target(target_id, target_player, target_mob, target_cs)
 
 	# T-068: completion re-validates (death/resource/range/LoS) then runs the same executor dispatch.
-	var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+	var now_tick: int = _now_tick()
 	var exec_result = _AE.complete_cast(
 		caster_snap, target_snap, ability, now_tick, _rng, _threat_table, _ability_registry, _pvp_ok
 	)
@@ -768,9 +781,8 @@ func _check_death_player(pid: int, now: int) -> void:
 	var cs = _combat_states.get(pid)
 	if cs == null:
 		return
-	var asm = _ASM.new()
 	var was_dead: bool = cs.state == _CS.CombatStateEnum.DEAD
-	_combat_states[pid] = asm.check_death_transition(
+	_combat_states[pid] = _asm.check_death_transition(
 		cs, res, now, ServerConfig.PLAYER_RESPAWN_TICKS
 	)
 	# T-364: bounded death penalty — wear gear ONCE on the alive→dead edge (server-observed).
@@ -816,34 +828,14 @@ func _check_death_mob(mob_id: int, now: int) -> void:  # T-026: check if mob die
 	if not _CR.is_dead(mob.resources):
 		return
 	var attackers: Array = _threat_table.get_attackers(mob_id)
-	var asm = _ASM.new()
-	mob.combat_state = asm.check_death_transition(
+	mob.combat_state = _asm.check_death_transition(
 		mob.combat_state, mob.resources, now, _ML.next_respawn_ticks(mob, _rng)
 	)
 	_mobs[mob_id] = mob
 	var recipients: Array = _KC.recipients(_party_store, attackers, _combat_resources, mob.position)
 	# T-699: region-scoped to the mob's instance+region ∪ the kill-credit recipients + their parties.
-	(
-		_events
-		. at(
-			{
-				"type": "mob_death",
-				"mob_id": mob_id,
-				"mob_name": mob.name,
-				"target_id": mob_id,
-				"target_name": mob.name,
-				"caster_name": "",
-				"caster_id": "",
-				"hp": 0,
-				"max_hp": mob.resources.max_hp,
-				# T-034/T-293: kill credit — threat-holders + party-mates; type for quest match.
-				"credited_player_ids": recipients,
-				"mob_type_id": mob.mob_type_id,
-			},
-			int(mob.instance_id),
-			mob.position,
-			recipients
-		)
+	_events.at(
+		_ED.mob_death(mob_id, mob, recipients), int(mob.instance_id), mob.position, recipients
 	)
 	_recap.finish_target(mob_id, str(mob.mob_type_id), mob.name, now)
 	# T-042/TD-002 + T-358: server-observed kill credit + mob-kill XP (client never asserts a kill).
@@ -885,14 +877,13 @@ func _run_mob_ai_tick(now: int) -> void:
 	var awake: Dictionary = _SZ.awake_regions(
 		_SZ.player_grounds(players), _world_regions, ServerConfig.get_zone_wake_margin()
 	)
-	var asm = _ASM.new()
 	var ai_results: Array = []  # collect before applying (don't mutate _mobs while iterating)
 	for mob_id in _mobs:
 		var mob = _mobs[mob_id]
 		if not _SZ.is_mob_awake(mob, awake, _world_regions):
 			continue  # T-594: sleeping zone — no player present, this mob does not tick
 		var old_state = mob.combat_state
-		mob.combat_state = asm.advance_timers(mob.combat_state, now)
+		mob.combat_state = _asm.advance_timers(mob.combat_state, now)
 		if (  # T-026: DEAD→IDLE mob respawn
 			old_state.state == _CS.CombatStateEnum.DEAD
 			and mob.combat_state.state == _CS.CombatStateEnum.IDLE
@@ -924,7 +915,7 @@ func _apply_mob_events(events: Array) -> void:
 			amount = _MD.non_lethal_cap(mob, amount, _combat_resources.get(target_id, null))  # T-560
 			if _combat_resources.has(target_id) and amount > 0:
 				_mount_svc.dismount(target_id, "damage")
-				var now_tick: int = Time.get_ticks_msec() / (1000 / ServerConfig.TICK_RATE_HZ)
+				var now_tick: int = _now_tick()
 				_combat_resources[target_id] = _combat_resources[target_id].apply_damage(amount)
 				var tcr: CombatResources = _combat_resources[target_id]  # T-062: rage on hit
 				if tcr.resource_kind == "rage":

@@ -135,8 +135,10 @@ func _run(id: int, cmd: Dictionary) -> void:
 			)
 		"wheel":  # T-126: scroll steps>0 zooms in (wheel up), steps<0 zooms out
 			_op_wheel(id, int(cmd.get("steps", 1)))
-		"ui":
-			_ack(id, {"ok": true, "controls": _dump_controls(get_tree().root, [])})
+		"ui":  # rects are CONTENT space; multiply by content_scale for screenshot pixels (T-747)
+			var scale := UiViewport.content_scale(get_viewport())
+			var controls := _dump_controls(get_tree().root, [])
+			_ack(id, {"ok": true, "controls": controls, "content_scale": scale})
 		"state":
 			_ack(id, {"ok": true, "state": _dump_state()})
 		"observe":  # T-562: ONE semantic snapshot for an LLM play-agent (reuses HUD/nameplate/log)
@@ -271,38 +273,14 @@ func _run(id: int, cmd: Dictionary) -> void:
 			_ack(id, {"ok": false, "error": "unknown op: %s" % cmd.get("op", "")})
 
 
+# Captures live in PilotCapture (pilot.gd is at the 1000-line cap). Both return WINDOW-pixel
+# images — see that module for why the pilot's screenshot->click loop needs no conversion.
 func _op_screenshot(id: int, path: String) -> void:
-	# Wait one drawn frame so pending UI changes land in the capture.
-	await RenderingServer.frame_post_draw
-	var img: Image = get_viewport().get_texture().get_image()
-	var err := img.save_png(path)
-	_ack(id, {"ok": err == OK, "path": path, "width": img.get_width(), "height": img.get_height()})
+	_ack(id, await PilotCapture.screenshot(get_viewport(), path))
 
 
-# Capture `frames` drawn frames (every `every`-th) into dir/f_####.png — pilot.py stitches them into
-# a GIF/MP4 so live motion (particles, VFX, day/night, weather) is viewable, not just single frames.
 func _op_record(id: int, frames: int, dir: String, every: int) -> void:
-	DirAccess.make_dir_recursive_absolute(dir)
-	# clear any stale frames from a previous recording
-	var d := DirAccess.open(dir)
-	if d != null:
-		for f in d.get_files():
-			if f.begins_with("f_") and f.ends_with(".png"):
-				d.remove(f)
-	var saved := 0
-	for i in range(frames):
-		await RenderingServer.frame_post_draw
-		if i % every == 0:
-			var img: Image = get_viewport().get_texture().get_image()
-			# downscale before save — a full-res PNG encodes at ~2s/frame here (the bottleneck);
-			# a 720-wide frame saves ~10x faster and is plenty for a review clip.
-			if img.get_width() > 720:
-				img.resize(
-					720, int(720.0 * img.get_height() / img.get_width()), Image.INTERPOLATE_BILINEAR
-				)
-			img.save_png(dir.path_join("f_%04d.png" % saved))
-			saved += 1
-	_ack(id, {"ok": true, "dir": dir, "count": saved})
+	_ack(id, await PilotCapture.record(get_viewport(), frames, dir, every))
 
 
 # Record the Master audio bus to a WAV via AudioEffectRecord (the bus DSP tap works regardless of
@@ -345,6 +323,11 @@ func _audio_graph() -> Dictionary:
 			)
 		)
 	var cam := get_viewport().get_camera_3d()
+	# T-752: the mix is measured at the AudioListener3D (LocalPlayer's, on the body); the camera is
+	# only the engine's fallback. Both distances are reported — dist_to_listener decides what you
+	# hear, and their gap is the ~8 m camera boom (orbit: only dist_to_cam should move).
+	var lis: Node3D = get_viewport().get_audio_listener_3d()
+	var ref: Node3D = lis if lis != null else cam
 	var players := []
 	for node in get_tree().root.find_children("*", "AudioStreamPlayer", true, false):
 		players.append(
@@ -354,6 +337,9 @@ func _audio_graph() -> Dictionary:
 		var dist := -1.0
 		if cam != null:
 			dist = cam.global_position.distance_to(node.global_position)
+		var dist_l := -1.0
+		if ref != null:
+			dist_l = ref.global_position.distance_to(node.global_position)
 		(
 			players
 			. append(
@@ -365,10 +351,16 @@ func _audio_graph() -> Dictionary:
 					"unit_db": node.volume_db,
 					"max_distance": node.max_distance,
 					"dist_to_cam": snappedf(dist, 0.1),
+					"dist_to_listener": snappedf(dist_l, 0.1),
 				}
 			)
 		)
-	return {"buses": buses, "players": players, "camera": str(cam.get_path()) if cam else "NONE"}
+	return {
+		"buses": buses,
+		"players": players,
+		"camera": str(cam.get_path()) if cam else "NONE",
+		"listener": str(lis.get_path()) if lis else "NONE(camera is listener)",
+	}
 
 
 # T-142: dev-only benchmark camera for the screenshot wall. Lazily creates ONE standalone Camera3D
@@ -605,26 +597,17 @@ func _op_wheel(id: int, steps: int) -> void:
 			var ev := InputEventMouseButton.new()
 			ev.button_index = btn
 			ev.pressed = pressed
-			ev.position = get_viewport().get_visible_rect().size / 2.0
+			ev.position = PilotMouse.window_centre(self)
 			Input.parse_input_event(ev)
 	Input.flush_buffered_events()
 	_ack(id, {"ok": true, "steps": steps})
 
 
 # Split from _op_click so a synthesized left-click is reusable without a standalone ack
-# (T-623: create_character's gender/class/handbook buttons).
+# (T-623: create_character's gender/class/handbook buttons). `pos` is WINDOW space — the space
+# screenshots are in, so `pilot.py click x y` off a shot needs no conversion (T-747).
 func _click_at(pos: Vector2) -> void:
-	var motion := InputEventMouseMotion.new()
-	motion.position = pos
-	motion.global_position = pos
-	Input.parse_input_event(motion)
-	for pressed in [true, false]:
-		var ev := InputEventMouseButton.new()
-		ev.button_index = MOUSE_BUTTON_LEFT
-		ev.pressed = pressed
-		ev.position = pos
-		ev.global_position = pos
-		Input.parse_input_event(ev)
+	PilotMouse.click_window(pos)
 
 
 func _op_click(id: int, pos: Vector2) -> void:
@@ -638,7 +621,7 @@ func _op_click(id: int, pos: Vector2) -> void:
 func _op_look(id: int, dx: float, dy: float) -> void:
 	var player := _local_player()
 	var before_yaw := player.rotation.y if player != null else 0.0
-	var center := Vector2(get_viewport().get_visible_rect().size) / 2.0
+	var center := PilotMouse.window_centre(self)  # WINDOW space, not the content centre (T-747)
 	var rmb := InputEventMouseButton.new()
 	rmb.button_index = MOUSE_BUTTON_RIGHT
 	rmb.pressed = true
@@ -676,7 +659,7 @@ func _op_look(id: int, dx: float, dy: float) -> void:
 # camera-only orbit (local_player.gd's _orbit_armed/_orbiting) was manual-QA-only.
 func _op_drag(id: int, button_name: String, dx: float, dy: float, secs: float) -> void:
 	var btn := _button_index(button_name)
-	var center := Vector2(get_viewport().get_visible_rect().size) / 2.0
+	var center := PilotMouse.window_centre(self)  # WINDOW space, not the content centre (T-747)
 	var down := InputEventMouseButton.new()
 	down.button_index = btn
 	down.pressed = true
@@ -717,7 +700,10 @@ func _op_click_node(id: int, node_name: String) -> void:
 	if target == null:
 		_ack(id, {"ok": false, "error": "no visible Control named '%s'" % node_name})
 		return
-	_op_click(id, target.get_global_rect().get_center())
+	# get_global_rect() is CONTENT space; injection needs WINDOW space (T-747).
+	_op_click(
+		id, UiViewport.content_to_window(get_viewport(), target.get_global_rect().get_center())
+	)
 
 
 func _find_visible_control(node: Node, node_name: String) -> Control:
@@ -761,29 +747,39 @@ func _op_setvis(id: int, path: String, vis: bool) -> void:
 
 
 # Camera pose for the "scene" op so node AABBs can be projected to screen coordinates offline.
+# T-747: "viewport" was get_viewport().size, which under stretch is the WINDOW size — wrong for
+# this dump's whole purpose, since an offline projection reproduces unproject_position() and that
+# works in CONTENT space. It now reports the content rect, with the window size and scale alongside
+# so a consumer that wants screenshot pixels can multiply instead of guess.
 func _dump_camera() -> Dictionary:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return {}
 	var t := cam.global_transform
+	var content := get_viewport().get_visible_rect().size
 	return {
 		"pos": [t.origin.x, t.origin.y, t.origin.z],
 		"basis_x": [t.basis.x.x, t.basis.x.y, t.basis.x.z],
 		"basis_y": [t.basis.y.x, t.basis.y.y, t.basis.y.z],
 		"basis_z": [t.basis.z.x, t.basis.z.y, t.basis.z.z],
 		"fov": cam.fov,
-		"viewport": [get_viewport().size.x, get_viewport().size.y],
+		"viewport": [content.x, content.y],  # CONTENT space — matches unproject_position
+		"window": [get_viewport().size.x, get_viewport().size.y],  # WINDOW space — screenshot px
+		"content_scale": UiViewport.content_scale(get_viewport()),
 	}
 
 
 # Visual-QA aid ("pick" op): raycast from the camera through a screen pixel and report the
 # collider hit — "what IS that thing on screen?" without walking the pilot around. Note:
 # collision-less visuals (trees, some decor) are invisible to the ray and it hits what's behind.
+# `px` arrives in WINDOW space (it is read off a screenshot, same as the "click" op); camera rays
+# are CONTENT space, so it converts on the way in (T-747).
 func _op_pick(id: int, px: Vector2) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		_ack(id, {"ok": false, "error": "no 3D camera"})
 		return
+	px = UiViewport.window_to_content(get_viewport(), px)
 	var from := cam.project_ray_origin(px)
 	var to := from + cam.project_ray_normal(px) * 300.0
 	var hit := cam.get_world_3d().direct_space_state.intersect_ray(

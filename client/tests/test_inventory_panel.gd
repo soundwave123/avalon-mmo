@@ -201,3 +201,38 @@ func test_uses_solidwindow_frame_with_scroll() -> void:
 	assert_not_null(frame.get_node_or_null("Scroll"), "internal scroll caps the window to 720p")
 	for child in _panel.get_children():
 		assert_false(child is ColorRect, "the hand-rolled ColorRect box is gone")
+
+
+# T-751: the cells carry live hovered/unhovered/activated connections and T-640 drag state, and
+# render() is itself reached FROM those signals (a bag click emits action_selected -> the server
+# replies -> render()). `free()` destroys the emitter mid-emission — the documented crash. This
+# drives the exact re-entrant shape: render() called from inside a cell's own activated handler.
+func test_rebuilding_from_inside_a_cell_signal_does_not_error() -> void:
+	_panel.render(_slots())
+	var cell := _cell_with_name("Wolf Pelt")
+	assert_not_null(cell, "precondition: the bag rendered a live cell")
+	var rebuilt := [0]
+	_panel.action_selected.connect(
+		func(_a):
+			rebuilt[0] += 1
+			_panel.render(_slots())  # re-entrant rebuild, from inside the cell's own emission
+	)
+	cell.activated.emit(MOUSE_BUTTON_LEFT)
+	assert_eq(rebuilt[0], 1, "the click round-tripped and rebuilt the grid")
+	assert_eq(get_errors().size(), 0, "no free-during-emission error from the rebuild")
+	assert_eq(_panel.get_cells().size(), 16 + _panel._EQUIP_SLOTS.size(), "one clean set of cells")
+	assert_not_null(_cell_with_name("Wolf Pelt"), "and the fresh grid still shows the item")
+
+
+# T-751: detach-then-queue_free must leave get_children() holding ONLY the new rows this same
+# frame — the reason the sibling panels remove_child before queueing (a bare queue_free would
+# double every count until the end of the frame).
+func test_a_rebuild_never_doubles_the_grid_within_the_frame() -> void:
+	for _i in range(3):
+		_panel.render(_slots())
+	assert_eq(_panel._bag_grid.get_child_count(), 16, "16 bag cells, not 48")
+	assert_eq(
+		_panel._equip_grid.get_child_count(),
+		_panel._EQUIP_SLOTS.size(),
+		"one equipped row, not three"
+	)

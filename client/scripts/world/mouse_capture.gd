@@ -18,8 +18,21 @@ extends RefCounted
 #   2. Every capture -> visible transition warps the cursor back to the anchor recorded at capture
 #      time (the press position: exactly where the click landed).
 #
-# Positions are VIEWPORT-local (InputEvent.position / Input.warp_mouse share that space) — never
-# mix in DisplayServer.mouse_get_position(), which is screen-global.
+# T-747 CORRECTION. The line that used to be here said "InputEvent.position / Input.warp_mouse
+# share that space". They did, until UI stretch split one space into two — and the correction
+# matters, because getting it wrong reintroduces exactly the bug T-739 shipped to fix:
+#
+#   * InputEvent.position as DELIVERED to local_player (where every anchor comes from) is CONTENT
+#     space — 1280x720.
+#   * Input.warp_mouse() forwards straight to DisplayServer in WINDOW pixels; it does NOT apply the
+#     content-scale transform.
+#
+# So warping a content-space anchor unconverted lands the cursor at 1/1.5 of the intended distance
+# from the top-left on the owner's 1920x1080 window — i.e. a right-drag mouse-look or a click on an
+# NPC would once again dump the cursor toward the screen's top-left corner. The anchor stays in
+# content space (that is the space callers speak); the conversion happens once, here, at the warp.
+#
+# Still true: never mix in DisplayServer.mouse_get_position(), which is screen-global.
 #
 # `ops` records every transition so the behaviour is unit-testable headlessly: the headless
 # DisplayServer stubs mouse_set_mode/warp_mouse out and always reports MOUSE_MODE_VISIBLE, so
@@ -64,5 +77,19 @@ func release() -> void:
 	_captured = false
 	# Order matters: go VISIBLE first (that is the transition that re-centres), then warp back.
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	Input.warp_mouse(_anchor)
-	ops.append({"op": OP_RESTORE, "pos": _anchor})
+	var warp_to := _window_anchor()
+	Input.warp_mouse(warp_to)
+	# "pos" stays the CONTENT anchor (the caller's space, and what "where the gesture began" means);
+	# "warp" is the WINDOW position actually sent, so the headless test can prove the conversion
+	# happened — the DisplayServer stub makes reading the real cursor back worthless.
+	ops.append({"op": OP_RESTORE, "pos": _anchor, "warp": warp_to})
+
+
+# The anchor in WINDOW pixels, which is the only space Input.warp_mouse() understands. Reached via
+# the main loop rather than a stored viewport so the capture/release signatures — and therefore
+# every call site in local_player.gd — stay untouched.
+func _window_anchor() -> Vector2:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null or tree.root == null:
+		return _anchor
+	return UiViewport.content_to_window(tree.root, _anchor)

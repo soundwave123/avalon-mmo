@@ -105,7 +105,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_yaw -= event.relative.x * LOOK_SENS
 		_pitch = clampf(_pitch - event.relative.y * LOOK_SENS, -1.4, 1.4)
 		_cam.rotation = Vector3(_pitch, _yaw, 0.0)
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+	elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_ESCAPE:
 		get_tree().quit(0)
 
 
@@ -114,17 +114,17 @@ func _process(delta: float) -> void:
 		return
 	var dir := Vector3.ZERO
 	var b := _cam.global_transform.basis
-	if Input.is_key_pressed(KEY_W):
+	if Input.is_physical_key_pressed(KEY_W):
 		dir -= b.z
-	if Input.is_key_pressed(KEY_S):
+	if Input.is_physical_key_pressed(KEY_S):
 		dir += b.z
-	if Input.is_key_pressed(KEY_A):
+	if Input.is_physical_key_pressed(KEY_A):
 		dir -= b.x
-	if Input.is_key_pressed(KEY_D):
+	if Input.is_physical_key_pressed(KEY_D):
 		dir += b.x
-	if Input.is_key_pressed(KEY_E) or Input.is_key_pressed(KEY_SPACE):
+	if Input.is_physical_key_pressed(KEY_E) or Input.is_physical_key_pressed(KEY_SPACE):
 		dir += Vector3.UP
-	if Input.is_key_pressed(KEY_Q):
+	if Input.is_physical_key_pressed(KEY_Q):
 		dir += Vector3.DOWN
 	if dir != Vector3.ZERO:
 		_cam.global_position += dir.normalized() * MOVE_SPEED * delta

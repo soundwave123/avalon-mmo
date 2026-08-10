@@ -75,12 +75,17 @@ func bind_player(local_player) -> void:
 # A still right-click in the world: re-use the LEFT-click ray. Only a broadcast PLAYER both
 # selects and offers the menu; ground/NPC/mob right-clicks change nothing (a right-click is
 # never a deselect — that stays left-click/Esc behavior).
+# T-753: routed through main's ClickPickQueue so this ray, like the left-click one, resolves in
+# _physics_process instead of the input callback (a locked space silently returns no hit).
 func _on_world_right_click(pos: Vector2) -> void:
-	var cam = _main.get_viewport().get_camera_3d()
-	if cam == null or _main.remote_entities == null:
+	if _main.remote_entities == null or _main.click_picks == null:
 		return
-	var entities: Dictionary = _main.remote_entities.get("_entities")
-	var picked: int = TargetSelection.target_id_for_click(cam, pos, entities, _main.npc_world)
+	_main.click_picks.submit(pos, _on_pick_resolved.bind(pos))
+
+
+# The queue calls back one physics frame later with the pick; `pos` rides via bind because the menu
+# has to open at the pixel the player actually right-clicked, not wherever the cursor drifted to.
+func _on_pick_resolved(picked: int, pos: Vector2) -> void:
 	if picked == TargetSelection.NPC_CLICK or picked == -1 or _row_for(picked).is_empty():
 		return
 	_main._on_entity_clicked(picked)

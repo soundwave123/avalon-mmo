@@ -11,19 +11,25 @@ const SettingsPanelT = preload("res://scripts/ui/settings_panel.gd")
 
 func test_world_map_key_registered_on_every_keybind_surface() -> void:
 	# T-723 idiom: the F1 handbook derives its label from the same keycode the panel dispatches on.
+	# T-761: both surfaces now render through KeyRegistry.label_for, so compare against THAT rather
+	# than OS.get_keycode_string — on a non-US keyboard the two disagree and the label is right.
+	var expected := KeyRegistry.label_for(WorldMapPanelT.TOGGLE_KEYCODE)
 	var found := false
 	for row: Dictionary in ControlsReferenceT.rows():
 		if str(row["action"]) == "World map":
 			found = true
-			assert_eq(str(row["keys_label"]), OS.get_keycode_string(WorldMapPanelT.TOGGLE_KEYCODE))
+			assert_eq(str(row["keys_label"]), expected)
 	assert_true(found, "ControlsReference must list the World map binding")
-	# And the Esc->Options keybind list carries the same row.
+	# And the Esc->Options keybind list carries the same row. T-761: assert on the RENDERED rows —
+	# the const now holds registry ids, and the rendering is the thing a player reads.
+	var panel = SettingsPanelT.new()
 	var in_settings := false
-	for bind: Array in SettingsPanelT.KEYBINDS:
+	for bind: Array in panel._keybind_rows():
 		if str(bind[0]) == "World map":
 			in_settings = true
-			assert_eq(str(bind[1]), "T")
-	assert_true(in_settings, "SettingsPanel.KEYBINDS must list the World map binding")
+			assert_eq(str(bind[1]), expected)
+	panel.free()
+	assert_true(in_settings, "SettingsPanel keybind list must carry the World map binding")
 
 
 func test_toggle_key_is_not_taken_by_main_dispatch() -> void:

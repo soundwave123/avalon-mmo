@@ -47,17 +47,41 @@ func test_active_count_increments_on_spawn() -> void:
 	assert_true(_pool.get_active_count() > initial)
 
 
-func test_spawn_returns_labels_to_pool_after_finish() -> void:
-	# This test checks the structural invariant:
-	# spawn → animate → finish → label back in pool.
-	# We can't easily wait for the tween in a headless test,
-	# so verify the pool can handle spawns without crashing.
-	var initial_pool_size := _pool.get_pool_size()
-	# Spawn more than default pool to force new label creation
-	for i in range(20):
-		_pool.spawn_text(i, "test", Color.WHITE)
-	# At least 5 new labels should have been created
-	assert_true(_pool.get_spawned_count() >= 20)
+# T-756: this used to spawn 20 labels and assert get_spawned_count() >= 20 — a counter that
+# only ever increments, so the assert was true the moment the loop ran and the recycle path
+# the test is NAMED for was never touched. The tween can't be awaited headlessly, but the
+# recycle is driven by the label's `finished` signal, and that CAN be fired directly.
+func test_a_finished_label_returns_to_the_pool_and_releases_its_entity_slot() -> void:
+	var pool := FloatingTextPool.new()
+	add_child_autofree(pool)
+	var pool_before := pool.get_pool_size()
+	assert_gt(pool_before, 0, "the preloaded pool has labels to hand out")
+
+	pool.spawn_text(4242, "13", Color.RED)
+	assert_eq(pool.get_pool_size(), pool_before - 1, "spawning takes the label OUT of the pool")
+	assert_eq(pool.get_active_count(), 1, "and parks it against the entity")
+
+	var label: FloatingTextLabel = pool._labels_by_entity[4242]
+	label.finished.emit()
+
+	assert_eq(pool.get_pool_size(), pool_before, "the finished label is recycled, not leaked")
+	assert_eq(pool.get_active_count(), 0, "and the entity slot is released for reuse")
+
+
+func test_pool_grows_when_every_label_is_still_animating() -> void:
+	# The exhaustion path: _get_available_label() returns null and spawn_text builds a new one
+	# rather than dropping the hit. Asserted on labels actually parented, not on the counter.
+	var pool := FloatingTextPool.new()
+	add_child_autofree(pool)
+	var labels_before := pool.get_child_count()
+	var over := pool.get_pool_size() + 5
+	for i in range(over):
+		pool.spawn_text(i, "test", Color.WHITE)
+	assert_eq(pool.get_pool_size(), 0, "every preloaded label is out on an entity")
+	assert_gt(
+		pool.get_child_count(), labels_before, "the pool built new labels rather than dropping hits"
+	)
+	assert_eq(pool.get_active_count(), over, "no hit was silently dropped")
 
 
 func test_is_label_available_after_init() -> void:

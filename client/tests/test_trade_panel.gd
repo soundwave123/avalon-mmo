@@ -76,3 +76,22 @@ func test_rejection_shows_reason_without_closing() -> void:
 	_panel.receive({"type": "trade_result", "ok": false, "reason": "rate_limited"})
 	assert_true(_panel.visible)
 	assert_true(_panel.status_text().contains("rate_limited"))
+
+
+# ---- T-755: BBCode injection through the trade partner's name ------------------
+#
+# The stakes here are unusually concrete: an unclosed tag in the partner's name swallows every line
+# rendered BELOW the header — which is the list of items you are about to hand over. A trade window
+# that hides its own contents is worse than a cosmetic defacement.
+func test_hostile_partner_name_cannot_hide_the_offer_list() -> void:
+	_panel.receive(
+		_view({"partner": "[color=#000000]mallory", "theirs": {"items": [], "coins": 40}})
+	)
+	var rtl := RichTextLabel.new()
+	rtl.bbcode_enabled = true
+	add_child_autofree(rtl)
+	rtl.text = _panel.body_text()
+	var parsed := rtl.get_parsed_text()
+	assert_string_contains(parsed, "[color=#000000]mallory", "the partner name renders as text")
+	assert_string_contains(parsed, "wolf_pelt x3", "your own staged offer stays visible")
+	assert_string_contains(parsed, "Your bag", "the sections below the header survive")

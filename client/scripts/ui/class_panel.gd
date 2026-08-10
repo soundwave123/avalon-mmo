@@ -147,18 +147,20 @@ func _input(event: InputEvent) -> void:
 		return
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	var key := event as InputEventKey
-	if key.keycode >= KEY_1 and key.keycode <= KEY_3:
-		var index: int = key.keycode - KEY_1
+	# T-761: by physical position — the modal's 1/2/3 picks must land on the top-row keys wherever
+	# the layout puts their glyphs (KeyRegistry modal_pick_* rows).
+	var code := KeyRegistry.event_code(event as InputEventKey)
+	if code >= KEY_1 and code <= KEY_3:
+		var index: int = code - KEY_1
 		if index < _buttons.size():
 			(_buttons[index] as Button).pressed.emit()
-	elif key.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+	elif code in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
 		var focused := get_viewport().gui_get_focus_owner()
 		if focused is Button and focused in _buttons:
 			(focused as Button).pressed.emit()
 		elif not _buttons.is_empty():
 			(_buttons[0] as Button).pressed.emit()
-	elif key.keycode == KEY_UP or key.keycode == KEY_DOWN:
+	elif code == KEY_UP or code == KEY_DOWN:
 		return  # let the built-in focus system move between buttons
 	get_viewport().set_input_as_handled()
 

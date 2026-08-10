@@ -30,6 +30,7 @@ const MOUSE_SENSITIVITY := 0.0035  # radians per pixel
 # press becomes a drag; below this a left press stays a click and the cursor is never touched.
 const ORBIT_DEADZONE_PX := 4.0  # pixels of travel before a left press becomes a camera orbit
 const CAMERA_HEIGHT := 1.6  # ~head height; the rig pivots here
+const EAR_HEIGHT := 1.5  # T-752: the audio listener sits at the character's ears, on the BODY
 # T-082: WoW spacebar jump — a ~0.62s arc reaching ~1.1m (WoW-like feel). Client-visual
 # for now: the server world is flat and ground position stays authoritative; the arc is
 # cosmetic height on the local body (multiplayer jump visibility = follow-up).
@@ -131,8 +132,21 @@ func set_gameplay_input_check(cb: Callable) -> void:
 
 
 # T-424: true while the chat input is focused; movement/jump/walk-toggle must read no keys then.
+#
+# T-761: ...and true while ANY free-type field is focused, not just chat's. The injected callable
+# only ever asked chat_panel.is_typing(), so naming a guild, haggling in trade or typing a
+# character name left the raw WASD/SPACE polls below wide open — the player walked away mid-word
+# and jumped on every space between two words. main.gd's event dispatch has consulted UiInputGate
+# since T-504; the polling path never did, which is exactly how a gate that "exists" still leaks.
+# One predicate covers all three raw polls (movement, jump, the "/" walk toggle) because all three
+# already funnel through here.
+#
+# get_viewport() is null for a LocalPlayer outside the tree (isolated tests, pre-HUD spawn) and
+# UiInputGate answers false for a null viewport, so the un-parented case stays movable.
 func _is_typing() -> bool:
-	return _typing_check.is_valid() and bool(_typing_check.call())
+	if _typing_check.is_valid() and bool(_typing_check.call()):
+		return true
+	return UiInputGate.is_text_input_focused(get_viewport())
 
 
 func _is_gameplay_input_disabled() -> bool:
@@ -230,6 +244,24 @@ func _build_body() -> void:
 	col.shape = shape
 	col.position = Vector3(0.0, 0.83, 0.0)
 	add_child(col)
+	_build_listener()
+
+
+# T-752: the AUDIO LISTENER — the point the entire 3D mix is measured from. With no AudioListener3D
+# current, Godot measures at the active Camera3D, and this rig parks its camera ~8 m BEHIND the
+# character (_cam_dist): a mob swinging at your face was mixed as an 8 m-distant sound, remote
+# footsteps at melee range read across-the-street, and orbiting the camera (T-321 left-drag) walked
+# the measuring point across the Ashmoor district boundary — flipping AmbientFxLayer's -50 dB era
+# gate on every ambience bed by nothing but where you were looking. Parented to the BODY (not to
+# the camera rig, and NOT to _cam_yaw_pivot), it follows the character and the camera can orbit,
+# zoom, or collide without moving the player's ears. Everything that asks "where is the player
+# hearing from" goes through AmbientFxLayer.listener_node(), which prefers this node.
+func _build_listener() -> void:
+	var listener := AudioListener3D.new()
+	listener.name = "PlayerListener"
+	listener.position = Vector3(0.0, EAR_HEIGHT, 0.0)
+	add_child(listener)
+	listener.make_current()
 
 
 func _build_camera() -> void:
@@ -281,7 +313,9 @@ func _build_camera() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# T-321: run/walk toggle (WoW default "/" ToggleRun). Walk feeds the T-123 anim run threshold
 	# honestly (WALK_SPEED < RUN_THRESHOLD_MPS) — server-legal without a flag (slower than max).
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SLASH:
+	# T-761: physical position (KeyRegistry walk_toggle).
+	var tap: bool = event is InputEventKey and event.pressed and not event.echo
+	if tap and KeyRegistry.event_code(event as InputEventKey) == KEY_SLASH:
 		if _is_typing() or _is_gameplay_input_disabled():
 			return  # T-424: "/" is a chat command prefix while typing — never the walk toggle
 		_walking = PlayerMovement.toggled_walk(_walking)
@@ -371,15 +405,18 @@ func _physics_process(delta: float) -> void:
 	# T-424: while the chat input is focused, read NO movement keys — leave dir at ZERO so the eased
 	# velocity below decelerates to a stop (no hard teleport). This raw poll bypasses the LineEdit's
 	# key capture, which is exactly why unguarded WASD leaked into movement while typing.
+	# T-761: is_PHYSICAL_key_pressed — the four keys are a position (the WASD diamond), not the
+	# letters W/A/S/D. On AZERTY those positions print Z/Q/S/D and the old logical poll made the
+	# game unplayable there; by position it is the same diamond under the same fingers everywhere.
 	var dir := Vector3.ZERO
 	if not _is_typing():
-		if Input.is_key_pressed(KEY_W):
+		if Input.is_physical_key_pressed(KEY_W):
 			dir.z -= 1.0
-		if Input.is_key_pressed(KEY_S):
+		if Input.is_physical_key_pressed(KEY_S):
 			dir.z += 1.0
-		if Input.is_key_pressed(KEY_A):
+		if Input.is_physical_key_pressed(KEY_A):
 			dir.x -= 1.0
-		if Input.is_key_pressed(KEY_D):
+		if Input.is_physical_key_pressed(KEY_D):
 			dir.x += 1.0
 	# T-321: accel/decel + turn smoothing. Ease the ground velocity toward the desired velocity
 	# (WASD rotated by facing, at run OR walk speed) instead of snapping to it — so momentum ramps
@@ -508,11 +545,13 @@ func _ground_height(probe := Vector3.ZERO) -> float:
 # floor underfoot (T-189: was a hard-coded y=0, which broke raised interior floors).
 func _tick_jump(delta: float) -> void:
 	# T-424: no jump while typing in chat (the same raw-poll bypass as WASD).
+	# T-761: polled by POSITION, and _is_typing() now covers every focused text field rather than
+	# chat alone — a space between two typed words used to launch the player into the air.
 	if (
 		not _airborne
 		and not _is_typing()
 		and not _is_gameplay_input_disabled()
-		and Input.is_key_pressed(KEY_SPACE)
+		and Input.is_physical_key_pressed(KEY_SPACE)
 	):
 		_airborne = true
 		_vertical_velocity = JUMP_VELOCITY

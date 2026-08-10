@@ -171,14 +171,14 @@ func is_typing() -> bool:
 func _input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.is_pressed() or event.is_echo():
 		return
-	var key := event as InputEventKey
-	if key.keycode == KEY_ENTER and not is_typing():
+	var code := KeyRegistry.event_code(event as InputEventKey)  # T-761: physical position
+	if code == KEY_ENTER and not is_typing():
 		if UiInputGate.is_text_input_focused(get_viewport()):
 			return
 		_input_box.visible = true  # summon the input row, then focus it
 		_input_box.grab_focus()
 		get_viewport().set_input_as_handled()
-	elif key.keycode == KEY_ESCAPE and is_typing():
+	elif code == KEY_ESCAPE and is_typing():
 		_input_box.clear()
 		_input_box.release_focus()  # cancel typing without sending; global Esc menu stays gated
 		get_viewport().set_input_as_handled()
@@ -449,4 +449,9 @@ func disconnect_notice() -> Dictionary:
 
 func _exit_tree() -> void:
 	if _maintenance_banner != null and _maintenance_banner.get_parent() != self:
+		# T-751: release the handle at the free site. queue_free() is DEFERRED, so for the rest of
+		# the frame this field is still non-null and still is_instance_valid() — setup()'s
+		# "already built?" test read true off a doomed banner and skipped the rebuild, leaving a
+		# re-mounted chat panel poking a detached node on every maintenance notice.
 		_maintenance_banner.queue_free()
+		_maintenance_banner = null

@@ -68,5 +68,7 @@ static func _channel_color(channel: String) -> Color:
 
 
 # Neutralise BBCode so a player cannot inject markup (e.g. "[color=red]") into the RichTextLabel.
+# T-755 promoted this idiom to the shared BBCode utility (it had been copied here and into
+# pvp_panel); this wrapper keeps every call site above reading unchanged.
 static func _escape(s: String) -> String:
-	return s.replace("[", "[lb]")
+	return BBCode.escape(s)

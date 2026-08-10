@@ -73,9 +73,23 @@ func test_the_emitter_is_configured_to_fall_off_with_distance() -> void:
 
 func test_remote_footfalls_are_quieter_than_your_own() -> void:
 	# The ticket asks for other players to be present but not to compete with your own feet.
-	assert_lt(Loco.REMOTE_TRIM_DB, 0.0, "remote steps are trimmed down")
+	#
+	# T-756: the old second assertion was `own + REMOTE_TRIM_DB < own` — pure algebra, true for
+	# any negative constant whatsoever, and it never touched the playback path. Deleting the
+	# `+ REMOTE_TRIM_DB` from play_remote_steps (the actual regression it is named against) left
+	# it passing. Drive the real call and read the level off the emitter.
+	assert_lt(Loco.REMOTE_TRIM_DB, 0.0, "remote steps are trimmed down, not up")
 	var own := Cadence.gain_db(Cadence.GAIT_RUN, 6.0)
-	assert_lt(own + Loco.REMOTE_TRIM_DB, own, "a remote runner sits under your own footfalls")
+	var body := _body()
+	Loco.play_remote_steps(body, [{"clip": "step_grass_1", "gain_db": own, "pitch": 1.0}])
+	var e := Loco.ensure_emitter(body)
+	assert_almost_eq(
+		e.volume_db,
+		own + Loco.REMOTE_TRIM_DB,
+		0.001,
+		"the remote path applies the trim to the emitter it actually plays"
+	)
+	assert_lt(e.volume_db, own, "a remote runner sits under your own footfalls")
 
 
 func test_playing_a_remote_step_arms_the_emitter() -> void:

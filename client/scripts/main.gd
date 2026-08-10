@@ -47,6 +47,7 @@ var npc_markers: NpcMarkersLayer = null  # T-048: quest-giver !/? markers (world
 var local_player: LocalPlayer = null  # T-054: the player you control
 var remote_entities: RemoteEntitiesLayer = null  # T-055: other players + mobs (interpolated)
 var npc_world: NpcWorldLayer = null  # T-056: NPC bodies + !/? billboards (clickable → talk)
+var click_picks: ClickPickQueue = null  # T-753: world clicks, ray-resolved in _physics_process
 var audio: AudioManager = null  # T-111: looping meadow ambience + one-shot SFX
 var ambient_fx: AmbientFxLayer = null  # T-139: pollen motes + chimney smoke + campfire embers
 var music_bed: MusicBedLayer = null  # T-416: per-zone music score beds (own "Music" bus)
@@ -128,76 +129,58 @@ func _enter_world() -> void:
 		return
 	_world_built = true
 	await LoadPhases.cut(self, "world")  # T-691: paint the loading screen before the terrain block
+	# T-751: every LoadPhases seam yields a real frame in a live client. A quit, a scene swap or a
+	# failed login between frames frees this node, but the SceneTree that resumes the coroutine
+	# outlives it — so execution really does come back here, to a `self` that no longer exists and
+	# an $HUD that is gone. is_inside_tree() is the cheap self-check; bail and build nothing.
+	if not is_inside_tree():
+		return
 
 	# T-053: the 3D world (gray-box ground + lighting + third-person camera), built in code.
-	world_view = WorldView.new()
-	world_view.name = "WorldView"
-	add_child(world_view)
+	world_view = _mount(self, WorldView.new(), "WorldView")
 
 	# T-111: the world's sound — looping meadow ambience + a one-shot SFX pool (audio.play_sfx).
-	audio = AudioManager.new()
-	audio.name = "AudioManager"
-	add_child(audio)
+	audio = _mount(self, AudioManager.new(), "AudioManager")
 
 	# T-055: layer that renders/interpolates other players + mobs from the positions broadcast.
-	remote_entities = RemoteEntitiesLayer.new()
-	remote_entities.name = "RemoteEntities"
-	world_view.add_child(remote_entities)
+	remote_entities = _mount(world_view, RemoteEntitiesLayer.new(), "RemoteEntities")
 
 	# T-081: world dressing (GLB houses/trees). T-187: also the source of derived interior volumes.
 	await LoadPhases.cut(self, "props")  # T-691: manifest + GLB pin seam (the big decode block)
-	world_props = WorldPropsLayer.new()
-	world_props.name = "WorldProps"
-	world_view.add_child(world_props)
+	if not is_inside_tree():  # T-751: freed across the seam (see the "world" seam)
+		return
+	world_props = _mount(world_view, WorldPropsLayer.new(), "WorldProps")
 
 	# T-056: NPC bodies + !/? billboards in the world; click a body to talk.
-	npc_world = NpcWorldLayer.new()
-	npc_world.name = "NpcWorld"
-	world_view.add_child(npc_world)
+	npc_world = _mount(world_view, NpcWorldLayer.new(), "NpcWorld")
 	get_viewport().physics_object_picking = true  # required for CollisionObject3D.input_event clicks
 
 	# T-139: ambient particle FX (pollen motes, chimney smoke, campfire embers + firelight).
-	ambient_fx = AmbientFxLayer.new()
-	ambient_fx.name = "AmbientFx"
-	world_view.add_child(ambient_fx)
+	ambient_fx = _mount(world_view, AmbientFxLayer.new(), "AmbientFx")
 
 	# T-416: per-zone MUSIC score beds on their own "Music" bus (crossfades between zone regions).
-	music_bed = MusicBedLayer.new()
-	music_bed.name = "MusicBed"
-	world_view.add_child(music_bed)
+	music_bed = _mount(world_view, MusicBedLayer.new(), "MusicBed")
 
 	# T-110: spell/combat VFX bursts (cast/impact/heal), fired from the combat handlers.
-	vfx = VfxManager.new()
-	vfx.name = "Vfx"
-	world_view.add_child(vfx)
+	vfx = _mount(world_view, VfxManager.new(), "Vfx")
 
 	await LoadPhases.cut(self, "hud")  # T-691: interface build seam
-	combat_feedback = CombatFeedback.new()
-	combat_feedback.name = "CombatFeedback"
-	$HUD.add_child(combat_feedback)
+	if not is_inside_tree():  # T-751: freed across the seam (see the "world" seam)
+		return
+	combat_feedback = _mount($HUD, CombatFeedback.new(), "CombatFeedback")
 	combat_feedback.set_overlays_enabled(false)  # T-057: 3D health bars + log, not the 2D overlays
 
 	# T-308: always-on combat HUD — health/resource bars, kit action bar, compass. Fed from _on_*.
-	player_hud = PlayerHud.new()
-	player_hud.name = "PlayerHud"
-	$HUD.add_child(player_hud)
-	death_presentation = DeathPresentation.new()
-	death_presentation.name = "DeathPresentation"
-	$HUD.add_child(death_presentation)
+	player_hud = _mount($HUD, PlayerHud.new(), "PlayerHud")
+	death_presentation = _mount($HUD, DeathPresentation.new(), "DeathPresentation")
 	death_presentation.setup(combat_feedback.get_combat_log())
 
-	quest_log_panel = QuestLogPanel.new()
-	quest_log_panel.name = "QuestLogPanel"
-	$HUD.add_child(quest_log_panel)
+	quest_log_panel = _mount($HUD, QuestLogPanel.new(), "QuestLogPanel")
 
-	inventory_panel = InventoryPanel.new()
-	inventory_panel.name = "InventoryPanel"
-	$HUD.add_child(inventory_panel)
+	inventory_panel = _mount($HUD, InventoryPanel.new(), "InventoryPanel")
 
 	# T-233: hover an item -> slot/stats/value; T-422e also feeds worn gear for +/- vs-equipped deltas.
-	item_tooltip = ItemTooltip.new()
-	item_tooltip.name = "ItemTooltip"
-	$HUD.add_child(item_tooltip)
+	item_tooltip = _mount($HUD, ItemTooltip.new(), "ItemTooltip")
 	inventory_panel.item_hover_started.connect(func(item): item_tooltip.show_for(item))
 	inventory_panel.item_hover_ended.connect(func(): item_tooltip.hide_tooltip())
 	inventory_panel.equipment_changed.connect(func(eq): item_tooltip.set_equipment(eq))
@@ -296,6 +279,10 @@ func _enter_world() -> void:
 	var weekly_panel: Control = _WEEKLY_PANEL.new()  # T-480 weekly vault (J)
 	$HUD.add_child(weekly_panel)
 	weekly_panel.setup(craft_send, craft_typing, _reply_router)
+	# T-759: these 6 were outside the Esc sweep — quest_offer in particular TRAPPED the player, opening
+	# Options on top of an un-dismissable offer. (party_invite_dialog joins in _wire_hud_once, below.)
+	_panel_set += [pvp_panel, social_ui.trade_panel, social_ui.social_panel, weekly_panel]
+	_panel_set += [$HUD.get_node_or_null("RecipePanel"), $HUD.get_node_or_null("QuestOfferPanel")]
 	# T-376 handbook; T-558/T-714 whole-sequence creation gate; T-710/T-711 guided-onboarding seams.
 	_onboarding.setup($HUD, class_panel, gender_panel, _creation)
 	_onboarding.bind_guide(
@@ -312,6 +299,16 @@ func _enter_world() -> void:
 		var pilot: Node = preload("res://scripts/dev/pilot.gd").new()
 		pilot.name = "Pilot"
 		add_child(pilot)
+
+
+# T-751: new + name + add_child in ONE line. main.gd sits AT the 1000-line cap (T-640 and T-716
+# both carved for exactly this reason), and the post-await liveness guards this ticket adds had to
+# come out of that budget — this trio repeated fourteen times and pays for them. Untyped return on
+# purpose: the callers assign into typed vars, and an untyped return spares them all an `as` cast.
+func _mount(parent: Node, node: Node, nm: String):
+	node.name = nm
+	parent.add_child(node)
+	return node
 
 
 func _setup_networking(token_override := "", host_override := "", port_override := 0) -> void:
@@ -331,6 +328,8 @@ func _setup_networking(token_override := "", host_override := "", port_override 
 	# T-691 gate, FIRST login only (a reconnect's world phases never fire -> it could never dismiss)
 	await LoadPhases.boot_screen($HUD if not _world_built else null)
 	await _enter_world()  # T-494: authenticated — now build the world + HUD before the handshake
+	if not is_inside_tree():  # T-751: both awaits above yield real frames (see _enter_world)
+		return
 	_smoke = OS.get_environment("AVALON_NET_SMOKE") == "1"
 	_onboarding.begin(_token, _smoke)  # T-376: per-user onboarding key + harness-run guard
 	_observe = OS.get_environment("AVALON_OBSERVE") == "1"  # two-client harness: watch remote entities
@@ -374,6 +373,8 @@ func _setup_networking(token_override := "", host_override := "", port_override 
 	)
 
 	await LoadPhases.cut(self, "connect")  # T-691: ENet connect + world handshake seam
+	if not is_inside_tree():  # T-751: freed across the seam (see the "world" seam)
+		return
 	_enet = ENetMultiplayerPeer.new()
 	var err: int = _enet.create_client(host, port)
 	if err != OK:
@@ -410,6 +411,8 @@ func _wire_hud_once() -> void:
 	remote_entities.entity_clicked.connect(_on_entity_clicked)
 	npc_world.npc_clicked.connect(_on_npc_clicked)  # T-056: click an NPC → talk intent
 	_invite_flow = PartyInviteFlow.mount(self)  # T-736: menu/dialog under $HUD + target-frame hook
+	_panel_set.append(_invite_flow.dialog)  # T-759: Esc closes the invite dialog (mounted post-set)
+	click_picks = ClickPickQueue.mount(self)  # T-753: buffered click → next-physics-frame raycast
 	# T-056 pass 2: clicked quest-log / inventory action links → the matching intent. T-461/T-710:
 	# objectives_changed renders the always-on HUD tracker (pre-accept line + T-711 stall clock).
 	quest_log_panel.action_selected.connect(func(meta): PanelActions.dispatch(_net, meta))
@@ -906,43 +909,43 @@ func _input(event: InputEvent) -> void:
 		return
 	if not _world_built or has_node("HUD/LoadingScreen"):
 		return  # T-494/T-691: no world hotkeys until login + loading finish building the HUD
-	var key := event as InputEventKey
+	var code := KeyRegistry.event_code(event as InputEventKey)  # T-761: by POSITION, not letter
 	if UiInputGate.is_text_input_focused(get_viewport()):
 		return  # T-504: every free-type field owns all keyboard input, not only chat
 	if chat_panel != null and chat_panel.is_typing():
 		return  # T-361: focus discipline — typing in chat must not fire WASD/hotkeys/Esc menu
-	if key.keycode in [KEY_L, KEY_I, KEY_N, KEY_C, KEY_QUOTELEFT, KEY_ESCAPE] and audio != null:
+	if code in [KEY_L, KEY_I, KEY_N, KEY_C, KEY_QUOTELEFT, KEY_ESCAPE] and audio != null:
 		audio.play_sfx("ui_click", -13.0)  # T-111: a click on panel toggles / autoattack toggle
-	if key.keycode == KEY_L:
+	if code == KEY_L:
 		quest_log_panel.toggle()
-	elif key.keycode == KEY_C:  # T-295: character sheet (primaries + derived stats)
+	elif code == KEY_C:  # T-295: character sheet (primaries + derived stats)
 		character_sheet_panel.toggle()
-	elif key.keycode == KEY_I:
+	elif code == KEY_I:
 		inventory_panel.toggle()
 		if inventory_panel.visible:
 			_net.get_inventory()  # T-225: fresh slots on open (same idiom as talents)
-	elif key.keycode == KEY_N:  # T-065: talent tree
+	elif code == KEY_N:  # T-065: talent tree
 		talent_panel.toggle()
 		if talent_panel.visible:
 			_net.request_talents()
-	elif key.keycode == KEY_QUOTELEFT:
+	elif code == KEY_QUOTELEFT:
 		_toggle_autoattack()  # T-057: auto-attack (moved off "1" for the T-063 action bar)
-	elif key.keycode == KEY_M:
+	elif code == KEY_M:
 		_net._toggle_mount()
-	elif key.keycode == KEY_TAB:
+	elif code == KEY_TAB:
 		var origin := local_player.global_position if local_player != null else Vector3.ZERO
 		var next_id := TargetSelection.next_hostile_target(
 			remote_entities.get("_entities"), _target_id, origin
 		)
 		if next_id != -1:
 			_on_entity_clicked(next_id)
-	elif AbilityKeybinds.slot_for_keycode(key.keycode) != -1:
+	elif AbilityKeybinds.slot_for_keycode(code) != -1:
 		# T-065: while the class panel is up, 1-3 belong to class selection, not the bar.
 		if class_panel == null or not class_panel.visible:
 			# T-063 slots, T-723 range: the WHOLE keyed bar (1-9), not just the first four —
 			# the interrupts sit past slot 4 on a trained kit's default layout.
-			_cast_kit_slot(AbilityKeybinds.slot_for_keycode(key.keycode))
-	elif key.keycode == KEY_ESCAPE:
+			_cast_kit_slot(AbilityKeybinds.slot_for_keycode(code))
+	elif code == KEY_ESCAPE:
 		_handle_escape()
 
 
@@ -969,6 +972,8 @@ func _open_hud_panels() -> Array:  # Esc closes these before opening Options (T-
 
 # T-057: left-click empty ground → deselect (like Esc); clicks that hit an entity/NPC are
 # handled by their own input_event (target / talk), which leaves the target alone.
+# T-753: the ray is NOT cast here — click_pick_queue buffers it to the next _physics_process, the
+# only phase where a space query is reliable (a locked space returns {} = a silently dropped click).
 func _unhandled_input(event: InputEvent) -> void:
 	if not _world_built or has_node("HUD/LoadingScreen"):
 		return  # T-494/T-691: click-targeting is inert behind the login + loading gates
@@ -976,17 +981,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.button_index != MOUSE_BUTTON_LEFT:
 		return
-	var cam := get_viewport().get_camera_3d()
-	if cam == null:
-		return
-	var entities: Dictionary = remote_entities.get("_entities") if remote_entities != null else {}
-	var picked := TargetSelection.target_id_for_click(cam, event.position, entities, npc_world)
-	if picked == TargetSelection.NPC_CLICK:
-		return  # NPC click belongs to its talk handler and leaves combat target alone
-	if picked != -1:
-		_on_entity_clicked(picked)
-		return
-	_clear_target()
+	if click_picks != null:  # _world_built flips before _wire_hud_once mounts the queue
+		click_picks.submit_target_click(event.position)
 
 
 func _send_to_server(msg: Dictionary) -> void:

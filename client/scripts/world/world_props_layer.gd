@@ -564,15 +564,49 @@ func pinned_scene(scene_path: String) -> PackedScene:
 		return _scene_pin[scene_path]
 	var scene: PackedScene = null
 	if _requested.has(scene_path):
-		# Collect the background load _preload_scenes started. Instant if it finished; blocks like
-		# load() if not — either way it REUSES that work instead of decoding the GLB a second time.
+		# Collect the background load _preload_scenes started. T-758: gate on the status FIRST
+		# (the visual_preload.load_scene model). LOADED hands it over instantly; IN_PROGRESS blocks
+		# only for the decode's remainder — either way it REUSES that work. On FAILED/INVALID we must
+		# NOT call load_threaded_get (it pushes an engine error and returns null); fall to load().
 		_requested.erase(scene_path)
-		scene = ResourceLoader.load_threaded_get(scene_path) as PackedScene
+		var status := ResourceLoader.load_threaded_get_status(scene_path)
+		if (
+			status == ResourceLoader.THREAD_LOAD_LOADED
+			or status == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+		):
+			scene = ResourceLoader.load_threaded_get(scene_path) as PackedScene
 	if scene == null:
 		scene = load(scene_path) as PackedScene
 	if scene != null:
 		_scene_pin[scene_path] = scene
 	return scene
+
+
+# T-758: socket name -> OmniLight spec, or an EMPTY dictionary for "no light". This replaced the
+# always-on `else` catch-all in _place that lit EVERY unmatched socket: 67 unintended lights, 55
+# of them glowing signboards. Only the fire/candle/lamp families get an emitter; a socket used for
+# anything ELSE (socket_sign, socket_sigil, socket_service, socket_cellar_stair, socket_url)
+# resolves to {} and is skipped. Spec keys: color, range, energy (steady interior fill),
+# base_energy (>0 means DUSK-GATED: WorldView's night_lights tick drives it from the sun, and it
+# starts dark), night (add to the night_lights group). socket_rift stays inline in _place (it seeds
+# an fx group too), so it is deliberately absent here.
+static func socket_light_spec(sock_name: String) -> Dictionary:
+	if sock_name.begins_with("socket_gaslamp"):
+		# T-346/T-619: era-2 gas lamp — an omnidirectional amber pool, dusk-gated.
+		return {"color": Color(1.0, 0.66, 0.3), "range": 8.5, "base_energy": 3.0, "night": true}
+	if sock_name.begins_with("socket_brazier"):
+		# Exterior fire on wall walks / gates / keep roofs — amber, and DUSK-GATED like the standalone
+		# prop_brazier.glb (_NIGHT_LIGHTS). The old catch-all lit these as a soft always-on candle, so
+		# a wall brazier blazed at noon; the fire now lights at dusk, matching the brazier prop.
+		return {"color": Color(1.0, 0.5, 0.2), "range": 8.0, "base_energy": 3.5, "night": true}
+	if sock_name.begins_with("socket_hearth"):
+		# Interior firelight — always-on so the room reads by day (owner: interiors were too dark).
+		return {"color": Color(1.0, 0.62, 0.32), "range": 7.0, "energy": 3.5, "night": false}
+	if sock_name.begins_with("socket_candles"):
+		# Interior candle/altar glow — always-on. omni_range 8 is load-bearing: the T-632 cathedral
+		# nave chain relies on the pools overlapping, so DO NOT shrink it without re-spacing sockets.
+		return {"color": Color(1.0, 0.78, 0.5), "range": 8.0, "energy": 2.2, "night": false}
+	return {}
 
 
 func _place(p: Dictionary, track_index: int = -1) -> bool:
@@ -630,19 +664,19 @@ func _place(p: Dictionary, track_index: int = -1) -> bool:
 	# socket_hearth -> warm fire light; socket_candles -> soft altar glow. Owner: interiors
 	# were too dark to see into; the hearths now carry the room.
 	for sock in node.find_children("socket_*", "Node3D", true, false):
-		if str(sock.name).begins_with("socket_door"):
+		var sname := str(sock.name)
+		if sname.begins_with("socket_door"):
 			continue  # T-210: door markers feed the walk-in audit, not the light pass
-		if str(sock.name).begins_with("socket_chimney"):
+		if sname.begins_with("socket_chimney"):
 			sock.add_to_group("chimney_sockets")  # T-209: AmbientFxLayer smokes these
 			continue
-		var light: Light3D
-		if str(sock.name).begins_with("socket_rift"):
+		if sname.begins_with("socket_rift"):
 			# T-407: the era-rift aperture. AmbientFxLayer hangs the shimmer plane + drifting
 			# motes off the grouped socket (the socket_chimney discovery pattern); here we attach
 			# the cold rift glow that lights the surrounding ground after dusk — DUSK-GATED via
 			# the T-298 night_lights group like the gaslamps, so the plaza cobble catches the
 			# "wrong" cyan-violet light at night (the stone's own emissive seams are baked into
-			# the GLB material and carry the read by day).
+			# the GLB material and carry the read by day). Kept inline: it seeds an fx group too.
 			sock.add_to_group("rift_sockets")
 			var omni_rift := OmniLight3D.new()
 			omni_rift.omni_range = 9.0
@@ -650,37 +684,25 @@ func _place(p: Dictionary, track_index: int = -1) -> bool:
 			omni_rift.light_energy = 0.0
 			omni_rift.set_meta("base_energy", 3.4)
 			omni_rift.add_to_group("night_lights")
-			light = omni_rift
-		elif str(sock.name).begins_with("socket_gaslamp"):
-			# T-346 -> T-619: era-2 gas lamp. The mesh ships only the socket; the engine
-			# attaches the emitter. T-346's 4.7 upgrade preferred an AreaLight3D here, but an
-			# AreaLight3D is a one-sided PANEL (it emits along the node's -Z only, a cinematic
-			# softbox) — the translation-only socket never aimed that beam anywhere useful, so
-			# every High Street lamp read stone-cold at night while the omni-lit rift/hearth
-			# sockets in this same function glowed. A gas lamp is an omnidirectional amber
-			# pool: OmniLight3D unconditionally, the exact type/energy the T-345 PoC proved.
-			# Amber gaslight, DUSK-GATED via the night_lights group (WorldView's day/night
-			# tick drives energy from the sun elevation) so lamps light at dusk, not noon.
-			var omni_gas := OmniLight3D.new()
-			omni_gas.omni_range = 8.5
-			light = omni_gas
-			light.light_color = Color(1.0, 0.66, 0.3)
-			light.light_energy = 0.0
-			light.set_meta("base_energy", 3.0)
-			light.add_to_group("night_lights")
-		elif str(sock.name).begins_with("socket_hearth"):
-			var omni_hearth := OmniLight3D.new()
-			omni_hearth.light_color = Color(1.0, 0.62, 0.32)  # firelight
-			omni_hearth.light_energy = 3.5
-			omni_hearth.omni_range = 7.0
-			light = omni_hearth
-		else:  # socket_candles and future soft sockets
-			var omni_candle := OmniLight3D.new()
-			omni_candle.light_color = Color(1.0, 0.78, 0.5)
-			omni_candle.light_energy = 2.2
-			omni_candle.omni_range = 8.0
-			light = omni_candle
+			omni_rift.shadow_enabled = false
+			sock.add_child(omni_rift)
+			continue
+		# T-758: an EXPLICIT allow-list (socket_light_spec) replaced the old `else` catch-all that
+		# attached an always-on OmniLight to every unmatched socket — that lit 67 sockets the world
+		# never meant to glow, 55 of them shop signboards (socket_sign) reading as lanterns by day.
+		# Anything the spec doesn't recognize (sign/sigil/service/cellar_stair/url) now gets NO light.
+		var spec := socket_light_spec(sname)
+		if spec.is_empty():
+			continue
+		var light := OmniLight3D.new()
+		light.light_color = spec["color"]
+		light.omni_range = float(spec["range"])
+		light.light_energy = float(spec.get("energy", 0.0))
 		light.shadow_enabled = false  # many small lights; SDFGI carries the bounce
+		if bool(spec.get("night", false)):
+			# Dusk-gated: starts dark, WorldView's night_lights tick drives energy from the sun.
+			light.set_meta("base_energy", float(spec["base_energy"]))
+			light.add_to_group("night_lights")
 		sock.add_child(light)
 	# T-298: attach the dusk-gated street light for lampposts/braziers (see _NIGHT_LIGHTS).
 	if _NIGHT_LIGHTS.has(base):
